@@ -1,0 +1,10 @@
+A plugin for vim that shows you where other matches to your current regular
+expression are.
+
+To use:
+
+put the vim file in your ~/.vim/plugins folder.
+
+:set hls
+
+/searchforsomething/
