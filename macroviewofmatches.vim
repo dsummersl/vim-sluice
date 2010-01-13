@@ -2,19 +2,6 @@
 " of matches to your current search. It gives you a general idea of all the
 " areas in the file that match the search you performed.
 
-if has( "signs" ) == 0
-	echohl ErrorMsg
-	echo "MacroViewOfMatches requires Vim to have +signs support."
-	echohl None
-	finish
-endif
-
-" This handles all the slow/fastness of responsiveness of the entire plugin:
-set updatetime=100
-
-let g:mvom_default_bg='bbbbbb'
-exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g:mvom_default_bg
-
 " mappings"{{{
 " TODO I'd like to support the general concept of 'there are X matches in this
 " row ... by making the intensity progressively darker (5 levels thank you
@@ -73,6 +60,7 @@ function! RePaintMatches()
 		let b:cached_dimensions['bottom'] = line('w$')
 		let b:cached_dimensions['height'] = winheight(0)
 		let b:cached_dimensions['pos'] = line('.')
+		let b:cached_dimensions['hls'] = &hls
 		call PaintMV()
 		return 1
 	endif
@@ -80,7 +68,7 @@ function! RePaintMatches()
 	let lastVisible = line('w$')
 	let winHeight = winheight(0)
 	let cursorPos = line('.')
-	if firstVisible != b:cached_dimensions['top'] || lastVisible != b:cached_dimensions['bottom'] || winHeight != b:cached_dimensions['height'] || cursorPos != b:cached_dimensions['pos']
+	if firstVisible != b:cached_dimensions['top'] || lastVisible != b:cached_dimensions['bottom'] || winHeight != b:cached_dimensions['height'] || cursorPos != b:cached_dimensions['pos'] || &hls != b:cached_dimensions['hls']
 		call PaintMV()
 		let painted = 1
 	endif
@@ -124,8 +112,6 @@ function! MacroViewStop()
 	" TODO NEW this new version is basically just saying, UPDATE the data for my
 	" match.
 	" sign unplace *
-	" unlet! b:cached_dimensions
-	" unlet! b:cached_signs
 	" Now color everything up.
 	if RePaintMatches() == 0
 		" its a new search so regardless of size/window stuff, we want to
@@ -154,30 +140,33 @@ function! SearchData()
 	endwhile
 	return results
 endfunction
+function! SearchEnabled()
+	return &hls == 1
+endfunction
 "}}}
 " Window (show current visible window in macro area)"{{{
 function! WindowInit()
 endfunction
 function! WindowData()
-	if exists('b:cached_dimensions')
-		let firstVisible = line("w0")
-		let lastVisible = line("w$")
-		let totalLines = line("$")
-		let currentLine = line(".")
-		let n = firstVisible
-		let results = {}
-		let offsetOfCursor = ConvertToPercentOffset(currentLine,firstVisible,lastVisible,totalLines)
-		while n <= lastVisible
-			let results[n] = {}
-			let results[n]['count'] = 1
-			if offsetOfCursor == ConvertToPercentOffset(n,firstVisible,lastVisible,totalLines) 
-				let results[n]['iscurrentline'] = 1
-			endif
-			let n = n+1
-		endwhile
-		return results
-	endif
-	return {}
+	let firstVisible = line("w0")
+	let lastVisible = line("w$")
+	let totalLines = line("$")
+	let currentLine = line(".")
+	let n = firstVisible
+	let results = {}
+	let offsetOfCursor = ConvertToPercentOffset(currentLine,firstVisible,lastVisible,totalLines)
+	while n <= lastVisible
+		let results[n] = {}
+		let results[n]['count'] = 1
+		if offsetOfCursor == ConvertToPercentOffset(n,firstVisible,lastVisible,totalLines) 
+			let results[n]['iscurrentline'] = 1
+		endif
+		let n = n+1
+	endwhile
+	return results
+endfunction
+function! WindowEnabled()
+	return &hls == 1
 endfunction
 "}}}
 " }}}
@@ -279,13 +268,6 @@ endfunction
 
 " }}}
 " Rendering Logic {{{
-
-function! DoSearchSetup()
-	call SetupMV('Search','Slash')
-	call SetupMV('Window','BG')
-	call PaintMV()
-endfunction
-
 function! SetupMV(pluginName,renderType)
 	if !exists('b:mv_plugins') | let b:mv_plugins = [] | endif
 	call add(b:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
@@ -307,13 +289,26 @@ function! PaintMV()
 	let firstVisible = line('w0')
 	let lastVisible = line('w$')
 	let allData = CombineData(b:mv_plugins)
-	call DoPaintMatches(totalLines,firstVisible,lastVisible,allData,"UnpaintSign","PaintSign")
+	let anyEnabled = 0
+	for pluginInstance in b:mv_plugins
+		let plugin = pluginInstance['plugin']
+		if {plugin}Enabled()
+			let anyEnabled = 1
+			break
+		endif
+	endfor
+	if anyEnabled
+		call DoPaintMatches(totalLines,firstVisible,lastVisible,allData,"UnpaintSign","PaintSign")
+	else
+		sign unplace *
+	endif
 	call setpos('.', w:save_cursor)
 	let b:cached_dimensions = {}
 	let b:cached_dimensions['top'] = line('w0')
 	let b:cached_dimensions['bottom'] = line('w$')
 	let b:cached_dimensions['height'] = winheight(0)
 	let b:cached_dimensions['pos'] = line('.')
+	let b:cached_dimensions['hls'] = &hls
 endfunction
 
 " Given all the plugins, generate the line level data: which plugins have
@@ -335,6 +330,9 @@ function! CombineData(plugins)
 	let allData = {}
 	for pluginInstance in a:plugins
 		let plugin = pluginInstance['plugin']
+		if !{plugin}Enabled()
+			continue
+		endif
 		call setpos('.', w:save_cursor) " so the plugins all get to start from the same 'window'
 		let data={plugin}Data()
 		for line in keys(data) " loop through all the data and add it to my own master list.
@@ -712,4 +710,24 @@ function! TestSuite()
 	call TestDoPaintMatches()
 endfunction
 "}}}
+" Startup and configuration"{{{
+
+if has( "signs" ) == 0
+	echohl ErrorMsg
+	echo "MacroViewOfMatches requires Vim to have +signs support."
+	echohl None
+	finish
+endif
+
+" This handles all the slow/fastness of responsiveness of the entire plugin:
+set updatetime=100
+
+let g:mvom_default_bg='bbbbbb'
+exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g:mvom_default_bg
+
+" Configuration:
+call SetupMV('Search','Slash')
+call SetupMV('Window','BG')
+
+" "}}}
 " vim: set fdm=marker:
