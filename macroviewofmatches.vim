@@ -143,6 +143,10 @@ function! UnderCursorInit()
 	exe "highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
 endfunction
 function! UnderCursorData()
+	" TODO if the char under the cursor isn't part of the 'isword' then don't
+	" search
+	" TODO also in general for this search make it *start* from back 100 lines
+	" and go forward no more than a 100 or so matches (performance fixer)
 	let old_search=@/
 	exe "silent normal *"
 	let results=SearchData()
@@ -161,6 +165,9 @@ function! UnderCursorEnabled()
 	endif
 	return &hls == 1
 endfunction
+" TODO add a plugin that shows you the other matches if they are off screen.
+" TODO I might want to not show search/undercursor/etc if they are onscreen
+" (less clutter).
 "}}}
 " }}}
 " Builtin rendering types {{{
