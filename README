@@ -8,3 +8,10 @@ put the vim file in your ~/.vim/plugins folder.
 :set hls
 
 /searchforsomething/
+
+================================================================================
+
+TODO:
+
+- Support terminal vim (automatically pick colors available rather than assuming full GUI colors are there)
+- optimizations, I suspect.

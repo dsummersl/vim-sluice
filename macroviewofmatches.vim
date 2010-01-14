@@ -7,22 +7,6 @@
 " row ... by making the intensity progressively darker (5 levels thank you
 " human recog).
 "
-" TODO It'd be sweet to support multiple icons that worked both graphically or
-" non graphically and could overlap (maybe 3 different sets of data).
-"
-" Somebody must have already done research on what the ASCII characters can
-" look like they already overlap:
-" 
-" One category:
-" //
-" //
-" Two category:
-" \\
-" \\
-" Both categories:
-" XX
-" XX
-"
 " TODO the folding logic messes things up - have to somehow take into account
 " the folded lines or the 'green' and -- parts get all messed up.
 " au VimResized * call PaintMatches(@/). Problem is it looks like signs aren't
@@ -54,24 +38,36 @@
 au! CursorHold * nested call RePaintMatches()
 function! RePaintMatches()
 	let painted = 0
-	if !exists('b:cached_dimensions')
-		let b:cached_dimensions = {}
-		let b:cached_dimensions['top'] = line('w0')
-		let b:cached_dimensions['bottom'] = line('w$')
-		let b:cached_dimensions['height'] = winheight(0)
-		let b:cached_dimensions['pos'] = line('.')
-		let b:cached_dimensions['hls'] = &hls
-		call PaintMV()
+	let w:save_cursor = winsaveview()
+	if !exists('w:cached_dim')
+		let w:cached_dim = {}
+		let w:cached_dim['top'] = line('w0')
+		let w:cached_dim['bottom'] = line('w$')
+		let w:cached_dim['height'] = winheight(0)
+		let w:cached_dim['pos'] = line('.')
+		let w:cached_dim['hls'] = &hls
+		let w:cached_dim['data'] = CombineData(g:mv_plugins)
+		call PaintMV(w:cached_dim['data'])
+		" TODO restore first line as the 'top' line
+		call winrestview(w:save_cursor)
 		return 1
 	endif
 	let firstVisible = line('w0')
 	let lastVisible = line('w$')
 	let winHeight = winheight(0)
 	let cursorPos = line('.')
-	if firstVisible != b:cached_dimensions['top'] || lastVisible != b:cached_dimensions['bottom'] || winHeight != b:cached_dimensions['height'] || cursorPos != b:cached_dimensions['pos'] || &hls != b:cached_dimensions['hls']
-		call PaintMV()
+	let data = CombineData(g:mv_plugins)
+	if firstVisible != w:cached_dim['top'] || lastVisible != w:cached_dim['bottom'] || winHeight != w:cached_dim['height'] || cursorPos != w:cached_dim['pos'] || &hls != w:cached_dim['hls'] || data != w:cached_dim['data']
+		call PaintMV(data)
 		let painted = 1
 	endif
+	let w:cached_dim['top'] = line('w0')
+	let w:cached_dim['bottom'] = line('w$')
+	let w:cached_dim['height'] = winheight(0)
+	let w:cached_dim['pos'] = line('.')
+	let w:cached_dim['hls'] = &hls
+	let w:cached_dim['data'] = data
+	call winrestview(w:save_cursor)
 	return painted
 endfunction
 "}}}
@@ -91,33 +87,6 @@ endfunction
 
 " Search"{{{
 function! SearchInit()
-	noremap / :call MacroViewStart()<CR>/
-	noremap * :call MacroViewStart()<CR>/
-endfunction
-function! ReSearch()
-	if RePaintMatches() == 0
-		" its a new search so regardless of size/window stuff, we want to
-		" repaint
-		PaintMV()
-	endif
-endfunction
-function! MacroViewStart()
-	cnoremap <silent> <CR> <CR>:call MacroViewStop()<CR>
-	cnoremap <silent> <Esc> <C-C>:call MacroViewStop()<CR>
-endfunction
-function! MacroViewStop()
-	cunmap <CR>
-	cunmap <Esc>
-	" new search so forget we colored:
-	" TODO NEW this new version is basically just saying, UPDATE the data for my
-	" match.
-	" sign unplace *
-	" Now color everything up.
-	if RePaintMatches() == 0
-		" its a new search so regardless of size/window stuff, we want to
-		" repaint
-		PaintMV()
-	endif
 endfunction
 function! SearchData()
 	let results = {}
@@ -169,6 +138,30 @@ function! WindowEnabled()
 	return &hls == 1
 endfunction
 "}}}
+" UnderCursor: show matches for the 'word' the cursor is currently on"{{{
+function! UnderCursorInit()
+	exe "highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
+endfunction
+function! UnderCursorData()
+	let old_search=@/
+	exe "silent normal *"
+	let results=SearchData()
+  execute 'silent syntax clear UnderCursor'
+	execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
+	" remove the current line, b/c obviously we know about that
+	if has_key(results,w:save_cursor['lnum'])
+		call remove(results,w:save_cursor['lnum'])
+	endif
+	let @/=old_search
+	return results
+endfunction
+function! UnderCursorEnabled()
+	if &hls == 0
+		execute 'silent syntax clear UnderCursor'
+	endif
+	return &hls == 1
+endfunction
+"}}}
 " }}}
 " Builtin rendering types {{{
 " The rendering types are pluggable. Here is the expected format for them:
@@ -198,6 +191,7 @@ endfunction
 " }
 "
 
+" Slash (//) painter"{{{
 function! SlashInit()
 endfunction
 function! SlashPaint(vals)
@@ -208,7 +202,7 @@ function! SlashPaint(vals)
 	endfor
 	return result
 endfunction
-function! SlashReconcile(vals)
+function! SlashReconcile(vals,key)
 	let matchColor = 'ffff00'
 	let result = {}
 	for line in keys(a:vals)
@@ -216,7 +210,26 @@ function! SlashReconcile(vals)
 	endfor
 	return result
 endfunction
-
+"}}}
+" Backslash (\\) painter"{{{
+function! BackslashInit()
+	" same as slash
+	call SlashInit()
+endfunction
+function! BackslashPaint(vals)
+	let matchColor = '9966ff'
+	let result = {}
+	for line in keys(a:vals)
+		let result[line] = { 'text': '\\', 'fg': matchColor, 'bg':g:mvom_default_bg }
+	endfor
+	return result
+endfunction
+function! BackslashReconcile(vals,state)
+	" same as slash
+	call SlashReconcile(a:vals,a:state)
+endfunction
+""}}}
+" Background Painter"{{{
 function! BGInit()
 endfunction
 function! BGPaint(vals)
@@ -253,44 +266,27 @@ function! BGReconcile(vals)
 	endfor
 	return result
 endfunction
-
-function! BackslashInit()
-	" same as slash
-	call SlashInit()
-endfunction
-function! BackslashPaint(vals,state)
-	return { 'text': '\\\\', 'fg': '111111', 'bg':g:mvom_default_bg }
-endfunction
-function! BackslashReconcile(vals,state)
-	" same as slash
-	call SlashReconcile(a:vals,a:state)
-endfunction
-
+"}}}
 " }}}
 " Rendering Logic {{{
 function! SetupMV(pluginName,renderType)
-	if !exists('b:mv_plugins') | let b:mv_plugins = [] | endif
-	call add(b:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
+	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
+	call {a:pluginName}Init()
+	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
 endfunction
 
 " paint the matches for real, on the screen. With signs.
-function! PaintMV()
-	if !exists('b:mv_plugins') | return | endif
+function! PaintMV(data)
+	if !exists('g:mv_plugins') | return | endif
 	"TODO add in some cacheing? IE: if you call this method should it always
 	"repaint everything, or should it only do it if dimensions have changed
 	"and locations have changed. For now. The simpler.
 
-	"if len(a:searchTerm) == 0
-		"sign unplace *
-		"return
-	"endif
-	let w:save_cursor = getpos(".")
 	let totalLines = line('$')
 	let firstVisible = line('w0')
 	let lastVisible = line('w$')
-	let allData = CombineData(b:mv_plugins)
 	let anyEnabled = 0
-	for pluginInstance in b:mv_plugins
+	for pluginInstance in g:mv_plugins
 		let plugin = pluginInstance['plugin']
 		if {plugin}Enabled()
 			let anyEnabled = 1
@@ -298,17 +294,10 @@ function! PaintMV()
 		endif
 	endfor
 	if anyEnabled
-		call DoPaintMatches(totalLines,firstVisible,lastVisible,allData,"UnpaintSign","PaintSign")
+		call DoPaintMatches(totalLines,firstVisible,lastVisible,a:data,"UnpaintSign","PaintSign")
 	else
 		sign unplace *
 	endif
-	call setpos('.', w:save_cursor)
-	let b:cached_dimensions = {}
-	let b:cached_dimensions['top'] = line('w0')
-	let b:cached_dimensions['bottom'] = line('w$')
-	let b:cached_dimensions['height'] = winheight(0)
-	let b:cached_dimensions['pos'] = line('.')
-	let b:cached_dimensions['hls'] = &hls
 endfunction
 
 " Given all the plugins, generate the line level data: which plugins have
@@ -333,7 +322,7 @@ function! CombineData(plugins)
 		if !{plugin}Enabled()
 			continue
 		endif
-		call setpos('.', w:save_cursor) " so the plugins all get to start from the same 'window'
+		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
 		let data={plugin}Data()
 		for line in keys(data) " loop through all the data and add it to my own master list.
 			"echo "plg ". plugin ." line ". line
@@ -435,8 +424,7 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 	for [line, trash] in items(a:searchResults)
 		let locinInFile = ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
 		if has_key(results,locinInFile) && has_key(results[locinInFile],'count')
-			" we already have a rendering for this line, lets just bump up the
-			" counts.
+			" we already have a rendering for this line, add up the counts, and Reconcile for all the plugins involved.
 			call extend(results[locinInFile],a:searchResults[line])
 			let oldcount = results[locinInFile]['count'] 
 			let results[locinInFile]['count'] = oldcount + a:searchResults[line]['count']
@@ -445,6 +433,8 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 			let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
 		endif
 	endfor
+	" TODO for those lines that have more than one plugin match at this point,
+	" we'll want to call the Reconcile method to get proper UI looks.
 	" paint any new things:
 	sign unplace *
 	for [key,val] in items(results)
@@ -455,8 +445,8 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 			let val['fg'] = val['bg']
 		endif
 		if has_key(val,'fg')
-			"exe "hi! VisWin ctermfg=black ctermbg=green guifg=".val['fg']." guibg=".val['bg']
-			exe "hi! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+			"exe "highlight! VisWin ctermfg=black ctermbg=green guifg=".val['fg']." guibg=".val['bg']
+			exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 			exe "let g:mvom_hi_".<SID>GetHighlightName(val)."=1"
 			exe "sign define ".<SID>GetSignName(val)." text=".val['text']." texthl=".<SID>GetHighlightName(val)
 		endif
@@ -641,7 +631,7 @@ endfunction
 function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"
 	" TODO these are still NOT passing.
-	let w:save_cursor = getpos(".")
+	let w:save_cursor = winsaveview()
 	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'}]),{})
 	call VUAssertEquals(CombineData([{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
 	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
@@ -693,14 +683,15 @@ function! TestDoPaintMatches()
 	unlet! g:mvom_hi_MVOM_000000000000
 	call VUAssertEquals(DoPaintMatches(6,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
+	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
+	"unlet! g:mvom_hi_MVOM_000000000000
+	"call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	"call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" dubgging call
-	" echo DoPaintMatches(line('$'),line('w0'),line('w$'),CombineData(b:mv_plugins),"UnpaintTestSign","PaintTestStub")
+	" echo DoPaintMatches(line('$'),line('w0'),line('w$'),CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
 endfunction
 
 function! TestSuite()
@@ -708,6 +699,10 @@ function! TestSuite()
 	call TestCombineData()
 	call TestConvertToPercentOffset()
 	call TestDoPaintMatches()
+	call TestGetHumanReadables()
+	call TestGetSignName()
+	call TestRGBToHSVAndBack()
+	call TestHexToRGBAndBack()
 endfunction
 "}}}
 " Startup and configuration"{{{
@@ -727,6 +722,7 @@ exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g
 
 " Configuration:
 call SetupMV('Search','Slash')
+call SetupMV('UnderCursor','Backslash')
 call SetupMV('Window','BG')
 
 " "}}}
