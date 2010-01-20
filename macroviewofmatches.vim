@@ -38,6 +38,9 @@
 au! CursorHold * nested call RePaintMatches()
 function! RePaintMatches()
 	let painted = 0
+	if !exists('g:mvom_loaded') || g:mvom_loaded==0 || !exists('g:mvom_enabled') || g:mvom_enabled==0
+		return painted
+	endif
 	let w:save_cursor = winsaveview()
 	if !exists('w:cached_dim')
 		let w:cached_dim = {}
@@ -48,7 +51,6 @@ function! RePaintMatches()
 		let w:cached_dim['hls'] = &hls
 		let w:cached_dim['data'] = CombineData(g:mv_plugins)
 		call PaintMV(w:cached_dim['data'])
-		" TODO restore first line as the 'top' line
 		call winrestview(w:save_cursor)
 		return 1
 	endif
@@ -89,13 +91,21 @@ endfunction
 function! SearchInit()
 endfunction
 function! SearchData()
+	" for this search make it match up to 50 things backward, and 50 things
+	" forward (performance fixing)
 	let results = {}
 	let n = 1
-	1
+	let startLine = 1
+	" TODO cache results so as to avoid researching on duplicates (save last
+	" search and save state of file (if file changed or if search changed then
+	" redo)
+	" we only do up to 100 matches for performance reasons.
+	let startLine = line('.')
+	exe "". startLine
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-	while search(@/,"We") > 0
+	while search(@/,"We") > 0 && n < 50 " search forwards
 		let here = line('.')
 		let cnt = 0
 		if has_key(results,here) && has_key(results[here],'count')
@@ -107,10 +117,24 @@ function! SearchData()
 		let results[here]['count'] = cnt
 		let n = n+1
 	endwhile
+	let n = 1
+	while search(@/,"Wb") > 0 && n < 50 " search backwards
+		let here = line('.')
+		let cnt = 0
+		if has_key(results,here) && has_key(results[here],'count')
+			let cnt = results[here]['count']
+		else
+			let results[here] = {}
+		endif
+		let cnt = cnt + 1
+		let results[here]['count'] = cnt
+		let n = n+1
+	endwhile
+	exe "". startLine
 	return results
 endfunction
 function! SearchEnabled()
-	return &hls == 1
+	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
 endfunction
 "}}}
 " Window (show current visible window in macro area)"{{{
@@ -135,18 +159,28 @@ function! WindowData()
 	return results
 endfunction
 function! WindowEnabled()
-	return &hls == 1
+	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
 endfunction
 "}}}
 " UnderCursor: show matches for the 'word' the cursor is currently on"{{{
 function! UnderCursorInit()
 	exe "highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
+	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
 endfunction
 function! UnderCursorData()
-	" TODO if the char under the cursor isn't part of the 'isword' then don't
-	" search
-	" TODO also in general for this search make it *start* from back 100 lines
-	" and go forward no more than a 100 or so matches (performance fixer)
+	" TODO words that are reserved aren't hilighted (probably b/c they're
+	" already hilighted for their language...how do I add my highlighting to
+	" theirs?
+	let old_zero=@0
+	exe 'silent normal "0yl'
+	let charundercursor=@0
+	let @0=old_zero
+	if match(charundercursor,'\k') == -1
+		" if the char under the cursor isn't part of the 'isword' then don't
+		" search
+		execute 'silent syntax clear UnderCursor'
+		return {}
+	endif
 	let old_search=@/
 	exe "silent normal *"
 	let results=SearchData()
@@ -163,7 +197,7 @@ function! UnderCursorEnabled()
 	if &hls == 0
 		execute 'silent syntax clear UnderCursor'
 	endif
-	return &hls == 1
+	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
 endfunction
 " TODO add a plugin that shows you the other matches if they are off screen.
 " TODO I might want to not show search/undercursor/etc if they are onscreen
@@ -209,13 +243,21 @@ function! SlashPaint(vals)
 	endfor
 	return result
 endfunction
-function! SlashReconcile(vals,key)
-	let matchColor = 'ffff00'
-	let result = {}
-	for line in keys(a:vals)
-		let result[line] = { 'text': 'XX', 'fg': matchColor, 'bg':g:mvom_default_bg }
-	endfor
-	return result
+function! SlashReconcile(vals)
+	" if its a slash or backslash then do something, otherwise, we don't care.
+	" TODO this still isn't quite right - I don't think its counting correctly
+	"let cnt = 0
+	"for plugin in a:vals['plugins']
+		"let render = <SID>FindRenderForPlugin(plugin)
+		"if render == 'Slash' || render == 'Backslash'
+			"let cnt = cnt + 1
+		"endif
+	"endfor
+	"if cnt > 1
+		"" TODO combine the colors together somehow
+		"let a:vals['text'] = 'XX'
+	"end
+	return a:vals
 endfunction
 "}}}
 " Backslash (\\) painter"{{{
@@ -231,9 +273,9 @@ function! BackslashPaint(vals)
 	endfor
 	return result
 endfunction
-function! BackslashReconcile(vals,state)
+function! BackslashReconcile(vals)
 	" same as slash
-	call SlashReconcile(a:vals,a:state)
+	return SlashReconcile(a:vals)
 endfunction
 ""}}}
 " Background Painter"{{{
@@ -267,19 +309,19 @@ function! BGPaint(vals)
 	return result
 endfunction
 function! BGReconcile(vals)
-	let result = {}
-	for line in keys(a:vals)
-		let result[line] = { 'bg':'00ff00' }
-	endfor
-	return result
+	"let result[line] = { 'bg':'00ff00' }
+	return a:vals
 endfunction
 "}}}
 " }}}
 " Rendering Logic {{{
 function! SetupMV(pluginName,renderType)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
+	let old_enabled=g:mvom_enabled
+	let g:mvom_enabled=0
 	call {a:pluginName}Init()
 	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
+	let g:mvom_enabled=old_enabled
 endfunction
 
 " paint the matches for real, on the screen. With signs.
@@ -337,7 +379,7 @@ function! CombineData(plugins)
 				"echo "have entry: ". plugin
 				"echo data
 				"echo allData
-				if index(allData[line]['plugins'],plugin) == -1 
+				if count(allData[line]['plugins'],plugin) == 0
 					"echo "and its not listed"
 					" do we have the current plugin already? If not:
 					let oldcount = allData[line]['count']
@@ -364,7 +406,7 @@ function! CombineData(plugins)
 		let plugin = pluginInstance['plugin']
 		let pluginData = {}
 		for line in keys(allData)
-			if index(allData[line]['plugins'],plugin) >= 0
+			if count(allData[line]['plugins'],plugin) > 0
 				let pluginData[line] = allData[line]
 			endif
 		endfor
@@ -428,23 +470,41 @@ endfunction
 function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
+	" First colate all of hte search results into the 'macro' line (so several
+	" lines will be condensed to one line:
 	for [line, trash] in items(a:searchResults)
+		"echo "doing ". line ." which is ". string( trash['plugins'] )
 		let locinInFile = ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
 		if has_key(results,locinInFile) && has_key(results[locinInFile],'count')
 			" we already have a rendering for this line, add up the counts, and Reconcile for all the plugins involved.
+			"echo "pluginsa: ". string( results[locinInFile]['plugins'] )
+			"echo "pluginsb: ". string( trash['plugins'] )
+			" we need to combine the 'plugins' so that they all get listed in together.
+			let theplugs = <SID>Uniq(extend(results[locinInFile]['plugins'],a:searchResults[line]['plugins']))
 			call extend(results[locinInFile],a:searchResults[line])
 			let oldcount = results[locinInFile]['count'] 
 			let results[locinInFile]['count'] = oldcount + a:searchResults[line]['count']
+			let results[locinInFile]['plugins'] = theplugs
 		else
-			let results[locinInFile] = copy(a:searchResults[line])
+			let results[locinInFile] = copy(trash)
+			"echo "plugins: ". string( results[locinInFile]['plugins'] )
 			let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
 		endif
 	endfor
-	" TODO for those lines that have more than one plugin match at this point,
-	" we'll want to call the Reconcile method to get proper UI looks.
-	" paint any new things:
+	for [line, val] in items(results)
+		" for those lines that have more than one plugin match at this point,
+		" we'll want to call the Reconcile method to get proper UI looks.
+		" paint any new things:
+		if len(val['plugins']) > 1
+			for datap in val['plugins']
+				let render = <SID>FindRenderForPlugin(datap)
+				let results[line] = {render}Reconcile(val)
+			endfor
+		endif
+	endfor
 	sign unplace *
 	for [key,val] in items(results)
+		"echo "val = ". string(val)
 		if !has_key(val,'text')
 			let val['text'] = '..'
 		endif
@@ -461,6 +521,14 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 	endfor
 	let b:cached_signs = results
 	return results
+endfunction
+
+function! <SID>FindRenderForPlugin(dataPlugin)
+	for plugin in g:mv_plugins
+		if plugin['plugin'] == a:dataPlugin
+			return plugin['render']
+		endif
+	endfor
 endfunction
 "}}}
 " Utility functions"{{{
@@ -576,6 +644,17 @@ function! HSVToRGB(hsv)
 	return result
 endfunction
 
+" Return the unique elements in a list.
+function! <SID>Uniq(list)
+	let result = []
+	for i in a:list
+		if count(result,i) == 0
+			call add(result,i)
+		endif
+	endfor
+	return result
+endfunction
+
 ""}}}
 " test functions {{{
 
@@ -584,8 +663,8 @@ function! TestHexToRGBAndBack()
 	call VUAssertEquals(HexToRGB("ffffff"),[255,255,255])
 	call VUAssertEquals(HexToRGB("AAAAAA"),[170,170,170])
 	call VUAssertEquals(RGBToHex([0,0,0]),"000000")
-	call VUAssertEquals(RGBToHex([255,255,255]),"FFFFFF")
-	call VUAssertEquals(RGBToHex([32,15,180]),"200FB4")
+	call VUAssertEquals(RGBToHex([255,255,255]),"ffffff")
+	call VUAssertEquals(RGBToHex([32,15,180]),"200fb4")
 endfunction
 
 function! TestRGBToHSVAndBack()
@@ -604,20 +683,45 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(HSVToRGB([240,100,100]),[0,0,255])
 endfunction
 
+function! Test1Enabled()
+	return 1
+endfunction
 function! Test1Data()
 	return {}
+endfunction
+function! Test1Init()
 endfunction
 function! Test2Data()
 	return {'1':{'count':1}}
 endfunction
+function! Test2Init()
+endfunction
+function! Test2Enabled()
+	return 1 
+endfunction
 function! Test3Data()
 	return {'1':{'count':1},'2':{'count':2}}
+endfunction
+function! Test3Init()
+endfunction
+function! Test3Enabled()
+	return 1 
 endfunction
 function! Test4Data()
 	return {'1':{'count':1,'isvis':1},'2':{'count':2}}
 endfunction
+function! Test4Init()
+endfunction
+function! Test4Enabled()
+	return 1 
+endfunction
 function! Test5Data()
 	return {'5':{'count':1},'6':{'count':2}}
+endfunction
+function! Test5Init()
+endfunction
+function! Test5Enabled()
+	return 1
 endfunction
 function! Test1Paint(data)
 	return {}
@@ -631,6 +735,7 @@ function! Test3Paint(data)
 		let results[line] = copy(a:data[line])
 		let results[line]['fg'] = 'testhi'
 		let results[line]['bg'] = 'testbg'
+		let results[line]['text'] = '..'
 	endfor
 	return results
 endfunction
@@ -681,6 +786,14 @@ function! PaintTestStub(line,onscreen)
 endfunction
 function! UnpaintTestStub(line)
 endfunction
+function! NoReconcile(data)
+	return a:data " do nothing
+endfunction
+function! RRReconcile(data)
+	" change it to 'R' for reconcile?
+	let a:data['text'] = 'RR'
+	return a:data
+endfunction
 
 function! TestDoPaintMatches()
 	call VUAssertEquals(DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
@@ -692,13 +805,24 @@ function! TestDoPaintMatches()
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
+	let g:mv_plugins = []
+	call SetupMV('Test1','No')
+	call SetupMV('Test2','RR')
+	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1','Test2'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1','Test2'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	"unlet! g:mvom_hi_MVOM_000000000000
-	"call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	"call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
+	unlet! g:mvom_hi_MVOM_000000000000
+	call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" dubgging call
 	" echo DoPaintMatches(line('$'),line('w0'),line('w$'),CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
+endfunction
+
+function! TestUniq()
+	call VUAssertEquals(<SID>Uniq([]),[])
+	call VUAssertEquals(<SID>Uniq([1,2,3]),[1,2,3])
+	call VUAssertEquals(<SID>Uniq([3,2,1]),[3,2,1])
+	call VUAssertEquals(<SID>Uniq([3,2,1,2,3]),[3,2,1])
+	call VUAssertEquals(<SID>Uniq(['onea','oneb','onea']),['onea','oneb'])
 endfunction
 
 function! TestSuite()
@@ -710,13 +834,14 @@ function! TestSuite()
 	call TestGetSignName()
 	call TestRGBToHSVAndBack()
 	call TestHexToRGBAndBack()
+	call TestUniq()
 endfunction
 "}}}
 " Startup and configuration"{{{
 
-if has( "signs" ) == 0
+if has( "signs" ) == 0 || has("float") == 0
 	echohl ErrorMsg
-	echo "MacroViewOfMatches requires Vim to have +signs support."
+	echo "MacroViewOfMatches requires Vim to have +signs and +float support."
 	echohl None
 	finish
 endif
@@ -728,9 +853,13 @@ let g:mvom_default_bg='bbbbbb'
 exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g:mvom_default_bg
 
 " Configuration:
-call SetupMV('Search','Slash')
-call SetupMV('UnderCursor','Backslash')
-call SetupMV('Window','BG')
+if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
+if !exists('g:mvom_loaded')
+	call SetupMV('Search','Slash')
+	call SetupMV('UnderCursor','Backslash')
+	call SetupMV('Window','BG')
+	let g:mvom_loaded = 1
+endif
 
 " "}}}
 " vim: set fdm=marker:
