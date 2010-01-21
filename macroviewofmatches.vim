@@ -313,7 +313,6 @@ function! BGPaint(vals)
 	return result
 endfunction
 function! BGReconcile(vals)
-	"let result[line] = { 'bg':'00ff00' }
 	return a:vals
 endfunction
 "}}}
@@ -516,9 +515,16 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 			let val['fg'] = val['bg']
 		endif
 		if has_key(val,'fg')
-			if count(val['plugins'],"Window") > 0 && len(val['plugins']) == 1
-				" hack for the window plugin
-				exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=black ctermbg=black guifg=#".val['fg']." guibg=#".val['bg']
+			if count(val['plugins'],"Window") > 0
+				if len(val['plugins']) == 1
+					" hack for the window plugin
+					" TODO NR-16 ctermcolor support. Thisi s jsut NR8 (we could use dark
+					" gray)
+					exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=brown ctermbg=brown guifg=#".val['fg']." guibg=#".val['bg']
+				else
+					" hack for the window plugin
+					exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=white ctermbg=brown guifg=#".val['fg']." guibg=#".val['bg']
+				endif
 			else
 				exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=white ctermbg=black guifg=#".val['fg']." guibg=#".val['bg']
 			endif
@@ -857,8 +863,8 @@ endif
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
-let g:mvom_default_bg='aaaaaa'
-exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g:mvom_default_bg
+let g:mvom_default_bg='bbbbbb'
+exe "hi! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
 
 " Configuration:
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
