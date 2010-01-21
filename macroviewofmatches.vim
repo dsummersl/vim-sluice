@@ -105,7 +105,7 @@ function! SearchData()
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-	while search(@/,"We") > 0 && n < 50 " search forwards
+	while len(@/) > 0 && search(@/,"We") > 0 && n < 50 " search forwards
 		let here = line('.')
 		let cnt = 0
 		if has_key(results,here) && has_key(results[here],'count')
@@ -117,8 +117,9 @@ function! SearchData()
 		let results[here]['count'] = cnt
 		let n = n+1
 	endwhile
+	exe "". startLine
 	let n = 1
-	while search(@/,"Wb") > 0 && n < 50 " search backwards
+	while len(@/) > 0 && search(@/,"Wb") > 0 && n < 50 " search backwards
 		let here = line('.')
 		let cnt = 0
 		if has_key(results,here) && has_key(results[here],'count')
