@@ -13,8 +13,6 @@ put the vim file in your ~/.vim/plugins folder.
 
 TODO:
 
-- Support terminal vim (automatically pick colors available rather than assuming full GUI colors are there)
 - optimizations, I suspect.
 - add script requirements for vim 7.2
-- support the 'resolved' feature (two or more plugins highlighting the same lines).
 - under cursor highlighting of reserved words

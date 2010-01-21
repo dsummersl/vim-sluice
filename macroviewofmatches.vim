@@ -164,8 +164,8 @@ endfunction
 "}}}
 " UnderCursor: show matches for the 'word' the cursor is currently on"{{{
 function! UnderCursorInit()
-	exe "highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#9966ff guibg=#".g:mvom_default_bg
+	exe "highlight! UnderCursor ctermfg=white ctermbg=black guifg=#ccffff guibg=#".g:mvom_default_bg
+	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=white ctermbg=black guifg=#ccffff guibg=#".g:mvom_default_bg
 endfunction
 function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
@@ -186,10 +186,6 @@ function! UnderCursorData()
 	let results=SearchData()
   execute 'silent syntax clear UnderCursor'
 	execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
-	" remove the current line, b/c obviously we know about that
-	if has_key(results,w:save_cursor['lnum'])
-		call remove(results,w:save_cursor['lnum'])
-	endif
 	let @/=old_search
 	return results
 endfunction
@@ -235,28 +231,41 @@ endfunction
 " Slash (//) painter"{{{
 function! SlashInit()
 endfunction
-function! SlashPaint(vals)
-	let matchColor = 'ffff00'
+function! <SID>TypicalPaint(vals,slashes,matchColor)
+	let modded = RGBToHSV(HexToRGB(a:matchColor))
 	let result = {}
 	for line in keys(a:vals)
-		let result[line] = { 'text': '//', 'fg': matchColor, 'bg':g:mvom_default_bg }
+		let modded[2] = 60 + 10*a:vals[line]['count']/len(a:vals[line]['plugins'])
+		if modded[2] > 100
+			let modded[2] = 100
+		endif
+		let thecolor = RGBToHex(HSVToRGB(modded))
+		let result[line] = { 'text': a:slashes, 'fg': thecolor, 'bg':g:mvom_default_bg }
 	endfor
 	return result
+endfunction
+function! SlashPaint(vals)
+	return <SID>TypicalPaint(a:vals,'//','ffff00')
 endfunction
 function! SlashReconcile(vals)
 	" if its a slash or backslash then do something, otherwise, we don't care.
 	" TODO this still isn't quite right - I don't think its counting correctly
-	"let cnt = 0
-	"for plugin in a:vals['plugins']
-		"let render = <SID>FindRenderForPlugin(plugin)
-		"if render == 'Slash' || render == 'Backslash'
-			"let cnt = cnt + 1
-		"endif
-	"endfor
-	"if cnt > 1
-		"" TODO combine the colors together somehow
-		"let a:vals['text'] = 'XX'
-	"end
+	let cnt = 0
+	for plugin in a:vals['plugins']
+		let render = <SID>FindRenderForPlugin(plugin)
+		if render == 'Slash' || render == 'Backslash'
+			let cnt = cnt + 1
+		endif
+	endfor
+	if cnt > 1
+		let a:vals['text'] = 'XX'
+		let modded = RGBToHSV(HexToRGB('00ff00'))
+		let modded[2] = 50+ 10*a:vals['count']/len(a:vals['plugins'])
+		if modded[2] > 100
+			let modded[2] = 100
+		endif
+		let a:vals['fg'] = RGBToHex(HSVToRGB(modded))
+	end
 	return a:vals
 endfunction
 "}}}
@@ -266,12 +275,7 @@ function! BackslashInit()
 	call SlashInit()
 endfunction
 function! BackslashPaint(vals)
-	let matchColor = '9966ff'
-	let result = {}
-	for line in keys(a:vals)
-		let result[line] = { 'text': '\\', 'fg': matchColor, 'bg':g:mvom_default_bg }
-	endfor
-	return result
+	return <SID>TypicalPaint(a:vals,'\\','00ffff')
 endfunction
 function! BackslashReconcile(vals)
 	" same as slash
@@ -512,8 +516,12 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 			let val['fg'] = val['bg']
 		endif
 		if has_key(val,'fg')
-			"exe "highlight! VisWin ctermfg=black ctermbg=green guifg=".val['fg']." guibg=".val['bg']
-			exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+			if count(val['plugins'],"Window") > 0 && len(val['plugins']) == 1
+				" hack for the window plugin
+				exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=black ctermbg=black guifg=#".val['fg']." guibg=#".val['bg']
+			else
+				exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=white ctermbg=black guifg=#".val['fg']." guibg=#".val['bg']
+			endif
 			exe "let g:mvom_hi_".<SID>GetHighlightName(val)."=1"
 			exe "sign define ".<SID>GetSignName(val)." text=".val['text']." texthl=".<SID>GetHighlightName(val)
 		endif
@@ -849,7 +857,7 @@ endif
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
-let g:mvom_default_bg='bbbbbb'
+let g:mvom_default_bg='aaaaaa'
 exe "hi! SignColumn term=standout ctermfg=1 ctermbg=7 guifg=DarkBlue guibg=#". g:mvom_default_bg
 
 " Configuration:
