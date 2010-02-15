@@ -3,37 +3,14 @@
 " areas in the file that match the search you performed.
 
 " mappings"{{{
-" TODO I'd like to support the general concept of 'there are X matches in this
-" row ... by making the intensity progressively darker (5 levels thank you
-" human recog).
-"
-" TODO the folding logic messes things up - have to somehow take into account
-" the folded lines or the 'green' and -- parts get all messed up.
-" au VimResized * call PaintMatches(@/). Problem is it looks like signs aren't
-" supported over the folded regions??
-"
-" LAYOUT:
-"
-" UI layer: has macro and non macro mode? No this is kinda up to the renderer.
-" You'd have a renderer for macro and a renderer for non macro -- you tell the
-" plugin which mode you want (macro/non) and it swaps between them easily
-" enough I guess? I can't really display both can I? well...I could use one
-" column for macro and one for micro...Yes I like that. Then I'd use slightly
-" different color schemes for them. Chocolate-ish for the macro on far left.
-"
-" CODE:
-"
-" You can specify (currently) up to two different kinds of data that you'd
-" like to display. The data source just lists the dictionary and the renderer
-" type. Renderer types:
-"
-" '/' renderer (up to two kinds) and overlap
-" color - background color modulation
-" color - foreground color modulation?
-" blinky - something that could blink intermittently on the top of the other
-" renderings?
-"
-" A renderer is given ALL data
+
+" Sanity checks
+if has( "signs" ) == 0 || has("float") == 0 || v:version/100 < 7
+	echohl ErrorMsg
+	echo "MacroViewOfMatches requires Vim to have +signs and +float support and Vim v7+"
+	echohl None
+	finish
+endif
 
 au! CursorHold * nested call RePaintMatches()
 function! RePaintMatches()
@@ -135,7 +112,7 @@ function! SearchData()
 	return results
 endfunction
 function! SearchEnabled()
-	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
+	return &hls == 1
 endfunction
 "}}}
 " Window (show current visible window in macro area)"{{{
@@ -160,22 +137,25 @@ function! WindowData()
 	return results
 endfunction
 function! WindowEnabled()
-	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
+	return &hls == 1
 endfunction
 "}}}
 " UnderCursor: show matches for the 'word' the cursor is currently on"{{{
 function! UnderCursorInit()
-	exe "highlight! UnderCursor ctermfg=white ctermbg=black guifg=#ccffff guibg=#".g:mvom_default_bg
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=white ctermbg=black guifg=#ccffff guibg=#".g:mvom_default_bg
+	exe "highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
+	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
 function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
 	let old_zero=@0
+	let old_search=@"
 	exe 'silent normal "0yl'
 	let charundercursor=@0
 	let @0=old_zero
+	let @"=old_search
+	" TODO p and P aren't working right!
 	if match(charundercursor,'\k') == -1
 		" if the char under the cursor isn't part of the 'isword' then don't
 		" search
@@ -191,10 +171,10 @@ function! UnderCursorData()
 	return results
 endfunction
 function! UnderCursorEnabled()
-	if &hls == 0
+	if &hls == 0 || (exists('w:mvom_lastcalldisabled') && w:mvom_lastcalldisabled)
 		execute 'silent syntax clear UnderCursor'
 	endif
-	return &hls == 1 && &buftype != "help" && &buftype != "nofile"
+	return &hls == 1
 endfunction
 " TODO add a plugin that shows you the other matches if they are off screen.
 " TODO I might want to not show search/undercursor/etc if they are onscreen
@@ -246,7 +226,7 @@ function! <SID>TypicalPaint(vals,slashes,matchColor)
 	return result
 endfunction
 function! SlashPaint(vals)
-	return <SID>TypicalPaint(a:vals,'//','ffff00')
+	return <SID>TypicalPaint(a:vals,g:mvom_slash_chars,g:mvom_slash_color)
 endfunction
 function! SlashReconcile(vals)
 	" if its a slash or backslash then do something, otherwise, we don't care.
@@ -259,8 +239,8 @@ function! SlashReconcile(vals)
 		endif
 	endfor
 	if cnt > 1
-		let a:vals['text'] = 'XX'
-		let modded = RGBToHSV(HexToRGB('00ff00'))
+		let a:vals['text'] = g:mvom_ex_chars
+		let modded = RGBToHSV(HexToRGB(g:mvom_ex_color))
 		let modded[2] = 50+ 10*a:vals['count']/len(a:vals['plugins'])
 		if modded[2] > 100
 			let modded[2] = 100
@@ -276,7 +256,7 @@ function! BackslashInit()
 	call SlashInit()
 endfunction
 function! BackslashPaint(vals)
-	return <SID>TypicalPaint(a:vals,'\\','00ffff')
+	return <SID>TypicalPaint(a:vals,g:mvom_backslash_chars,g:mvom_backslash_color)
 endfunction
 function! BackslashReconcile(vals)
 	" same as slash
@@ -346,9 +326,25 @@ function! PaintMV(data)
 			break
 		endif
 	endfor
+	if &buftype == "help" || &buftype == "nofile" || &diff == 1
+		" situations in which we don't want this: help files, nofiles, diff mode
+		let anyEnabled = 0
+	endif
+	if anyEnabled == 1
+		" finally, if we are enabled by any means...check to make sure that there
+		" aren't any folds. We don't work with folds.
+		1
+		exe "silent normal zj"
+		if line('.') != 1
+			let anyEnabled = 0
+		endif
+		call winrestview(w:save_cursor)
+	endif
 	if anyEnabled
 		call DoPaintMatches(totalLines,firstVisible,lastVisible,a:data,"UnpaintSign","PaintSign")
+		let w:mvom_lastcalldisabled = 0
 	else
+		let w:mvom_lastcalldisabled = 1
 		sign unplace *
 	endif
 endfunction
@@ -611,9 +607,12 @@ function! RGBToHSV(rgb)
 	elseif normd[0] == mx
 		let hue = float2nr(60*((normd[1]-normd[2])/trunc(mx-mn))+360) % 360
 	elseif normd[1] == mx
-		let hue = float2nr(60*((normd[2]-normd[0])/trunc(mx-mn)))+120
+		let hue = float2nr(60*((normd[2]-normd[0])/trunc(mx-mn))+120) % 360
 	elseif normd[2] == mx
-		let hue = float2nr(60*((normd[0]-normd[1])/trunc(mx-mn)))+240
+		let hue = float2nr(60*((normd[0]-normd[1])/trunc(mx-mn))+240) % 360
+	endif
+	if hue < 0
+		let hue = 360 + hue
 	endif
 	let sat = 0
 	if mx > 0
@@ -651,7 +650,7 @@ function! HSVToRGB(hsv)
 	elseif hi == 4
 		let result = [t,p,normd[2]]
 	elseif hi == 5
-		let result = [v,p,q]
+		let result = [normd[2],p,q]
 	endif
 	let result[0] = float2nr(result[0]*255)
 	let result[1] = float2nr(result[1]*255)
@@ -690,6 +689,7 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(RGBToHSV([0,0,255]),[240,100,100])
 	call VUAssertEquals(RGBToHSV([50,50,50]),[0,0,19])
 	call VUAssertEquals(RGBToHSV([100,100,100]),[0,0,39])
+	" call VUAssertEquals(RGBToHSV([187,219,255]),[212,27,100])
 
 	call VUAssertEquals(HSVToRGB([0,0,0]),[0,0,0])
 	call VUAssertEquals(HSVToRGB([100,100,100]),[84,255,0])
@@ -852,26 +852,37 @@ function! TestSuite()
 	call TestUniq()
 endfunction
 "}}}
-" Startup and configuration"{{{
-
-if has( "signs" ) == 0 || has("float") == 0
-	echohl ErrorMsg
-	echo "MacroViewOfMatches requires Vim to have +signs and +float support."
-	echohl None
-	finish
-endif
-
+" Configuration"{{{
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
 let g:mvom_default_bg='bbbbbb'
 exe "hi! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
 
+" Slash options:
+let g:mvom_slash_chars = '/ '
+let g:mvom_slash_color = '00ff00'
+let g:mvom_ex_chars = 'X '
+let g:mvom_ex_color = '00ff00'
+" Backslash options:
+let g:mvom_backslash_chars = '\ '
+let g:mvom_backslash_color = '0055ff'
+" UnderCursor options:
+" TODO ideally I'd read the hl-IncSearch colors (but I don't know quite
+" how...)
+let g:mvom_undercursor_bg = 'e5f1ff'
+let g:mvom_undercursor_fg = '000000'
+
 " Configuration:
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
+if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 if !exists('g:mvom_loaded')
+	" Setup the type of plugins you want:
+	" Show the last search with //
 	call SetupMV('Search','Slash')
+	" Show all keywords in the file that match whats under your cursor with \\
 	call SetupMV('UnderCursor','Backslash')
+	" Show the visible portion with a darker background
 	call SetupMV('Window','BG')
 	let g:mvom_loaded = 1
 endif
