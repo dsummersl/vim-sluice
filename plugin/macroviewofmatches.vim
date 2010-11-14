@@ -146,21 +146,6 @@ function! UnderCursorInit()
 	exe "highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
-function! <SID>SaveRegisters()
-	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
-	let result = {}
-	for r in keys(registers)
-		let result["reg-".r] = getreg(registers[r], 1)
-		let result["mode-".r] = getregtype(registers[r])
-	endfor
-	return result
-endfunction
-function! <SID>LoadRegisters(datum)
-	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
-	for r in keys(registers)
-		call setreg(registers[r], a:datum["reg-".r], a:datum["mode-".r])
-	endfor
-endfunction
 function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
@@ -310,7 +295,7 @@ endfunction
 "}}}
 " }}}
 " Rendering Logic {{{
-function! SetupMV(pluginName,renderType)
+function! MVOM_Setup(pluginName,renderType)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
 	let old_enabled=g:mvom_enabled
 	let g:mvom_enabled=0
@@ -680,6 +665,22 @@ function! <SID>Uniq(list)
 	return result
 endfunction
 
+function! <SID>SaveRegisters()
+	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
+	let result = {}
+	for r in keys(registers)
+		let result["reg-".r] = getreg(registers[r], 1)
+		let result["mode-".r] = getregtype(registers[r])
+	endfor
+	return result
+endfunction
+
+function! <SID>LoadRegisters(datum)
+	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
+	for r in keys(registers)
+		call setreg(registers[r], a:datum["reg-".r], a:datum["mode-".r])
+	endfor
+endfunction
 ""}}}
 " test functions {{{
 
@@ -832,8 +833,8 @@ function! TestDoPaintMatches()
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
 	let g:mv_plugins = []
-	call SetupMV('Test1','No')
-	call SetupMV('Test2','RR')
+	call MVOM_Setup('Test1','No')
+	call MVOM_Setup('Test2','RR')
 	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1','Test2'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1','Test2'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	unlet! g:mvom_hi_MVOM_000000000000
@@ -874,7 +875,10 @@ function! TestSuite()
 	call TestLoadRegisters()
 endfunction
 "}}}
-" Configuration"{{{
+" Private Variables "{{{
+if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
+"}}}
+" Default Configuration"{{{
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
@@ -910,17 +914,15 @@ if !exists('g:mvom_bg_showinline') | let g:mvom_bg_showinline=1 | endif
 
 " Configuration:
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
-if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
 	" Show the last search with //
-	call SetupMV('Search','Slash')
+	call MVOM_Setup('Search','Slash')
 	" Show all keywords in the file that match whats under your cursor with \\
-	call SetupMV('UnderCursor','Backslash')
+	call MVOM_Setup('UnderCursor','Backslash')
 	" Show the visible portion with a darker background
-	call SetupMV('Window','BG')
+	call MVOM_Setup('Window','BG')
 	let g:mvom_loaded = 1
 endif
-
-" "}}}
+"}}}
 " vim: set fdm=marker:
