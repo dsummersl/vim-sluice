@@ -291,7 +291,7 @@ function! BGPaint(vals)
 	let bgcolor = RGBToHex(HSVToRGB(modded))
 	for line in keys(a:vals)
 		let color = bgcolor
-		if has_key(a:vals[line],'iscurrentline')
+		if has_key(a:vals[line],'iscurrentline') && g:mvom_bg_showinline == 1
 			let darkened = RGBToHSV(HexToRGB(bgcolor))
 			let darkened[2] = float2nr(darkened[2]*0.9)
 			let color = RGBToHex(HSVToRGB(darkened))
@@ -879,25 +879,34 @@ endfunction
 set updatetime=100
 
 " Maximum number of forward and backward searches to performed
-let g:mvom_max_searches = 50
+if !exists('g:mvom_max_searches ') | let g:mvom_max_searches = 75 | endif
 
 " default background color of the gutter:
-let g:mvom_default_bg='bbbbbb'
-exe "hi! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
+if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
+exe "autocmd BufNewFile,BufRead * highlight! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
 
 " Slash options:
-let g:mvom_slash_chars = '/ '
-let g:mvom_slash_color = '0055ff'
-let g:mvom_ex_chars = 'X '
-let g:mvom_ex_color = '00ff00'
+if !exists('g:mvom_slash_chars ') | let g:mvom_slash_chars ='/ ' | endif
+if !exists('g:mvom_slash_color ') | let g:mvom_slash_color ='0055ff' | endif
+
+" Ex options (when Slash/Backslash overlap):
+if !exists('g:mvom_ex_chars ') | let g:mvom_ex_chars ='X ' | endif
+if !exists('g:mvom_ex_color ') | let g:mvom_ex_color ='00ff00' | endif
+
 " Backslash options:
-let g:mvom_backslash_chars = '\ '
-let g:mvom_backslash_color = '00ff00'
+if !exists('g:mvom_backslash_chars ') | let g:mvom_backslash_chars ='\ ' | endif
+if !exists('g:mvom_backslash_color ') | let g:mvom_backslash_color ='00ff00' | endif
+
 " UnderCursor options:
-" TODO ideally I'd read the hl-IncSearch colors (but I don't know quite
-" how...)
-let g:mvom_undercursor_bg = 'e5f1ff'
-let g:mvom_undercursor_fg = '000000'
+" TODO ideally I'd read the hl-IncSearch colors (but I don't know quite how...)
+if !exists('g:mvom_undercursor_bg ') | let g:mvom_undercursor_bg ='e5f1ff' | endif
+if !exists('g:mvom_undercursor_fg ') | let g:mvom_undercursor_fg ='000000' | endif
+
+" Background options:
+" showinline will show both the highlight both the areas that correspond to
+" the current visible window, but also make the area where the cursor is
+" slightly darker:
+if !exists('g:mvom_bg_showinline') | let g:mvom_bg_showinline=1 | endif
 
 " Configuration:
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
