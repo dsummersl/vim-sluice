@@ -19,6 +19,7 @@ function! RePaintMatches()
 		return painted
 	endif
 	let w:save_cursor = winsaveview()
+	let w:save_registers = <SID>SaveRegisters()
 	if !exists('w:cached_dim')
 		let w:cached_dim = {}
 		let w:cached_dim['top'] = line('w0')
@@ -29,6 +30,7 @@ function! RePaintMatches()
 		let w:cached_dim['data'] = CombineData(g:mv_plugins)
 		call PaintMV(w:cached_dim['data'])
 		call winrestview(w:save_cursor)
+		call <SID>LoadRegisters(w:save_registers)
 		return 1
 	endif
 	let firstVisible = line('w0')
@@ -47,6 +49,7 @@ function! RePaintMatches()
 	let w:cached_dim['hls'] = &hls
 	let w:cached_dim['data'] = data
 	call winrestview(w:save_cursor)
+	call <SID>LoadRegisters(w:save_registers)
 	return painted
 endfunction
 "}}}
@@ -145,16 +148,30 @@ function! UnderCursorInit()
 	exe "highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
+function! <SID>SaveRegisters()
+	"TODO do all the registers {a-zA-Z0-9.%#:-"}	Use register {a-zA-Z0-9%#-"} for next delete, yank
+	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
+	let result = {}
+	for r in keys(registers)
+		let result["reg-".r] = getreg(registers[r], 1)
+		let result["mode-".r] = getregtype(registers[r])
+	endfor
+	return result
+endfunction
+function! <SID>LoadRegisters(datum)
+	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
+	for r in keys(registers)
+		call setreg(registers[r], a:datum["reg-".r], a:datum["mode-".r])
+	endfor
+endfunction
 function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
-	let old_zero=@0
-	let old_search=@"
+	
+	" need to save all registers, and then restore afterward.
 	exe 'silent normal "0yl'
 	let charundercursor=@0
-	let @0=old_zero
-	let @"=old_search
 	" TODO p and P aren't working right!
 	if match(charundercursor,'\k') == -1
 		" if the char under the cursor isn't part of the 'isword' then don't
@@ -163,6 +180,8 @@ function! UnderCursorData()
 		return {}
 	endif
 	let old_search=@/
+	" TODO the # and * keywords don't work reliably after this function gets
+	" called. Use an alternate to * and # for searching forward and backward
 	exe "silent normal *"
 	let results=SearchData()
   execute 'silent syntax clear UnderCursor'
@@ -840,6 +859,16 @@ function! TestUniq()
 	call VUAssertEquals(<SID>Uniq(['onea','oneb','onea']),['onea','oneb'])
 endfunction
 
+function! TestLoadRegisters()
+	let from = "something"
+	let @8 = from
+	let registers = <SID>SaveRegisters()
+	call VUAssertEquals(from,registers["reg-8"])
+	let registers["reg-8"] = from ."2"
+	call <SID>LoadRegisters(registers)
+	call VUAssertEquals(from ."2",@8)
+endfunction
+
 function! TestSuite()
 "call VURunnerRunTest('TestSuite')
 	call TestCombineData()
@@ -850,6 +879,7 @@ function! TestSuite()
 	call TestRGBToHSVAndBack()
 	call TestHexToRGBAndBack()
 	call TestUniq()
+	call TestLoadRegisters()
 endfunction
 "}}}
 " Configuration"{{{
@@ -861,12 +891,12 @@ exe "hi! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_def
 
 " Slash options:
 let g:mvom_slash_chars = '/ '
-let g:mvom_slash_color = '00ff00'
+let g:mvom_slash_color = '0055ff'
 let g:mvom_ex_chars = 'X '
 let g:mvom_ex_color = '00ff00'
 " Backslash options:
 let g:mvom_backslash_chars = '\ '
-let g:mvom_backslash_color = '0055ff'
+let g:mvom_backslash_color = '00ff00'
 " UnderCursor options:
 " TODO ideally I'd read the hl-IncSearch colors (but I don't know quite
 " how...)
