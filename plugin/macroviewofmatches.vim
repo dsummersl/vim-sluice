@@ -71,21 +71,19 @@ endfunction
 function! SearchInit()
 endfunction
 function! SearchData()
-	" for this search make it match up to 50 things backward, and 50 things
-	" forward (performance fixing)
+	" for this search make it match up and down a max # of times (performance fixing)
 	let results = {}
 	let n = 1
 	let startLine = 1
 	" TODO cache results so as to avoid researching on duplicates (save last
 	" search and save state of file (if file changed or if search changed then
 	" redo)
-	" we only do up to 100 matches for performance reasons.
 	let startLine = line('.')
 	exe "". startLine
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-	while len(@/) > 0 && search(@/,"We") > 0 && n < 50 " search forwards
+	while len(@/) > 0 && search(@/,"We") > 0 && n < g:mvom_max_searches " search forwards
 		let here = line('.')
 		let cnt = 0
 		if has_key(results,here) && has_key(results[here],'count')
@@ -99,7 +97,7 @@ function! SearchData()
 	endwhile
 	exe "". startLine
 	let n = 1
-	while len(@/) > 0 && search(@/,"Wb") > 0 && n < 50 " search backwards
+	while len(@/) > 0 && search(@/,"Wb") > 0 && n < g:mvom_max_searches " search backwards
 		let here = line('.')
 		let cnt = 0
 		if has_key(results,here) && has_key(results[here],'count')
@@ -149,7 +147,6 @@ function! UnderCursorInit()
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
 function! <SID>SaveRegisters()
-	"TODO do all the registers {a-zA-Z0-9.%#:-"}	Use register {a-zA-Z0-9%#-"} for next delete, yank
 	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
 	let result = {}
 	for r in keys(registers)
@@ -168,11 +165,8 @@ function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
-	
-	" need to save all registers, and then restore afterward.
 	exe 'silent normal "0yl'
 	let charundercursor=@0
-	" TODO p and P aren't working right!
 	if match(charundercursor,'\k') == -1
 		" if the char under the cursor isn't part of the 'isword' then don't
 		" search
@@ -180,8 +174,6 @@ function! UnderCursorData()
 		return {}
 	endif
 	let old_search=@/
-	" TODO the # and * keywords don't work reliably after this function gets
-	" called. Use an alternate to * and # for searching forward and backward
 	exe "silent normal *"
 	let results=SearchData()
   execute 'silent syntax clear UnderCursor'
@@ -289,7 +281,7 @@ function! BGPaint(vals)
 	let result = {}
 	let bgcolor = g:mvom_default_bg
 	let modded = RGBToHSV(HexToRGB(bgcolor))
-	" TODO if the bg is dark this code doesn't really color correclty (needs to
+	" TODO if the bg is dark this code doesn't really color correctly (needs to
 	" change by more and by something fixed I think
 	if modded[2] > 50 " if its really light, lets darken, otherwise we'll lighten
 		let modded[2] = float2nr(modded[2]*0.9)
@@ -886,6 +878,10 @@ endfunction
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
+" Maximum number of forward and backward searches to performed
+let g:mvom_max_searches = 50
+
+" default background color of the gutter:
 let g:mvom_default_bg='bbbbbb'
 exe "hi! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
 
