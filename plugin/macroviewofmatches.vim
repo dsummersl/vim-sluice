@@ -2,6 +2,13 @@
 " of matches to your current search. It gives you a general idea of all the
 " areas in the file that match the search you performed.
 
+" ie, MarkSearch("Something","green", "*")
+"function! MarkSearch(search,color="auto",character='*')
+"endfunction
+"function! MarkClearAll()
+"endfunction
+
+
 " mappings"{{{
 
 " Sanity checks
@@ -143,8 +150,8 @@ endfunction
 "}}}
 " UnderCursor: show matches for the 'word' the cursor is currently on"{{{
 function! UnderCursorInit()
-	exe "highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor ctermfg=black ctermbg=gray guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
+	exe "highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
+	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
 function! UnderCursorData()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
@@ -261,8 +268,10 @@ endfunction
 ""}}}
 " Background Painter"{{{
 function! BGInit()
+	"echom "bg init". reltime()[0]
 endfunction
 function! BGPaint(vals)
+	"echom "bg paint". reltime()[0]
 	let result = {}
 	let bgcolor = g:mvom_default_bg
 	let modded = RGBToHSV(HexToRGB(bgcolor))
@@ -290,6 +299,7 @@ function! BGPaint(vals)
 	return result
 endfunction
 function! BGReconcile(vals)
+	"echom "bg reconcile". reltime()[0]
 	return a:vals
 endfunction
 "}}}
@@ -437,7 +447,7 @@ function! PaintSign(line,dict)
 	" echom "fg with ". hiType
 	if has_key(a:dict,'fg')
 		let thesign=<SID>GetSignName(a:dict)
-		"echo "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
+		"echom "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 		exe "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 	else
 		" if 'visible' then this is a non-matching line that's currently
@@ -513,13 +523,13 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 					" hack for the window plugin
 					" TODO NR-16 ctermcolor support. Thisi s jsut NR8 (we could use dark
 					" gray)
-					exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=brown ctermbg=brown guifg=#".val['fg']." guibg=#".val['bg']
+					exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 				else
 					" hack for the window plugin
-					exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=white ctermbg=brown guifg=#".val['fg']." guibg=#".val['bg']
+					exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 				endif
 			else
-				exe "highlight! ".<SID>GetHighlightName(val)." ctermfg=white ctermbg=black guifg=#".val['fg']." guibg=#".val['bg']
+				exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 			endif
 			exe "let g:mvom_hi_".<SID>GetHighlightName(val)."=1"
 			exe "sign define ".<SID>GetSignName(val)." text=".val['text']." texthl=".<SID>GetHighlightName(val)
@@ -887,7 +897,7 @@ if !exists('g:mvom_max_searches ') | let g:mvom_max_searches = 75 | endif
 
 " default background color of the gutter:
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
-exe "autocmd BufNewFile,BufRead * highlight! SignColumn ctermfg=white ctermbg=black guifg=white guibg=#". g:mvom_default_bg
+exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
 
 " Slash options:
 if !exists('g:mvom_slash_chars ') | let g:mvom_slash_chars ='/ ' | endif
@@ -895,7 +905,7 @@ if !exists('g:mvom_slash_color ') | let g:mvom_slash_color ='0055ff' | endif
 
 " Ex options (when Slash/Backslash overlap):
 if !exists('g:mvom_ex_chars ') | let g:mvom_ex_chars ='X ' | endif
-if !exists('g:mvom_ex_color ') | let g:mvom_ex_color ='00ff00' | endif
+if !exists('g:mvom_ex_color ') | let g:mvom_ex_color ='0055ff' | endif
 
 " Backslash options:
 if !exists('g:mvom_backslash_chars ') | let g:mvom_backslash_chars ='\ ' | endif
@@ -919,7 +929,7 @@ if !exists('g:mvom_loaded')
 	" Show the last search with //
 	call MVOM_Setup('Search','Slash')
 	" Show all keywords in the file that match whats under your cursor with \\
-	call MVOM_Setup('UnderCursor','Backslash')
+	"call MVOM_Setup('UnderCursor','Backslash')
 	" Show the visible portion with a darker background
 	call MVOM_Setup('Window','BG')
 	let g:mvom_loaded = 1
