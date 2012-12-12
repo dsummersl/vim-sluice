@@ -7,7 +7,13 @@
 "endfunction
 "function! MarkClearAll()
 "endfunction
-
+"
+" TODO add a plugin that shows you the other matches if they are off screen.
+" TODO I might want to not show search/undercursor/etc if they are onscreen
+" (less clutter).
+" TODO git plugin for additions and subtractions
+" TODO a gundo compatible plugin - it shows you where you've been making
+" changes (colors boldly the recent changes).
 
 " mappings"{{{
 
@@ -26,7 +32,9 @@ function! RePaintMatches()
 		return painted
 	endif
 	let w:save_cursor = winsaveview()
-	let w:save_registers = <SID>SaveRegisters()
+	let w:save_registers = mvom#util#location#SaveRegisters()
+	" if there are no cached_dim then this is the first call to the
+	" repaintfunction. Make the cache and paint.
 	if !exists('w:cached_dim')
 		let w:cached_dim = {}
 		let w:cached_dim['top'] = line('w0')
@@ -36,8 +44,10 @@ function! RePaintMatches()
 		let w:cached_dim['hls'] = &hls
 		let w:cached_dim['data'] = CombineData(g:mv_plugins)
 		call PaintMV(w:cached_dim['data'])
+		" TODO possible optimization: don't restore the view if it hasn't changed?
 		call winrestview(w:save_cursor)
-		call <SID>LoadRegisters(w:save_registers)
+		" TODO ditto for load registers?
+		call mvom#util#location#LoadRegisters(w:save_registers)
 		return 1
 	endif
 	let firstVisible = line('w0')
@@ -56,7 +66,7 @@ function! RePaintMatches()
 	let w:cached_dim['hls'] = &hls
 	let w:cached_dim['data'] = data
 	call winrestview(w:save_cursor)
-	call <SID>LoadRegisters(w:save_registers)
+	call mvom#util#location#LoadRegisters(w:save_registers)
 	return painted
 endfunction
 "}}}
@@ -74,115 +84,6 @@ endfunction
 " Note: you can move the cursor around as much as you want as the position has
 " been saved and will be restored after this method call.
 
-" Search"{{{
-function! SearchInit()
-endfunction
-function! SearchData()
-	" for this search make it match up and down a max # of times (performance fixing)
-	let results = {}
-	let n = 1
-	let startLine = 1
-	" TODO cache results so as to avoid researching on duplicates (save last
-	" search and save state of file (if file changed or if search changed then
-	" redo)
-	let startLine = line('.')
-	exe "". startLine
-	let searchResults = {}
-	" TODO I should do 'c' option as well, but it requires some cursor moving
-	" to ensure no infinite loops
-	while len(@/) > 0 && search(@/,"We") > 0 && n < g:mvom_max_searches " search forwards
-		let here = line('.')
-		let cnt = 0
-		if has_key(results,here) && has_key(results[here],'count')
-			let cnt = results[here]['count']
-		else
-			let results[here] = {}
-		endif
-		let cnt = cnt + 1
-		let results[here]['count'] = cnt
-		let n = n+1
-	endwhile
-	exe "". startLine
-	let n = 1
-	while len(@/) > 0 && search(@/,"Wb") > 0 && n < g:mvom_max_searches " search backwards
-		let here = line('.')
-		let cnt = 0
-		if has_key(results,here) && has_key(results[here],'count')
-			let cnt = results[here]['count']
-		else
-			let results[here] = {}
-		endif
-		let cnt = cnt + 1
-		let results[here]['count'] = cnt
-		let n = n+1
-	endwhile
-	exe "". startLine
-	return results
-endfunction
-function! SearchEnabled()
-	return &hls == 1
-endfunction
-"}}}
-" Window (show current visible window in macro area)"{{{
-function! WindowInit()
-endfunction
-function! WindowData()
-	let firstVisible = line("w0")
-	let lastVisible = line("w$")
-	let totalLines = line("$")
-	let currentLine = line(".")
-	let n = firstVisible
-	let results = {}
-	let offsetOfCursor = ConvertToPercentOffset(currentLine,firstVisible,lastVisible,totalLines)
-	while n <= lastVisible
-		let results[n] = {}
-		let results[n]['count'] = 1
-		if offsetOfCursor == ConvertToPercentOffset(n,firstVisible,lastVisible,totalLines) 
-			let results[n]['iscurrentline'] = 1
-		endif
-		let n = n+1
-	endwhile
-	return results
-endfunction
-function! WindowEnabled()
-	return &hls == 1
-endfunction
-"}}}
-" UnderCursor: show matches for the 'word' the cursor is currently on"{{{
-function! UnderCursorInit()
-	exe "highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
-endfunction
-function! UnderCursorData()
-	" TODO words that are reserved aren't hilighted (probably b/c they're
-	" already hilighted for their language...how do I add my highlighting to
-	" theirs?
-	exe 'silent normal "0yl'
-	let charundercursor=@0
-	if match(charundercursor,'\k') == -1
-		" if the char under the cursor isn't part of the 'isword' then don't
-		" search
-		execute 'silent syntax clear UnderCursor'
-		return {}
-	endif
-	let old_search=@/
-	exe "silent normal *"
-	let results=SearchData()
-  execute 'silent syntax clear UnderCursor'
-	execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
-	let @/=old_search
-	return results
-endfunction
-function! UnderCursorEnabled()
-	if &hls == 0 || (exists('w:mvom_lastcalldisabled') && w:mvom_lastcalldisabled)
-		execute 'silent syntax clear UnderCursor'
-	endif
-	return &hls == 1
-endfunction
-" TODO add a plugin that shows you the other matches if they are off screen.
-" TODO I might want to not show search/undercursor/etc if they are onscreen
-" (less clutter).
-"}}}
 " }}}
 " Builtin rendering types {{{
 " The rendering types are pluggable. Here is the expected format for them:
@@ -216,14 +117,14 @@ endfunction
 function! SlashInit()
 endfunction
 function! <SID>TypicalPaint(vals,slashes,matchColor)
-	let modded = RGBToHSV(HexToRGB(a:matchColor))
+	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:matchColor))
 	let result = {}
 	for line in keys(a:vals)
 		let modded[2] = 60 + 10*a:vals[line]['count']/len(a:vals[line]['plugins'])
 		if modded[2] > 100
 			let modded[2] = 100
 		endif
-		let thecolor = RGBToHex(HSVToRGB(modded))
+		let thecolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 		let result[line] = { 'text': a:slashes, 'fg': thecolor, 'bg':g:mvom_default_bg }
 	endfor
 	return result
@@ -243,12 +144,12 @@ function! SlashReconcile(vals)
 	endfor
 	if cnt > 1
 		let a:vals['text'] = g:mvom_ex_chars
-		let modded = RGBToHSV(HexToRGB(g:mvom_ex_color))
+		let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(g:mvom_ex_color))
 		let modded[2] = 50+ 10*a:vals['count']/len(a:vals['plugins'])
 		if modded[2] > 100
 			let modded[2] = 100
 		endif
-		let a:vals['fg'] = RGBToHex(HSVToRGB(modded))
+		let a:vals['fg'] = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 	end
 	return a:vals
 endfunction
@@ -274,7 +175,7 @@ function! BGPaint(vals)
 	"echom "bg paint". reltime()[0]
 	let result = {}
 	let bgcolor = g:mvom_default_bg
-	let modded = RGBToHSV(HexToRGB(bgcolor))
+	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
 	" TODO if the bg is dark this code doesn't really color correctly (needs to
 	" change by more and by something fixed I think
 	if modded[2] > 50 " if its really light, lets darken, otherwise we'll lighten
@@ -282,13 +183,13 @@ function! BGPaint(vals)
 	else
 		let modded[2] = float2nr(modded[2]+modded[2]*0.1)
 	endif
-	let bgcolor = RGBToHex(HSVToRGB(modded))
+	let bgcolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 	for line in keys(a:vals)
 		let color = bgcolor
 		if has_key(a:vals[line],'iscurrentline') && g:mvom_bg_showinline == 1
-			let darkened = RGBToHSV(HexToRGB(bgcolor))
+			let darkened = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
 			let darkened[2] = float2nr(darkened[2]*0.9)
-			let color = RGBToHex(HSVToRGB(darkened))
+			let color = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(darkened))
 		endif
 		if has_key(a:vals[line],'text')
 			let result[line] = { 'bg':color }
@@ -309,8 +210,9 @@ function! MVOM_Setup(pluginName,renderType)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
 	let old_enabled=g:mvom_enabled
 	let g:mvom_enabled=0
-	call {a:pluginName}Init()
-	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
+	let a:pluginpath="mvom#plugins#".a:pluginName
+	call {a:pluginpath}#init()
+	call add(g:mv_plugins,{ 'plugin': a:pluginpath, 'render': a:renderType })
 	let g:mvom_enabled=old_enabled
 endfunction
 
@@ -327,7 +229,7 @@ function! PaintMV(data)
 	let anyEnabled = 0
 	for pluginInstance in g:mv_plugins
 		let plugin = pluginInstance['plugin']
-		if {plugin}Enabled()
+		if {plugin}#enabled()
 			let anyEnabled = 1
 			break
 		endif
@@ -340,7 +242,7 @@ function! PaintMV(data)
 		" finally, if we are enabled by any means...check to make sure that there
 		" aren't any folds. We don't work with folds.
 		1
-		exe "silent normal zj"
+		exe "silent normal! zj"
 		if line('.') != 1
 			let anyEnabled = 0
 		endif
@@ -374,11 +276,11 @@ function! CombineData(plugins)
 	let allData = {}
 	for pluginInstance in a:plugins
 		let plugin = pluginInstance['plugin']
-		if !{plugin}Enabled()
+		if !{plugin}#enabled()
 			continue
 		endif
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
-		let data={plugin}Data()
+		let data={plugin}#data()
 		for line in keys(data) " loop through all the data and add it to my own master list.
 			"echo "plg ". plugin ." line ". line
 			if has_key(allData,line)
@@ -446,7 +348,7 @@ function! PaintSign(line,dict)
 	" echom "here is ". here ." and firstVisible = ". firstVisible ." and lastVisible = ". lastVisible ." gonna do ". locinInFile
 	" echom "fg with ". hiType
 	if has_key(a:dict,'fg')
-		let thesign=<SID>GetSignName(a:dict)
+		let thesign=mvom#util#color#GetSignName(a:dict)
 		"echom "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 		exe "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 	else
@@ -480,13 +382,13 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 	" lines will be condensed to one line:
 	for [line, trash] in items(a:searchResults)
 		"echo "doing ". line ." which is ". string( trash['plugins'] )
-		let locinInFile = ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
 		if has_key(results,locinInFile) && has_key(results[locinInFile],'count')
 			" we already have a rendering for this line, add up the counts, and Reconcile for all the plugins involved.
 			"echo "pluginsa: ". string( results[locinInFile]['plugins'] )
 			"echo "pluginsb: ". string( trash['plugins'] )
 			" we need to combine the 'plugins' so that they all get listed in together.
-			let theplugs = <SID>Uniq(extend(results[locinInFile]['plugins'],a:searchResults[line]['plugins']))
+			let theplugs = mvom#util#color#Uniq(extend(results[locinInFile]['plugins'],a:searchResults[line]['plugins']))
 			call extend(results[locinInFile],a:searchResults[line])
 			let oldcount = results[locinInFile]['count'] 
 			let results[locinInFile]['count'] = oldcount + a:searchResults[line]['count']
@@ -523,16 +425,16 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 					" hack for the window plugin
 					" TODO NR-16 ctermcolor support. Thisi s jsut NR8 (we could use dark
 					" gray)
-					exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+					exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 				else
 					" hack for the window plugin
-					exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+					exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 				endif
 			else
-				exe "highlight! ".<SID>GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+				exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 			endif
-			exe "let g:mvom_hi_".<SID>GetHighlightName(val)."=1"
-			exe "sign define ".<SID>GetSignName(val)." text=".val['text']." texthl=".<SID>GetHighlightName(val)
+			exe "let g:mvom_hi_".mvom#util#color#GetHighlightName(val)."=1"
+			exe "sign define ".mvom#util#color#GetSignName(val)." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
 		endif
 		call {a:paintFunction}(key,val)
 	endfor
@@ -546,343 +448,6 @@ function! <SID>FindRenderForPlugin(dataPlugin)
 			return plugin['render']
 		endif
 	endfor
-endfunction
-"}}}
-" Utility functions"{{{
-function! <SID>GetHighlightName(dictionary)
-	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
-endfunction
-
-function! <SID>GetSignName(dictionary)
-	return <SID>GetHighlightName(a:dictionary)."_".<SID>GetHumanReadables(a:dictionary['text'])
-endfunction
-
-function! <SID>GetHumanReadables(chars)
-	let result = ""
-	let n = 0
-	while n < len(a:chars)
-		if a:chars[n] == '/'
-			let result = result . 'fs'
-		elseif a:chars[n] == '\'
-			let result = result . 'bs'
-		elseif a:chars[n] == '.'
-			let result = result . 'dt'
-		elseif a:chars[n] == '#'
-			let result = result . 'hsh'
-		elseif a:chars[n] == '-'
-			let result = result . 'da'
-		else
-			let result = result . a:chars[n]
-		end
-		let n = n + 1
-	endwhile
-	return result
-endfunction
-
-" This function takes in some line number that is <= the total
-" possible lines, and places it somewhere on the range between
-" [start,end] depending on what percent of the match it is.
-function! ConvertToPercentOffset(line,start,end,total)
-	let percent = a:line / str2float(a:total)
-	let lines = a:end - a:start
-	return float2nr(percent * lines)+a:start
-endfunction
-
-" Convert a 6 character hex RGB to a 3 part (0-255) array.
-function! HexToRGB(hex)
-	return ["0x".a:hex[0:1]+0,"0x".a:hex[2:3]+0,"0x".a:hex[4:5]+0]
-endfunction
-
-" Convert a 3 part (0-255) array to a 6 char hex equivalent.
-function! RGBToHex(hex)
-	return printf("%02x%02x%02x",a:hex[0],a:hex[1],a:hex[2])
-endfunction
-
-" Make an array of HSV values from an array to RGB values.
-function! RGBToHSV(rgb)
-	let two55 = trunc(255)
-	let normd = copy(a:rgb)
-	let normd[0] = a:rgb[0]/two55
-	let normd[1] = a:rgb[1]/two55
-	let normd[2] = a:rgb[2]/two55
-	let mx = max(a:rgb)/two55
-	let mn = min(a:rgb)/two55
-	let hue = 0
-	if mx == mn
-		let hue = 0
-	elseif normd[0] == mx
-		let hue = float2nr(60*((normd[1]-normd[2])/trunc(mx-mn))+360) % 360
-	elseif normd[1] == mx
-		let hue = float2nr(60*((normd[2]-normd[0])/trunc(mx-mn))+120) % 360
-	elseif normd[2] == mx
-		let hue = float2nr(60*((normd[0]-normd[1])/trunc(mx-mn))+240) % 360
-	endif
-	if hue < 0
-		let hue = 360 + hue
-	endif
-	let sat = 0
-	if mx > 0
-		if mn == mx
-			let sat = 0
-		else
-			let sat = 1-mn/trunc(mx)
-		endif
-	endif
-	let val = mx
-	return [float2nr(hue),float2nr(sat*100),float2nr(val*100)]
-endfunction
-
-function! HSVToRGB(hsv)
-	let one00 = trunc(100)
-	let normd = copy(a:hsv)
-	let normd[0] = a:hsv[0]
-	let normd[1] = a:hsv[1]/one00
-	let normd[2] = a:hsv[2]/one00
-	let six0 = trunc(60)
-	let hi = float2nr(floor(normd[0]/six0)) % 6
-	let f = normd[0]/six0 - floor(normd[0]/six0)
-	let p = normd[2]*(1-normd[1])
-	let q = normd[2]*(1-f*normd[1])
-	let t = normd[2]*(1-(1-f)*normd[1])
-	let result = [0,0,0]
-	if hi == 0
-		let result = [normd[2],t,p]
-	elseif hi == 1
-		let result = [q,normd[2],p]
-	elseif hi == 2
-		let result = [p,normd[2],t]
-	elseif hi == 3
-		let result = [p,q,normd[2]]
-	elseif hi == 4
-		let result = [t,p,normd[2]]
-	elseif hi == 5
-		let result = [normd[2],p,q]
-	endif
-	let result[0] = float2nr(result[0]*255)
-	let result[1] = float2nr(result[1]*255)
-	let result[2] = float2nr(result[2]*255)
-	return result
-endfunction
-
-" Return the unique elements in a list.
-function! <SID>Uniq(list)
-	let result = []
-	for i in a:list
-		if count(result,i) == 0
-			call add(result,i)
-		endif
-	endfor
-	return result
-endfunction
-
-function! <SID>SaveRegisters()
-	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
-	let result = {}
-	for r in keys(registers)
-		let result["reg-".r] = getreg(registers[r], 1)
-		let result["mode-".r] = getregtype(registers[r])
-	endfor
-	return result
-endfunction
-
-function! <SID>LoadRegisters(datum)
-	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
-	for r in keys(registers)
-		call setreg(registers[r], a:datum["reg-".r], a:datum["mode-".r])
-	endfor
-endfunction
-""}}}
-" test functions {{{
-
-function! TestHexToRGBAndBack()
-	call VUAssertEquals(HexToRGB("000000"),[0,0,0])
-	call VUAssertEquals(HexToRGB("ffffff"),[255,255,255])
-	call VUAssertEquals(HexToRGB("AAAAAA"),[170,170,170])
-	call VUAssertEquals(RGBToHex([0,0,0]),"000000")
-	call VUAssertEquals(RGBToHex([255,255,255]),"ffffff")
-	call VUAssertEquals(RGBToHex([32,15,180]),"200fb4")
-endfunction
-
-function! TestRGBToHSVAndBack()
-	call VUAssertEquals(RGBToHSV([0,0,0]),[0,0,0])
-	call VUAssertEquals(RGBToHSV([255,255,255]),[0,0,100])
-	call VUAssertEquals(RGBToHSV([255,0,0]),[0,100,100])
-	call VUAssertEquals(RGBToHSV([0,255,0]),[120,100,100])
-	call VUAssertEquals(RGBToHSV([0,0,255]),[240,100,100])
-	call VUAssertEquals(RGBToHSV([50,50,50]),[0,0,19])
-	call VUAssertEquals(RGBToHSV([100,100,100]),[0,0,39])
-	" call VUAssertEquals(RGBToHSV([187,219,255]),[212,27,100])
-
-	call VUAssertEquals(HSVToRGB([0,0,0]),[0,0,0])
-	call VUAssertEquals(HSVToRGB([100,100,100]),[84,255,0])
-	call VUAssertEquals(HSVToRGB([0,100,100]),[255,0,0])
-	call VUAssertEquals(HSVToRGB([120,100,100]),[0,255,0])
-	call VUAssertEquals(HSVToRGB([240,100,100]),[0,0,255])
-endfunction
-
-function! Test1Enabled()
-	return 1
-endfunction
-function! Test1Data()
-	return {}
-endfunction
-function! Test1Init()
-endfunction
-function! Test2Data()
-	return {'1':{'count':1}}
-endfunction
-function! Test2Init()
-endfunction
-function! Test2Enabled()
-	return 1 
-endfunction
-function! Test3Data()
-	return {'1':{'count':1},'2':{'count':2}}
-endfunction
-function! Test3Init()
-endfunction
-function! Test3Enabled()
-	return 1 
-endfunction
-function! Test4Data()
-	return {'1':{'count':1,'isvis':1},'2':{'count':2}}
-endfunction
-function! Test4Init()
-endfunction
-function! Test4Enabled()
-	return 1 
-endfunction
-function! Test5Data()
-	return {'5':{'count':1},'6':{'count':2}}
-endfunction
-function! Test5Init()
-endfunction
-function! Test5Enabled()
-	return 1
-endfunction
-function! Test1Paint(data)
-	return {}
-endfunction
-function! Test2Paint(data)
-	return {'1':{'text':'..', 'fg':'testhi', 'bg':'testbg'}}
-endfunction
-function! Test3Paint(data)
-	let results = {}
-	for line in keys(a:data)
-		let results[line] = copy(a:data[line])
-		let results[line]['fg'] = 'testhi'
-		let results[line]['bg'] = 'testbg'
-		let results[line]['text'] = '..'
-	endfor
-	return results
-endfunction
-
-function! TestCombineData()
-  " put your curser in this block somewhere and then type ":call VUAutoRun()"
-	" TODO these are still NOT passing.
-	let w:save_cursor = winsaveview()
-	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'}]),{})
-	call VUAssertEquals(CombineData([{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(CombineData([{'plugin':'Test2','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
-	" expect line 1 to have count=2 and then a line 2 of count 2
-	" but then just the rendering for test2 will happen so...same old thing
-	" there.
-	call VUAssertEquals(CombineData([{'plugin':'Test3','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test3','Test2'], 'line':1, 'bg':'testbg'}})
-	" if one data source has an extra key it should always be in the results
-	" regardless of order:
-	call VUAssertEquals(CombineData([{'plugin':'Test4','render':'Test2'},{'plugin':'Test3','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test4','Test3'], 'line':1, 'bg':'testbg', 'isvis':1}})
-	call VUAssertEquals(CombineData([{'plugin':'Test3','render':'Test2'},{'plugin':'Test4','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test3','Test4'], 'line':1, 'bg':'testbg', 'isvis':1}})
-	" non intersecting data sets, both should be there.
-	call VUAssertEquals(CombineData([{'plugin':'Test4','render':'Test3'},{'plugin':'Test5','render':'Test3'}]), { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test4'], 'line':1, 'bg':'testbg', 'isvis':1}, '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test4'], 'line':2, 'bg':'testbg'}, '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test5'], 'line':5, 'bg':'testbg'}, '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test5'], 'line':6, 'bg':'testbg'}, })
-endfunction
-
-function! TestConvertToPercentOffset()
-  " put your curser in this block somwhere and then type ":call VUAutoRun()"
-  call VUAssertEquals(ConvertToPercentOffset(1,1,31,31),1)
-  call VUAssertEquals(ConvertToPercentOffset(31,1,31,31),31)
-  call VUAssertEquals(ConvertToPercentOffset(1,70,100,100),70)
-  call VUAssertEquals(ConvertToPercentOffset(100,70,100,100),100)
-  call VUAssertEquals(ConvertToPercentOffset(50,70,100,100),85)
-endfunction
-
-function! TestGetHumanReadables()
-	call VUAssertEquals(<SID>GetHumanReadables(""),"")
-	call VUAssertEquals(<SID>GetHumanReadables("aa"),"aa")
-	call VUAssertEquals(<SID>GetHumanReadables(".."),"dtdt")
-	call VUAssertEquals(<SID>GetHumanReadables("\\\\"),"bsbs")
-	call VUAssertEquals(<SID>GetHumanReadables("//"),"fsfs")
-	call VUAssertEquals(<SID>GetHumanReadables("--"),"dada")
-endfunction
-
-function! TestGetSignName()
-	call VUAssertEquals(<SID>GetSignName({'fg':'000000','bg':'111111','text':'--'}),"MVOM_000000111111_dada")
-endfunction
-
-function! PaintTestStub(line,onscreen)
-endfunction
-function! UnpaintTestStub(line)
-endfunction
-function! NoReconcile(data)
-	return a:data " do nothing
-endfunction
-function! RRReconcile(data)
-	" change it to 'R' for reconcile?
-	let a:data['text'] = 'RR'
-	return a:data
-endfunction
-
-function! TestDoPaintMatches()
-	call VUAssertEquals(DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
-	" if all lines are currently visible, don't do anything:
-	" first just paint one line. We expect that the line '1' would be painted,
-	" and that the highlight group is created (and 'Test1' is called).
-	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(6,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	" two lines, implies some reconciliation should be happening here:
-	unlet! g:mvom_hi_MVOM_000000000000
-	let g:mv_plugins = []
-	call MVOM_Setup('Test1','No')
-	call MVOM_Setup('Test2','RR')
-	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1','Test2'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1','Test2'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	" dubgging call
-	" echo DoPaintMatches(line('$'),line('w0'),line('w$'),CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
-endfunction
-
-function! TestUniq()
-	call VUAssertEquals(<SID>Uniq([]),[])
-	call VUAssertEquals(<SID>Uniq([1,2,3]),[1,2,3])
-	call VUAssertEquals(<SID>Uniq([3,2,1]),[3,2,1])
-	call VUAssertEquals(<SID>Uniq([3,2,1,2,3]),[3,2,1])
-	call VUAssertEquals(<SID>Uniq(['onea','oneb','onea']),['onea','oneb'])
-endfunction
-
-function! TestLoadRegisters()
-	let from = "something"
-	let @8 = from
-	let registers = <SID>SaveRegisters()
-	call VUAssertEquals(from,registers["reg-8"])
-	let registers["reg-8"] = from ."2"
-	call <SID>LoadRegisters(registers)
-	call VUAssertEquals(from ."2",@8)
-endfunction
-
-function! TestSuite()
-"call VURunnerRunTest('TestSuite')
-	call TestCombineData()
-	call TestConvertToPercentOffset()
-	call TestDoPaintMatches()
-	call TestGetHumanReadables()
-	call TestGetSignName()
-	call TestRGBToHSVAndBack()
-	call TestHexToRGBAndBack()
-	call TestUniq()
-	call TestLoadRegisters()
 endfunction
 "}}}
 " Private Variables "{{{
@@ -927,12 +492,12 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
 	" Show the last search with //
-	call MVOM_Setup('Search','Slash')
+	call MVOM_Setup('search','Slash')
 	" Show all keywords in the file that match whats under your cursor with \\
-	"call MVOM_Setup('UnderCursor','Backslash')
+	"call MVOM_Setup('undercursor','backslash')
 	" Show the visible portion with a darker background
-	call MVOM_Setup('Window','BG')
+	call MVOM_Setup('window','BG')
 	let g:mvom_loaded = 1
 endif
 "}}}
-" vim: set fdm=marker:
+" vim: set fdm=marker noet:
