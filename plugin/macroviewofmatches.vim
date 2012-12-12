@@ -113,97 +113,6 @@ endfunction
 " }
 "
 
-" Slash (//) painter"{{{
-function! SlashInit()
-endfunction
-function! <SID>TypicalPaint(vals,slashes,matchColor)
-	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:matchColor))
-	let result = {}
-	for line in keys(a:vals)
-		let modded[2] = 60 + 10*a:vals[line]['count']/len(a:vals[line]['plugins'])
-		if modded[2] > 100
-			let modded[2] = 100
-		endif
-		let thecolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
-		let result[line] = { 'text': a:slashes, 'fg': thecolor, 'bg':g:mvom_default_bg }
-	endfor
-	return result
-endfunction
-function! SlashPaint(vals)
-	return <SID>TypicalPaint(a:vals,g:mvom_slash_chars,g:mvom_slash_color)
-endfunction
-function! SlashReconcile(vals)
-	" if its a slash or backslash then do something, otherwise, we don't care.
-	" TODO this still isn't quite right - I don't think its counting correctly
-	let cnt = 0
-	for plugin in a:vals['plugins']
-		let render = <SID>FindRenderForPlugin(plugin)
-		if render == 'Slash' || render == 'Backslash'
-			let cnt = cnt + 1
-		endif
-	endfor
-	if cnt > 1
-		let a:vals['text'] = g:mvom_ex_chars
-		let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(g:mvom_ex_color))
-		let modded[2] = 50+ 10*a:vals['count']/len(a:vals['plugins'])
-		if modded[2] > 100
-			let modded[2] = 100
-		endif
-		let a:vals['fg'] = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
-	end
-	return a:vals
-endfunction
-"}}}
-" Backslash (\\) painter"{{{
-function! BackslashInit()
-	" same as slash
-	call SlashInit()
-endfunction
-function! BackslashPaint(vals)
-	return <SID>TypicalPaint(a:vals,g:mvom_backslash_chars,g:mvom_backslash_color)
-endfunction
-function! BackslashReconcile(vals)
-	" same as slash
-	return SlashReconcile(a:vals)
-endfunction
-""}}}
-" Background Painter"{{{
-function! BGInit()
-	"echom "bg init". reltime()[0]
-endfunction
-function! BGPaint(vals)
-	"echom "bg paint". reltime()[0]
-	let result = {}
-	let bgcolor = g:mvom_default_bg
-	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
-	" TODO if the bg is dark this code doesn't really color correctly (needs to
-	" change by more and by something fixed I think
-	if modded[2] > 50 " if its really light, lets darken, otherwise we'll lighten
-		let modded[2] = float2nr(modded[2]*0.9)
-	else
-		let modded[2] = float2nr(modded[2]+modded[2]*0.1)
-	endif
-	let bgcolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
-	for line in keys(a:vals)
-		let color = bgcolor
-		if has_key(a:vals[line],'iscurrentline') && g:mvom_bg_showinline == 1
-			let darkened = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
-			let darkened[2] = float2nr(darkened[2]*0.9)
-			let color = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(darkened))
-		endif
-		if has_key(a:vals[line],'text')
-			let result[line] = { 'bg':color }
-		else
-			let result[line] = { 'bg':color }
-		endif
-	endfor
-	return result
-endfunction
-function! BGReconcile(vals)
-	"echom "bg reconcile". reltime()[0]
-	return a:vals
-endfunction
-"}}}
 " }}}
 " Rendering Logic {{{
 function! MVOM_Setup(pluginName,renderType)
@@ -211,8 +120,9 @@ function! MVOM_Setup(pluginName,renderType)
 	let old_enabled=g:mvom_enabled
 	let g:mvom_enabled=0
 	let a:pluginpath="mvom#plugins#".a:pluginName
+	let a:renderpath="mvom#renderers#".a:renderType
 	call {a:pluginpath}#init()
-	call add(g:mv_plugins,{ 'plugin': a:pluginpath, 'render': a:renderType })
+	call add(g:mv_plugins,{ 'plugin': a:pluginpath, 'render': a:renderpath })
 	let g:mvom_enabled=old_enabled
 endfunction
 
@@ -318,7 +228,7 @@ function! CombineData(plugins)
 				let pluginData[line] = allData[line]
 			endif
 		endfor
-		let paintData = {render}Paint(pluginData)
+		let paintData = {render}#Paint(pluginData)
 		for line in keys(paintData)
 			"echo "looking at line ".line." plugin ".plugin
 			"echo allData
@@ -405,8 +315,8 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 		" paint any new things:
 		if len(val['plugins']) > 1
 			for datap in val['plugins']
-				let render = <SID>FindRenderForPlugin(datap)
-				let results[line] = {render}Reconcile(val)
+				let render = mvom#renderers#util#FindRenderForPlugin(datap)
+				let results[line] = {render}#Reconcile(val)
 			endfor
 		endif
 	endfor
@@ -440,14 +350,6 @@ function! DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpai
 	endfor
 	let b:cached_signs = results
 	return results
-endfunction
-
-function! <SID>FindRenderForPlugin(dataPlugin)
-	for plugin in g:mv_plugins
-		if plugin['plugin'] == a:dataPlugin
-			return plugin['render']
-		endif
-	endfor
 endfunction
 "}}}
 " Private Variables "{{{
@@ -492,11 +394,11 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
 	" Show the last search with //
-	call MVOM_Setup('search','Slash')
+	call MVOM_Setup('search','slash')
 	" Show all keywords in the file that match whats under your cursor with \\
 	"call MVOM_Setup('undercursor','backslash')
 	" Show the visible portion with a darker background
-	call MVOM_Setup('window','BG')
+	call MVOM_Setup('window','background')
 	let g:mvom_loaded = 1
 endif
 "}}}
