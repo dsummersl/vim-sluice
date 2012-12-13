@@ -1,9 +1,9 @@
 " Background Painter
-function! mvom#renderers#background#Init()
+function! mvom#renderers#background#init()
 	"echom "bg init". reltime()[0]
 endfunction
 
-function! mvom#renderers#background#Paint(vals)
+function! mvom#renderers#background#paint(vals)
 	"echom "bg paint". reltime()[0]
 	let result = {}
 	let bgcolor = g:mvom_default_bg
@@ -32,7 +32,7 @@ function! mvom#renderers#background#Paint(vals)
 	return result
 endfunction
 
-function! mvom#renderers#background#Reconcile(vals)
+function! mvom#renderers#background#reconcile(vals)
 	"echom "bg reconcile". reltime()[0]
 	return a:vals
 endfunction

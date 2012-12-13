@@ -26,99 +26,42 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(mvom#util#color#HSVToRGB([240,100,100]),[0,0,255])
 endfunction
 
-function! Test1Enabled()
-	return 1
-endfunction
-function! Test1Data()
-	return {}
-endfunction
-function! Test1Init()
-endfunction
-function! Test2Data()
-	return {'1':{'count':1}}
-endfunction
-function! Test2Init()
-endfunction
-function! Test2Enabled()
-	return 1 
-endfunction
-function! Test3Data()
-	return {'1':{'count':1},'2':{'count':2}}
-endfunction
-function! Test3Init()
-endfunction
-function! Test3Enabled()
-	return 1 
-endfunction
-function! Test4Data()
-	return {'1':{'count':1,'isvis':1},'2':{'count':2}}
-endfunction
-function! Test4Init()
-endfunction
-function! Test4Enabled()
-	return 1 
-endfunction
-function! Test5Data()
-	return {'5':{'count':1},'6':{'count':2}}
-endfunction
-function! Test5Init()
-endfunction
-function! Test5Enabled()
-	return 1
-endfunction
-function! Test1Paint(data)
-	return {}
-endfunction
-function! Test2Paint(data)
-	return {'1':{'text':'..', 'fg':'testhi', 'bg':'testbg'}}
-endfunction
-function! Test3Paint(data)
-	let results = {}
-	for line in keys(a:data)
-		let results[line] = copy(a:data[line])
-		let results[line]['fg'] = 'testhi'
-		let results[line]['bg'] = 'testbg'
-		let results[line]['text'] = '..'
-	endfor
-	return results
-endfunction
-
 function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"
 	" TODO these are still NOT passing.
 	let w:save_cursor = winsaveview()
-	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'}]),{})
-	call VUAssertEquals(CombineData([{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(CombineData([{'plugin':'Test1','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(CombineData([{'plugin':'Test2','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test2'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test1plugin','render':'mvom#test#test1paint'}]),{})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test1plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test2plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
 	" expect line 1 to have count=2 and then a line 2 of count 2
 	" but then just the rendering for test2 will happen so...same old thing
 	" there.
-	call VUAssertEquals(CombineData([{'plugin':'Test3','render':'Test1'},{'plugin':'Test2','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test3','Test2'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test3plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
 	" if one data source has an extra key it should always be in the results
 	" regardless of order:
-	call VUAssertEquals(CombineData([{'plugin':'Test4','render':'Test2'},{'plugin':'Test3','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test4','Test3'], 'line':1, 'bg':'testbg', 'isvis':1}})
-	call VUAssertEquals(CombineData([{'plugin':'Test3','render':'Test2'},{'plugin':'Test4','render':'Test2'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test3','Test4'], 'line':1, 'bg':'testbg', 'isvis':1}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test4plugin','render':'mvom#test#test2paint'},{'plugin':'mvom#test#test3plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin','mvom#test#test3plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test3plugin','render':'mvom#test#test2paint'},{'plugin':'mvom#test#test4plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
 	" non intersecting data sets, both should be there.
-	call VUAssertEquals(CombineData([{'plugin':'Test4','render':'Test3'},{'plugin':'Test5','render':'Test3'}]), { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test4'], 'line':1, 'bg':'testbg', 'isvis':1}, '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test4'], 'line':2, 'bg':'testbg'}, '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['Test5'], 'line':5, 'bg':'testbg'}, '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['Test5'], 'line':6, 'bg':'testbg'}, })
+	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test4plugin','render':'mvom#test#test3paint'},{'plugin':'mvom#test#test5plugin','render':'mvom#test#test3paint'}]), { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}, '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':2, 'bg':'testbg'}, '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':5, 'bg':'testbg'}, '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':6, 'bg':'testbg'}, })
 endfunction
 
 function! TestConvertToPercentOffset()
   " put your curser in this block somwhere and then type ":call VUAutoRun()"
-  call VUAssertEquals(mvom#util#ConvertToPercentOffset(1,1,31,31),1)
-  call VUAssertEquals(mvom#util#ConvertToPercentOffset(31,1,31,31),31)
-  call VUAssertEquals(mvom#util#ConvertToPercentOffset(1,70,100,100),70)
-  call VUAssertEquals(mvom#util#ConvertToPercentOffset(100,70,100,100),100)
-  call VUAssertEquals(mvom#util#ConvertToPercentOffset(50,70,100,100),85)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
 endfunction
 
 function! TestGetHumanReadables()
-	call VUAssertEquals(mvom#util#GetHumanReadables(""),"")
-	call VUAssertEquals(mvom#util#GetHumanReadables("aa"),"aa")
-	call VUAssertEquals(mvom#util#GetHumanReadables(".."),"dtdt")
-	call VUAssertEquals(mvom#util#GetHumanReadables("\\\\"),"bsbs")
-	call VUAssertEquals(mvom#util#GetHumanReadables("//"),"fsfs")
-	call VUAssertEquals(mvom#util#GetHumanReadables("--"),"dada")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables(""),"")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("aa"),"aa")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables(".."),"dtdt")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("\\\\"),"bsbs")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("//"),"fsfs")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("--"),"dada")
 endfunction
 
 function! TestGetSignName()
@@ -129,59 +72,51 @@ function! PaintTestStub(line,onscreen)
 endfunction
 function! UnpaintTestStub(line)
 endfunction
-function! NoReconcile(data)
-	return a:data " do nothing
-endfunction
-function! RRReconcile(data)
-	" change it to 'R' for reconcile?
-	let a:data['text'] = 'RR'
-	return a:data
-endfunction
 
 function! TestDoPaintMatches()
-	call VUAssertEquals(DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,
-	" and that the highlight group is created (and 'Test1' is called).
+	" and that the highlight group is created (and 'mvom#test#test1plugin' is called).
 	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(6,1,5,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(6,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
 	let g:mv_plugins = []
-	call MVOM_Setup('Test1','No')
-	call MVOM_Setup('Test2','RR')
-	call VUAssertEquals(DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['Test1','Test2'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['Test1'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['Test1','Test2'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
+	call mvom#renderer#setup('mvom#test#test1plugin','mvom#test#nopaint')
+	call mvom#renderer#setup('mvom#test#test2plugin','mvom#test#rrpaint')
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['mvom#test#test1plugin'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['Test1'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['Test1'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['mvom#test#test1plugin'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['mvom#test#test1plugin'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" dubgging call
-	" echo DoPaintMatches(line('$'),line('w0'),line('w$'),CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
+	" echo mvom#renderer#DoPaintMatches(line('$'),line('w0'),line('w$'),mvom#renderer#CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
 endfunction
 
 function! TestUniq()
-	call VUAssertEquals(<SID>Uniq([]),[])
-	call VUAssertEquals(<SID>Uniq([1,2,3]),[1,2,3])
-	call VUAssertEquals(<SID>Uniq([3,2,1]),[3,2,1])
-	call VUAssertEquals(<SID>Uniq([3,2,1,2,3]),[3,2,1])
-	call VUAssertEquals(<SID>Uniq(['onea','oneb','onea']),['onea','oneb'])
+	call VUAssertEquals(mvom#util#color#Uniq([]),[])
+	call VUAssertEquals(mvom#util#color#Uniq([1,2,3]),[1,2,3])
+	call VUAssertEquals(mvom#util#color#Uniq([3,2,1]),[3,2,1])
+	call VUAssertEquals(mvom#util#color#Uniq([3,2,1,2,3]),[3,2,1])
+	call VUAssertEquals(mvom#util#color#Uniq(['onea','oneb','onea']),['onea','oneb'])
 endfunction
 
 function! TestLoadRegisters()
 	let from = "something"
 	let @8 = from
-	let registers = mvom#util#SaveRegisters()
+	let registers = mvom#util#location#SaveRegisters()
 	call VUAssertEquals(from,registers["reg-8"])
 	let registers["reg-8"] = from ."2"
-	call mvom#util#LoadRegisters(registers)
+	call mvom#util#location#LoadRegisters(registers)
 	call VUAssertEquals(from ."2",@8)
 endfunction
 
 function! TestSuite()
 "call VURunnerRunTest('TestSuite')
 	call TestCombineData()
-	call TestConvertToPercentOffset()
+  call TestConvertToPercentOffset()
 	call TestDoPaintMatches()
 	call TestGetHumanReadables()
 	call TestGetSignName()
@@ -191,3 +126,5 @@ function! TestSuite()
 	call TestLoadRegisters()
 endfunction
 "}}}
+
+" vim -c "call VUAutoRun()" test.vim

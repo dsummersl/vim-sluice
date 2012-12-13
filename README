@@ -9,10 +9,12 @@ put the vim file in your ~/.vim/plugins folder.
 
 /searchforsomething/
 
+
 ================================================================================
+Testing
 
-TODO:
+To run the unit tests you must install the vimunit plugin (https://github.com/dsummersl/vimunit).
 
-- optimizations, I suspect.
-- add script requirements for vim 7.2
-- under cursor highlighting of reserved words
+vim -nc "so % | call VURunnerRunTest('TestSuite')" autoload/mvom/test.vim
+
+================================================================================

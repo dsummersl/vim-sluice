@@ -1,13 +1,13 @@
 " Slash (//) painter
 
-function! mvom#renderers#slash#Init()
+function! mvom#renderers#slash#init()
 endfunction
 
-function! mvom#renderers#slash#Paint(vals)
+function! mvom#renderers#slash#paint(vals)
 	return mvom#renderers#util#TypicalPaint(a:vals,g:mvom_slash_chars,g:mvom_slash_color)
 endfunction
 
-function! mvom#renderers#slash#Reconcile(vals)
+function! mvom#renderers#slash#reconcile(vals)
 	" if its a slash or backslash then do something, otherwise, we don't care.
 	" TODO this still isn't quite right - I don't think its counting correctly
 	let cnt = 0

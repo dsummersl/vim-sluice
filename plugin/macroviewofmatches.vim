@@ -114,11 +114,11 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
 	" Show the last search with //
-	call mvom#renderer#setup('search','slash')
+	call mvom#renderer#setup('mvom#plugins#search','mvom#renderers#slash')
 	" Show all keywords in the file that match whats under your cursor with \\
-	"call mvom#renderer#setup('undercursor','backslash')
+	"call mvom#renderer#setup('mvom#plugins#undercursor','mvom#renderers#backslash')
 	" Show the visible portion with a darker background
-	call mvom#renderer#setup('window','background')
+	call mvom#renderer#setup('mvom#plugins#window','mvom#renderers#background')
 	let g:mvom_loaded = 1
 endif
 "}}}
