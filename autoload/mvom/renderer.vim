@@ -1,4 +1,5 @@
-function! mvom#renderer#RePaintMatches()
+
+function! mvom#renderer#RePaintMatches()"{{{
 	let painted = 0
 	if !exists('g:mvom_loaded') || g:mvom_loaded==0 || !exists('g:mvom_enabled') || g:mvom_enabled==0
 		return painted
@@ -40,7 +41,7 @@ function! mvom#renderer#RePaintMatches()
 	call winrestview(w:save_cursor)
 	call mvom#util#location#LoadRegisters(w:save_registers)
 	return painted
-endfunction
+endfunction"}}}
 
 " TODO use an explicit set/add/remove plugin function.
 function! mvom#renderer#setup(pluginName,renderType)
@@ -52,8 +53,24 @@ function! mvom#renderer#setup(pluginName,renderType)
 	let g:mvom_enabled=old_enabled
 endfunction
 
+" Returns a string description suitable for embedding in one's
+" statusline.
+"
+" For instance, if 'search and underline' are configure then it would display:
+"
+"     '\:und' -- undercursor
+"     '/:s//' -- search
+"     '+:git' -- git changes
+"     '+:svn' -- subversion changes
+"     '+: hg' -- mercurial changes
+"     '+:bzr' -- bazaare changes
+"     '#:chg' -- frequent changes 
+"     '#:ind' -- # indents
+function! mvom#renderer#statusline()
+endfunction
+
 " paint the matches for real, on the screen. With signs.
-function! mvom#renderer#PaintMV(data)
+function! mvom#renderer#PaintMV(data)"{{{
 	if !exists('g:mv_plugins') | return | endif
 	"TODO add in some cacheing? IE: if you call this method should it always
 	"repaint everything, or should it only do it if dimensions have changed
@@ -91,7 +108,7 @@ function! mvom#renderer#PaintMV(data)
 		let w:mvom_lastcalldisabled = 1
 		sign unplace *
 	endif
-endfunction
+endfunction"}}}
 
 " Given all the plugins, generate the line level data: which plugins have
 " matches on which lines. Format is:
@@ -107,7 +124,7 @@ endfunction
 " 		TODO linehi - hilighting for the linelevel option.
 " 	}
 " }
-function! mvom#renderer#CombineData(plugins)
+function! mvom#renderer#CombineData(plugins)"{{{
 	"echo "START"
 	let allData = {}
 	for pluginInstance in a:plugins
@@ -178,9 +195,9 @@ function! mvom#renderer#CombineData(plugins)
 		endfor
 	endfor
 	return resultData
-endfunction
+endfunction"}}}
 
-function! mvom#renderer#PaintSign(line,dict)
+function! mvom#renderer#PaintSign(line,dict)"{{{
 	" echom "here is ". here ." and firstVisible = ". firstVisible ." and lastVisible = ". lastVisible ." gonna do ". locinInFile
 	" echom "fg with ". hiType
 	if has_key(a:dict,'fg')
@@ -191,7 +208,7 @@ function! mvom#renderer#PaintSign(line,dict)
 		" if 'visible' then this is a non-matching line that's currently
 		" 'visible'.
 	endif
-endfunction
+endfunction"}}}
 
 function! mvom#renderer#UnpaintSign(line,dict)
 	exe "sign unplace ".a:line." buffer=".winbufnr(0)
@@ -214,7 +231,7 @@ endfunction
 " possibly been created (so that they don't have to be recreated). These are
 " created before the paintFunction is called, so that the paintFunction
 " doesn't actually have to create any hilighting itself.
-function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)
+function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
 	" First colate all of hte search results into the 'macro' line (so several
@@ -279,4 +296,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 	endfor
 	let b:cached_signs = results
 	return results
-endfunction
+endfunction"}}}
+
+" vim: set fdm=marker:
