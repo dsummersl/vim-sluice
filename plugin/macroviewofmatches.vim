@@ -15,6 +15,10 @@
 " TODO a gundo compatible plugin - it shows you where you've been making
 " changes (colors boldly the recent changes).
 " TODO a status line to easily move/switch between the different plugins
+"
+" For icon support:
+" 	- requires imagemagick to convert between xpm and png.
+" 	- Make a new 'dash renderer' that has hte following options...:
 
 " mappings"{{{
 
@@ -79,9 +83,6 @@ if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=100
 
-" Maximum number of forward and backward searches to performed
-if !exists('g:mvom_max_searches ') | let g:mvom_max_searches = 75 | endif
-
 " default background color of the gutter:
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
@@ -114,11 +115,11 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
 	" Show the last search with //
-	call mvom#renderer#setup('mvom#plugins#search','mvom#renderers#slash')
+	call mvom#renderer#add('mvom#plugins#search','mvom#renderers#slash')
 	" Show all keywords in the file that match whats under your cursor with \\
-	"call mvom#renderer#setup('mvom#plugins#undercursor','mvom#renderers#backslash')
+	"call mvom#renderer#add('mvom#plugins#undercursor','mvom#renderers#backslash')
 	" Show the visible portion with a darker background
-	call mvom#renderer#setup('mvom#plugins#window','mvom#renderers#background')
+	call mvom#renderer#add('mvom#plugins#window','mvom#renderers#background')
 	let g:mvom_loaded = 1
 endif
 "}}}

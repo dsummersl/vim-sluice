@@ -5,6 +5,11 @@ function! mvom#plugins#underscore#init()
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
 endfunction
 
+function! mvom#plugins#search#deinit()
+  " TODO remove the autocommands and the highlight
+  " TODO also make the undercursor highlighting optional
+endfunction
+
 function! mvom#plugins#underscore#data()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to

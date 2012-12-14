@@ -1,0 +1,59 @@
+*mvom.txt* MVOM: plugins for the gutter. *mvom*
+
+CONTENTS ~
+
+                                                   *mvom-contents*
+===========================================================================
+
+1. About                                           |mvom-about|
+2. Quick Start
+3. Options
+4. Builtin Functions
+    4.1 Search
+    4.2 Under Cursor
+5. Plugins                                         |mvom-plugins|
+    5.1 Data Sources                               |mvom-data-sources|
+    5.2 Renderers                                  |mvom-renderers|
+
+===========================================================================
+
+ABOUT                                              *mvom-about*
+
+Plugins                                            *mvom-plugins*
+
+Data Sources                                       *mvom-data-sources*
+
+Given all the plugins, generate the line level data: which plugins have
+matches on which lines. Format is:
+{
+	'<linenumber>': {
+		'count': number of matches on the line
+		'plugins': an array with the name of the 'Data' plugins that have
+		matches on this particular line.
+		'line': line number
+		'text': text to display in signs area
+    'fg': foreground
+    'bg': background
+		TODO linehi - hilighting for the linelevel option.
+	}
+}
+
+Renderers                                          *mvom-renderers*
+
+Actual logic that paints the matches. Painting and searching are abstracted
+out so that it can be tested by itself.
+
+Parameters: searchResults are of the form defined by CombineData.
+
+Return: dictionary of lines that are currently set. Each line contains the
+standard elements created by CombineData. Additional possible keys:
+
+'visible'  - if the line is currently displayed on the screen then this would
+             be set to '1'.
+'metaline' - when in 'meta' mode this is the line that represents the %
+             offset of the actual line.
+
+Also makes some global variables for all the hilighting options that have
+possibly been created (so that they don't have to be recreated). These are
+created before the paintFunction is called, so that the paintFunction
+doesn't actually have to create any hilighting itself.

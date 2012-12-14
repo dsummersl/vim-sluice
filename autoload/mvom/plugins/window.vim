@@ -1,6 +1,10 @@
 " Window (show current visible window in macro area)
+" TODO make the cursor location highlighting optional.
 
 function! mvom#plugins#window#init()
+endfunction
+
+function! mvom#plugins#search#deinit()
 endfunction
 
 function! mvom#plugins#window#data()

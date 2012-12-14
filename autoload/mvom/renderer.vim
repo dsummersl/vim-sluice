@@ -43,13 +43,32 @@ function! mvom#renderer#RePaintMatches()"{{{
 	return painted
 endfunction"}}}
 
-" TODO use an explicit set/add/remove plugin function.
-function! mvom#renderer#setup(pluginName,renderType)
+" Add a specific plugin and rendering.
+function! mvom#renderer#add(pluginName,renderType)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
 	let old_enabled=g:mvom_enabled
 	let g:mvom_enabled=0
 	call {a:pluginName}#init()
 	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
+	let g:mvom_enabled=old_enabled
+endfunction
+
+" Remove a plugin.
+function! mvom#renderer#remove(pluginName)
+	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
+	let old_enabled=g:mvom_enabled
+	let g:mvom_enabled=0
+	call {a:pluginName}#deinit()
+  let cnt = -1
+  for p in g:mv_plugins
+    let cnt = cnt + 1
+    if p['plugin'] == a:pluginName
+      break
+    endif
+  endfor
+  if cnt >= 0
+    call remove(g:mv_plugins,cnt)
+  endif
 	let g:mvom_enabled=old_enabled
 endfunction
 
@@ -110,20 +129,6 @@ function! mvom#renderer#PaintMV(data)"{{{
 	endif
 endfunction"}}}
 
-" Given all the plugins, generate the line level data: which plugins have
-" matches on which lines. Format is:
-" {
-" 	'<linenumber>': {
-" 		'count': number of matches on the line
-" 		'plugins': an array with the name of the 'Data' plugins that have
-" 		matches on this particular line.
-" 		'line': line number
-" 		'text': text to display in signs area
-	"   'fg': foreground
-	"   'bg': background
-" 		TODO linehi - hilighting for the linelevel option.
-" 	}
-" }
 function! mvom#renderer#CombineData(plugins)"{{{
 	"echo "START"
 	let allData = {}
@@ -214,23 +219,6 @@ function! mvom#renderer#UnpaintSign(line,dict)
 	exe "sign unplace ".a:line." buffer=".winbufnr(0)
 endfunction
 
-" Actual logic that paints the matches. Painting and searching are abstracted
-" out so that it can be tested by itself.
-"
-" Parameters: searchResults are of the form defined by CombineData.
-"
-" Return: dictionary of lines that are currently set. Each line contains the
-" standard elements created by CombineData. Additional possible keys:
-"
-" 'visible'  - if the line is currently displayed on the screen then this would
-"              be set to '1'.
-" 'metaline' - when in 'meta' mode this is the line that represents the %
-"              offset of the actual line.
-"
-" Also makes some global variables for all the hilighting options that have
-" possibly been created (so that they don't have to be recreated). These are
-" created before the paintFunction is called, so that the paintFunction
-" doesn't actually have to create any hilighting itself.
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}

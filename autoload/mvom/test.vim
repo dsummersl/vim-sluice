@@ -1,4 +1,12 @@
-" test functions {{{
+" util#color tests {{{
+
+function! TestUniq()
+	call VUAssertEquals(mvom#util#color#Uniq([]),[])
+	call VUAssertEquals(mvom#util#color#Uniq([1,2,3]),[1,2,3])
+	call VUAssertEquals(mvom#util#color#Uniq([3,2,1]),[3,2,1])
+	call VUAssertEquals(mvom#util#color#Uniq([3,2,1,2,3]),[3,2,1])
+	call VUAssertEquals(mvom#util#color#Uniq(['onea','oneb','onea']),['onea','oneb'])
+endfunction
 
 function! TestHexToRGBAndBack()
 	call VUAssertEquals(mvom#util#color#HexToRGB("000000"),[0,0,0])
@@ -26,6 +34,40 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(mvom#util#color#HSVToRGB([240,100,100]),[0,0,255])
 endfunction
 
+function! TestGetSignName()
+	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--'}),"MVOM_000000111111_dada")
+endfunction
+" }}}
+" util#location "{{{
+function! TestLoadRegisters()
+	let from = "something"
+	let @8 = from
+	let registers = mvom#util#location#SaveRegisters()
+	call VUAssertEquals(from,registers["reg-8"])
+	let registers["reg-8"] = from ."2"
+	call mvom#util#location#LoadRegisters(registers)
+	call VUAssertEquals(from ."2",@8)
+endfunction
+
+function! TestConvertToPercentOffset()
+  " put your curser in this block somwhere and then type ":call VUAutoRun()"
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
+endfunction
+
+function! TestGetHumanReadables()
+	call VUAssertEquals(mvom#util#location#GetHumanReadables(""),"")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("aa"),"aa")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables(".."),"dtdt")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("\\\\"),"bsbs")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("//"),"fsfs")
+	call VUAssertEquals(mvom#util#location#GetHumanReadables("--"),"dada")
+endfunction
+"}}}
+" renderer tests"{{{
 function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"
 	" TODO these are still NOT passing.
@@ -46,28 +88,6 @@ function! TestCombineData()
 	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test4plugin','render':'mvom#test#test3paint'},{'plugin':'mvom#test#test5plugin','render':'mvom#test#test3paint'}]), { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}, '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':2, 'bg':'testbg'}, '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':5, 'bg':'testbg'}, '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':6, 'bg':'testbg'}, })
 endfunction
 
-function! TestConvertToPercentOffset()
-  " put your curser in this block somwhere and then type ":call VUAutoRun()"
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
-endfunction
-
-function! TestGetHumanReadables()
-	call VUAssertEquals(mvom#util#location#GetHumanReadables(""),"")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("aa"),"aa")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables(".."),"dtdt")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("\\\\"),"bsbs")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("//"),"fsfs")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("--"),"dada")
-endfunction
-
-function! TestGetSignName()
-	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--'}),"MVOM_000000111111_dada")
-endfunction
-
 function! PaintTestStub(line,onscreen)
 endfunction
 function! UnpaintTestStub(line)
@@ -84,8 +104,8 @@ function! TestDoPaintMatches()
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
 	let g:mv_plugins = []
-	call mvom#renderer#setup('mvom#test#test1plugin','mvom#test#nopaint')
-	call mvom#renderer#setup('mvom#test#test2plugin','mvom#test#rrpaint')
+	call mvom#renderer#add('mvom#test#test1plugin','mvom#test#nopaint')
+	call mvom#renderer#add('mvom#test#test2plugin','mvom#test#rrpaint')
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['mvom#test#test1plugin'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	unlet! g:mvom_hi_MVOM_000000000000
@@ -93,28 +113,15 @@ function! TestDoPaintMatches()
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" dubgging call
 	" echo mvom#renderer#DoPaintMatches(line('$'),line('w0'),line('w$'),mvom#renderer#CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
+
+  " When a plugin is removed, it should not longer be in the list of plugins
+	call mvom#renderer#remove('mvom#test#test2plugin')
+  call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'mvom#test#test1plugin', 'render': 'mvom#test#nopaint' }])
 endfunction
 
-function! TestUniq()
-	call VUAssertEquals(mvom#util#color#Uniq([]),[])
-	call VUAssertEquals(mvom#util#color#Uniq([1,2,3]),[1,2,3])
-	call VUAssertEquals(mvom#util#color#Uniq([3,2,1]),[3,2,1])
-	call VUAssertEquals(mvom#util#color#Uniq([3,2,1,2,3]),[3,2,1])
-	call VUAssertEquals(mvom#util#color#Uniq(['onea','oneb','onea']),['onea','oneb'])
-endfunction
-
-function! TestLoadRegisters()
-	let from = "something"
-	let @8 = from
-	let registers = mvom#util#location#SaveRegisters()
-	call VUAssertEquals(from,registers["reg-8"])
-	let registers["reg-8"] = from ."2"
-	call mvom#util#location#LoadRegisters(registers)
-	call VUAssertEquals(from ."2",@8)
-endfunction
+"}}}
 
 function! TestSuite()
-"call VURunnerRunTest('TestSuite')
 	call TestCombineData()
   call TestConvertToPercentOffset()
 	call TestDoPaintMatches()
@@ -125,6 +132,7 @@ function! TestSuite()
 	call TestUniq()
 	call TestLoadRegisters()
 endfunction
-"}}}
 
-" vim -c "call VUAutoRun()" test.vim
+" call VURunnerRunTest('TestSuite')
+
+" vim: set fdm=marker :

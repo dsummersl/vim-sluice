@@ -5,6 +5,10 @@ endfunction
 function! mvom#test#test5plugin#init()
 endfunction
 
+function! mvom#test#test5plugin#deinit()
+endfunction
+
+
 function! mvom#test#test5plugin#enabled()
 	return 1
 endfunction
