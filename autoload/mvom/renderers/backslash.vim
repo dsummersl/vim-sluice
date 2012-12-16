@@ -5,11 +5,11 @@ function! mvom#renderers#backslash#init(options)
 	call mvom#renderers#slash#init(a:options)
 endfunction
 
-function! mvom#renderers#backslash#paint(vals)
+function! mvom#renderers#backslash#paint(options,vals)
 	return mvom#renderers#util#TypicalPaint(a:vals,s:options['chars'],s:options['color'])
 endfunction
 
-function! mvom#renderers#backslash#reconcile(vals)
+function! mvom#renderers#backslash#reconcile(options,vals)
 	" same as slash
 	return mvom#renderers#slash#reconcile(a:vals)
 endfunction

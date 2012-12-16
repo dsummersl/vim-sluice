@@ -62,13 +62,11 @@ if !exists('g:mvom_loaded')
 	" Show all keywords in the file that match whats under your cursor with \\
 	"call mvom#renderer#add('mvom#plugins#undercursor','mvom#renderers#backslash')
 	" Show the visible portion with a darker background
-	"call mvom#renderer#add('mvom#plugins#window', {
-	"      \ 'render': 'mvom#renderers#background',
-	"      \ 'chars': '/ ',
-	"      \ 'color': '0055ff',
-	"      \ 'xchars': 'X ',
-	"      \ 'xcolor': '0055ff'
-	"      \ })
+	call mvom#renderer#add('mvom#plugins#window', {
+	      \ 'render': 'mvom#renderers#background',
+	      \ 'bg': 'dddddd',
+	      \ 'showinline': 0
+	      \ })
 	let g:mvom_loaded = 1
 endif
 "}}}
