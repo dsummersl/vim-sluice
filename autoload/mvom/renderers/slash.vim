@@ -10,7 +10,7 @@ function! mvom#renderers#slash#reconcile(options,vals)
 	let cnt = 0
 	for plugin in a:vals['plugins']
 		let render = mvom#renderers#util#FindRenderForPlugin(plugin)
-		if render == 'Slash' || render == 'Backslash'
+		if render == 'mvom#renderers#slash'
 			let cnt = cnt + 1
 		endif
 	endfor

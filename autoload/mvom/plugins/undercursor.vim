@@ -17,21 +17,26 @@ function! mvom#plugins#undercursor#data()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
-	exe 'silent normal! "0yl'
-	let charundercursor=@0
-	if match(charundercursor,'\k') == -1
-		" if the char under the cursor isn't part of the 'isword' then don't
-		" search
-		execute 'silent syntax clear UnderCursor'
-		return {}
-	endif
-	let old_search=@/
-	exe "silent normal! *"
-	let results=mvom#plugins#search#data()
-  execute 'silent syntax clear UnderCursor'
-	execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
-	let @/=old_search
-	return results
+  let old_search=@/
+  let oldg = @g
+	exe 'silent normal! "gyl'
+	let charundercursor=@g
+  try
+    if match(charundercursor,'\k') == -1
+      " if the char under the cursor isn't part of the 'isword' then don't
+      " search
+      execute 'silent syntax clear UnderCursor'
+      return {}
+    endif
+    exe "silent normal! *"
+    let results=mvom#plugins#search#data()
+    execute 'silent syntax clear UnderCursor'
+    execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
+    return results
+  finally
+    let @g=oldg
+    let @/=old_search
+  endtry
 endfunction
 
 function! mvom#plugins#undercursor#enabled()

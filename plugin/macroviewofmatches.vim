@@ -66,8 +66,8 @@ if !exists('g:mvom_loaded')
 				\ 'color': 'e5f1ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
-				\ 'fg': 'e5f1ff',
-				\ 'bg': '000000',
+				\ 'bg': 'e5f1ff',
+				\ 'fg': '000000'
 				\ })
 	" Show the visible portion with a darker background
 	call mvom#renderer#add('mvom#plugins#window', {
