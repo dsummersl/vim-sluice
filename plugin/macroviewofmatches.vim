@@ -60,7 +60,15 @@ if !exists('g:mvom_loaded')
 				\ 'xcolor': '0055ff'
 				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
-	"call mvom#renderer#add('mvom#plugins#undercursor','mvom#renderers#backslash')
+	call mvom#renderer#add('mvom#plugins#undercursor', {
+				\ 'render': 'mvom#renderers#slash',
+				\ 'chars': '\ ',
+				\ 'color': 'e5f1ff',
+				\ 'xchars': 'X ',
+				\ 'xcolor': '0055ff',
+				\ 'fg': 'e5f1ff',
+				\ 'bg': '000000',
+				\ })
 	" Show the visible portion with a darker background
 	call mvom#renderer#add('mvom#plugins#window', {
 	      \ 'render': 'mvom#renderers#background',

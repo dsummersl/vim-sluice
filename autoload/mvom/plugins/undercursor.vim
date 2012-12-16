@@ -3,17 +3,17 @@
 "   bg: background color
 
 " UnderCursor: show matches for the 'word' the cursor is currently on
-function! mvom#plugins#underscore#init(options)
+function! mvom#plugins#undercursor#init(options)
 	exe "highlight! UnderCursor guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#". a:options['fg'] ." guibg=#". a:options['bg']
 endfunction
 
-function! mvom#plugins#search#deinit()
+function! mvom#plugins#undercursor#deinit()
   " TODO remove the autocommands and the highlight
   " TODO also make the undercursor highlighting optional
 endfunction
 
-function! mvom#plugins#underscore#data()
+function! mvom#plugins#undercursor#data()
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
@@ -34,7 +34,7 @@ function! mvom#plugins#underscore#data()
 	return results
 endfunction
 
-function! mvom#plugins#underscore#enabled()
+function! mvom#plugins#undercursor#enabled()
 	if &hls == 0 || (exists('w:mvom_lastcalldisabled') && w:mvom_lastcalldisabled)
 		execute 'silent syntax clear UnderCursor'
 	endif
