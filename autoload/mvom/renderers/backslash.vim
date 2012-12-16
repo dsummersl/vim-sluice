@@ -1,14 +1,15 @@
 " Backslash (\\) painter
-function! mvom#renderers#backslash#init()
+function! mvom#renderers#backslash#init(options)
 	" same as slash
-	call SlashInit()
+  let s:options = a:options
+	call mvom#renderers#slash#init(a:options)
 endfunction
 
 function! mvom#renderers#backslash#paint(vals)
-	return mvom#renderers#util#TypicalPaint(a:vals,g:mvom_backslash_chars,g:mvom_backslash_color)
+	return mvom#renderers#util#TypicalPaint(a:vals,s:options['chars'],s:options['color'])
 endfunction
 
 function! mvom#renderers#backslash#reconcile(vals)
 	" same as slash
-	return SlashReconcile(a:vals)
+	return mvom#renderers#slash#reconcile(a:vals)
 endfunction

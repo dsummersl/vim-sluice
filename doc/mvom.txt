@@ -38,6 +38,22 @@ matches on which lines. Format is:
 	}
 }
 
+" Builtin data sources {{{
+" The basic idea for this is that there are X plugins supported and each
+" plugin is expected to have specific function names:
+"
+" <plugin>Init() -- called the first time its used
+" <plugin>Enabled() -- called on repaints... 1 for true, 0 for false.
+" <plugin>#Data(): return data. 
+" Each data uses a 'num'(row number) as key and then the following:
+" {
+" 	'count': number of occurrances on this line
+" }
+" Note: you can move the cursor around as much as you want as the position has
+" been saved and will be restored after this method call.
+
+" }}}
+
 Renderers                                          *mvom-renderers*
 
 Actual logic that paints the matches. Painting and searching are abstracted
@@ -57,3 +73,31 @@ Also makes some global variables for all the hilighting options that have
 possibly been created (so that they don't have to be recreated). These are
 created before the paintFunction is called, so that the paintFunction
 doesn't actually have to create any hilighting itself.
+
+" Builtin rendering types {{{
+" The rendering types are pluggable. Here is the expected format for them:
+" <render>Init() -- init anything it needs to init.
+" <render>PaintMacro() -- return a dictionary telling what symbols to place
+" in macro mode.
+" Should have the following keys for each line:
+" {
+"   'text':  -- 2 symbols to display if there is a match
+"   'fg': -- foreground
+"   'bg': -- background
+"   'linehi': -- highlight for the group. Probably not meaningful for macro mode...
+" }
+" <render>Paint(vals) -- return a dictionary telling what symbols to place
+" in micro mode.
+" vals param has the following keys:
+" {
+" 	'count': --- number of ... whatever... matches, links, etc
+" 	'line': --- line of concern
+" }
+" Should have the following keys:
+" {
+"   'text':  -- (optional) 2 symbols to display if there is a match
+"   'fg': -- foreground
+"   'bg': -- background
+"   'linehi': -- highlight for the group
+" }
+"

@@ -1,7 +1,10 @@
+" Options:
+" TODO hls: if true, then highlight
+"
 " Window (show current visible window in macro area)
 " TODO make the cursor location highlighting optional.
 
-function! mvom#plugins#window#init()
+function! mvom#plugins#window#init(options)
 endfunction
 
 function! mvom#plugins#search#deinit()

@@ -19,7 +19,7 @@ if !exists('g:mvom_search_respect_hls') | let g:mvom_search_respect_hls = 1 | en
 if !exists('g:mvom_search_max_searches ') | let g:mvom_search_max_searches = 75 | endif
 
 
-function! mvom#plugins#search#init()
+function! mvom#plugins#search#init(options)
 endfunction
 
 function! mvom#plugins#search#deinit()

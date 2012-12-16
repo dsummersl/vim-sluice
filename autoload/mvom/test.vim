@@ -72,20 +72,61 @@ function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"
 	" TODO these are still NOT passing.
 	let w:save_cursor = winsaveview()
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test1plugin','render':'mvom#test#test1paint'}]),{})
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test1plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test2plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint' }}
+        \ ]),
+        \
+        \ {})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test2paint'}}
+        \ ]),
+        \
+        \ {'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint'}},
+        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
+        \ ]),
+        \ 
+        \ {'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test1paint'}},
+        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
+        \ ]),
+        \
+        \ {'1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
 	" expect line 1 to have count=2 and then a line 2 of count 2
 	" but then just the rendering for test2 will happen so...same old thing
 	" there.
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test3plugin','render':'mvom#test#test1paint'},{'plugin':'mvom#test#test2plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test2plugin'], 'line':1, 'bg':'testbg'}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test3plugin', 'options': { 'render': 'mvom#test#test1paint'}},
+        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint' }}
+        \ ]),
+        \
+        \ {'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test2plugin'], 'line':1, 'bg':'testbg' }})
 	" if one data source has an extra key it should always be in the results
 	" regardless of order:
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test4plugin','render':'mvom#test#test2paint'},{'plugin':'mvom#test#test3plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin','mvom#test#test3plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test3plugin','render':'mvom#test#test2paint'},{'plugin':'mvom#test#test4plugin','render':'mvom#test#test2paint'}]),{'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test2paint'}},
+        \ {'plugin':'mvom#test#test3plugin','options': { 'render': 'mvom#test#test2paint' }}
+        \ ]),
+        \
+        \ {'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin','mvom#test#test3plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test3plugin','options': { 'render': 'mvom#test#test2paint'}},
+        \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test2paint' }}
+        \ ]),
+        \
+        \ {'1':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test3plugin','mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}})
 	" non intersecting data sets, both should be there.
-	call VUAssertEquals(mvom#renderer#CombineData([{'plugin':'mvom#test#test4plugin','render':'mvom#test#test3paint'},{'plugin':'mvom#test#test5plugin','render':'mvom#test#test3paint'}]), { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1}, '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':2, 'bg':'testbg'}, '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':5, 'bg':'testbg'}, '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':6, 'bg':'testbg'}, })
+	call VUAssertEquals(mvom#renderer#CombineData([
+        \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test3paint'}},
+        \ {'plugin':'mvom#test#test5plugin','options': { 'render': 'mvom#test#test3paint'}}
+        \ ]),
+        \
+        \ { '1':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':1, 'bg':'testbg', 'isvis':1},
+        \   '2':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test4plugin'], 'line':2, 'bg':'testbg'},
+        \   '5':{'count':1, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':5, 'bg':'testbg' },
+        \   '6':{'count':2, 'text':'..', 'fg':'testhi', 'plugins':['mvom#test#test5plugin'], 'line':6, 'bg':'testbg' }})
 endfunction
 
 function! PaintTestStub(line,onscreen)
@@ -104,8 +145,8 @@ function! TestDoPaintMatches()
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_000000000000
 	let g:mv_plugins = []
-	call mvom#renderer#add('mvom#test#test1plugin','mvom#test#nopaint')
-	call mvom#renderer#add('mvom#test#test2plugin','mvom#test#rrpaint')
+	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
+	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['mvom#test#test1plugin'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	unlet! g:mvom_hi_MVOM_000000000000
@@ -116,23 +157,11 @@ function! TestDoPaintMatches()
 
   " When a plugin is removed, it should not longer be in the list of plugins
 	call mvom#renderer#remove('mvom#test#test2plugin')
-  call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'mvom#test#test1plugin', 'render': 'mvom#test#nopaint' }])
+  call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#nopaint' }}])
 endfunction
 
 "}}}
 
-function! TestSuite()
-	call TestCombineData()
-  call TestConvertToPercentOffset()
-	call TestDoPaintMatches()
-	call TestGetHumanReadables()
-	call TestGetSignName()
-	call TestRGBToHSVAndBack()
-	call TestHexToRGBAndBack()
-	call TestUniq()
-	call TestLoadRegisters()
-endfunction
-
-" call VURunnerRunTest('TestSuite')
+"call VURunAllTests()
 
 " vim: set fdm=marker :

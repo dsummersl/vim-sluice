@@ -13,8 +13,9 @@ put the vim file in your ~/.vim/plugins folder.
 ================================================================================
 Testing
 
-To run the unit tests you must install the vimunit plugin (https://github.com/dsummersl/vimunit).
+To run the unit tests you must install the vimunit plugin
+(https://github.com/dsummersl/vimunit).
 
-vim -nc "so % | call VURunnerRunTest('TestSuite')" autoload/mvom/test.vim
+~/.vim/bundle/vimunit/vutest.sh autoload/mvom/test.vim 
 
 ================================================================================

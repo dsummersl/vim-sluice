@@ -1,8 +1,11 @@
+" Options:
+"   fg: foreground color
+"   bg: background color
 
 " UnderCursor: show matches for the 'word' the cursor is currently on
-function! mvom#plugins#underscore#init()
-	exe "highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#".g:mvom_undercursor_fg ." guibg=#". g:mvom_undercursor_bg
+function! mvom#plugins#underscore#init(options)
+	exe "highlight! UnderCursor guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
+	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#". a:options['fg'] ." guibg=#". a:options['bg']
 endfunction
 
 function! mvom#plugins#search#deinit()

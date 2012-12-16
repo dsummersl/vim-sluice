@@ -1,4 +1,4 @@
-function! mvom#test#test3paint#paint(data)
+function! mvom#test#test3paint#paint(options,data)
 	let results = {}
 	for line in keys(a:data)
 		let results[line] = copy(a:data[line])

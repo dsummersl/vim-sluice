@@ -9,5 +9,5 @@ function! mvom#test#test1plugin#data()
 	return {}
 endfunction
 
-function! mvom#test#test1plugin#init()
+function! mvom#test#test1plugin#init(options)
 endfunction

@@ -44,12 +44,21 @@ function! mvom#renderer#RePaintMatches()"{{{
 endfunction"}}}
 
 " Add a specific plugin and rendering.
-function! mvom#renderer#add(pluginName,renderType)
+"
+" Parameters:
+"     pluginName the path to the plugin file (ie, mvom/plugins/underscore
+"                would be mvom#plugins#underscore).
+"     options    Options for the plugin. Depends on the plugin, but all
+"                plugins have the following options:
+"
+"                    render Path to the renderer type.
+"
+function! mvom#renderer#add(pluginName,options)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
 	let old_enabled=g:mvom_enabled
 	let g:mvom_enabled=0
-	call {a:pluginName}#init()
-	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'render': a:renderType })
+	call {a:pluginName}#init(a:options)
+	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'options': a:options })
 	let g:mvom_enabled=old_enabled
 endfunction
 
@@ -168,7 +177,7 @@ function! mvom#renderer#CombineData(plugins)"{{{
 	endfor
 	let resultData = {}
 	for pluginInstance in a:plugins " now render everything
-		let render = pluginInstance['render']
+		let render = pluginInstance['options']['render']
 		let plugin = pluginInstance['plugin']
 		let pluginData = {}
 		for line in keys(allData)
@@ -176,7 +185,7 @@ function! mvom#renderer#CombineData(plugins)"{{{
 				let pluginData[line] = allData[line]
 			endif
 		endfor
-		let paintData = {render}#paint(pluginData)
+		let paintData = {render}#paint(pluginInstance['options'],pluginData)
 		for line in keys(paintData)
 			"echo "looking at line ".line." plugin ".plugin
 			"echo allData
@@ -250,7 +259,8 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 		if len(val['plugins']) > 1
 			for datap in val['plugins']
 				let render = mvom#renderers#util#FindRenderForPlugin(datap)
-				let results[line] = {render}#reconcile(val)
+				let plugin = mvom#renderers#util#FindPlugin(datap)
+				let results[line] = {render}#reconcile(plugin['options'],val)
 			endfor
 		endif
 	endfor
