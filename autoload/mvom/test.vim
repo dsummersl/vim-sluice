@@ -67,6 +67,26 @@ function! TestGetHumanReadables()
 	call VUAssertEquals(mvom#util#location#GetHumanReadables("--"),"dada")
 endfunction
 "}}}
+" util#icon"{{{
+
+function! TestMakeImage()
+  let image = mvom#renderers#icon#makeImage()
+  " base case:
+  call VUAssertEquals(mvom#renderers#icon#generateSVG(image),'<svg width="50px" height="50px"></svg>')
+  " one line on the top row:
+  call mvom#renderers#icon#addRectangle(image,'000000',0,0,50,2)
+  call VUAssertEquals(mvom#renderers#icon#generateSVG(image),'<svg width="50px" height="50px">'.
+        \'<rect x="0" y="0" height="2" width="50" style="fill: #000000;"/>'.
+        \'</svg>')
+endfunction
+
+function! TestGeneratePNGFile()
+  let image = mvom#renderers#icon#makeImage()
+  call mvom#renderers#icon#addRectangle(image,'000000',0,0,50,2)
+  call mvom#renderers#icon#generatePNGFile(image,'test')
+endfunction
+
+""}}}
 " renderer tests"{{{
 function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"

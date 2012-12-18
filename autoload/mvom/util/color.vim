@@ -1,4 +1,5 @@
 function! mvom#util#color#GetHighlightName(dictionary)
+  " TODO include icon attributes if in gui mode
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
