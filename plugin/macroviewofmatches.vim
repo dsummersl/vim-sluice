@@ -14,7 +14,9 @@
 " TODO git plugin for additions and subtractions
 " TODO a gundo compatible plugin - it shows you where you've been making
 " changes (colors boldly the recent changes).
-" TODO a status line to easily move/switch between the different plugins
+" TODO a plugin that shows you where the other match for the keyword that
+" you'veplaced your keyboard on is located (and use the matchit plugin if it
+" esists for for/endfor/etc).
 "
 " For icon support:
 " 	- requires imagemagick to convert between xpm and png.
@@ -43,11 +45,6 @@ set updatetime=100
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
 
-" UnderCursor options:
-" TODO ideally I'd read the hl-IncSearch colors (but I don't know quite how...)
-"if !exists('g:mvom_undercursor_bg ') | let g:mvom_undercursor_bg ='e5f1ff' | endif
-"if !exists('g:mvom_undercursor_fg ') | let g:mvom_undercursor_fg ='000000' | endif
-
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
@@ -57,6 +54,9 @@ if !exists('g:mvom_loaded')
 				\ 'chars': '/ ',
 				\ 'color': '0055ff',
 				\ 'xchars': 'X ',
+				\ 'iconcolor': '0055ff',
+				\ 'iconalign': 'center',
+				\ 'iconwidth': '50%',
 				\ 'xcolor': '0055ff'
 				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
@@ -66,6 +66,9 @@ if !exists('g:mvom_loaded')
 				\ 'color': 'e5f1ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
+				\ 'iconcolor': 'e5f1ff',
+				\ 'iconalign': 'center',
+				\ 'iconwidth': '50%',
 				\ 'bg': 'e5f1ff',
 				\ 'fg': '000000'
 				\ })
@@ -73,7 +76,10 @@ if !exists('g:mvom_loaded')
 	call mvom#renderer#add('mvom#plugins#window', {
 	      \ 'render': 'mvom#renderers#background',
 	      \ 'bg': 'dddddd',
-	      \ 'showinline': 0
+	      \ 'iconcolor': 'dddddd',
+	      \ 'iconalign': 'left',
+	      \ 'iconwidth': '50%',
+	      \ 'showinline': 1
 	      \ })
 	let g:mvom_loaded = 1
 endif

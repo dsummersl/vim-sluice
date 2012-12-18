@@ -81,20 +81,11 @@ function! mvom#renderer#remove(pluginName)
 	let g:mvom_enabled=old_enabled
 endfunction
 
-" Returns a string description suitable for embedding in one's
-" statusline.
-"
-" For instance, if 'search and underline' are configure then it would display:
-"
-"     '\:und' -- undercursor
-"     '/:s//' -- search
-"     '+:git' -- git changes
-"     '+:svn' -- subversion changes
-"     '+: hg' -- mercurial changes
-"     '+:bzr' -- bazaare changes
-"     '#:chg' -- frequent changes 
-"     '#:ind' -- # indents
-function! mvom#renderer#statusline()
+" Set a plugin option. See the related plugin documentation
+" for what options are available.
+function! mvom#renderer#setOption(pluginName,option,value)
+  let options = mvom#renderers#util#FindPlugin(a:pluginName)['options']
+  let options[a:option] = a:value
 endfunction
 
 " paint the matches for real, on the screen. With signs.
@@ -138,10 +129,28 @@ function! mvom#renderer#PaintMV(data)"{{{
 	endif
 endfunction"}}}
 
+" Given all the plugins, generate the line level data: which plugins have
+" matches on which lines. Format is:
+" {
+" 	'<linenumber>': {
+" 		'count': number of matches on the line
+" 		'plugins': an array with the name of the 'Data' plugins that have
+" 		matches on this particular line.
+" 		'line': line number
+" 		'text': text to display in signs area
+"     'fg': foreground
+"     'bg': background
+"     'iconcolor': gui color
+"     'iconalign': how to align the icon
+"     'iconwidth': how wide to paint the icon
+" 		TODO linehi - hilighting for the linelevel option.
+" 	}
+" }
 function! mvom#renderer#CombineData(plugins)"{{{
 	"echo "START"
 	let allData = {}
-	for pluginInstance in a:plugins
+  " Generate data for each plugin, and combine it into one master list:
+	for pluginInstance in a:plugins"{{{
 		let plugin = pluginInstance['plugin']
 		if !{plugin}#enabled()
 			continue
@@ -174,12 +183,14 @@ function! mvom#renderer#CombineData(plugins)"{{{
 				let allData[line]['plugins'] = [plugin]
 			endif
 		endfor
-	endfor
+	endfor"}}}
 	let resultData = {}
+  " Render all the data"{{{
 	for pluginInstance in a:plugins " now render everything
 		let render = pluginInstance['options']['render']
 		let plugin = pluginInstance['plugin']
 		let pluginData = {}
+    " Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
 			if count(allData[line]['plugins'],plugin) > 0
 				let pluginData[line] = allData[line]
@@ -196,18 +207,14 @@ function! mvom#renderer#CombineData(plugins)"{{{
 			else
 				let resultData[line] = copy(allData[line])
 			endif
-			if has_key(paintData[line],'text')
-				let resultData[line]['text'] = paintData[line]['text']
-				let pluginData[line]['text'] = paintData[line]['text']
-			endif
-			if has_key(paintData[line],'fg')
-				let resultData[line]['fg'] = paintData[line]['fg']
-				let pluginData[line]['fg'] = paintData[line]['fg']
-			endif
-			let resultData[line]['bg'] = paintData[line]['bg']
-			let pluginData[line]['bg'] = paintData[line]['bg']
+      for key in ["text","fg","bg","iconcolor","iconwidth","iconalign"]
+        if has_key(paintData[line],key)
+          let resultData[line][key] = paintData[line][key]
+          let pluginData[line][key] = paintData[line][key]
+        endif
+      endfor
 		endfor
-	endfor
+	endfor"}}}
 	return resultData
 endfunction"}}}
 
@@ -228,6 +235,23 @@ function! mvom#renderer#UnpaintSign(line,dict)
 	exe "sign unplace ".a:line." buffer=".winbufnr(0)
 endfunction
 
+" Actual logic that paints the matches. Painting and searching are abstracted
+" out so that it can be tested by itself.
+" 
+" Parameters: searchResults are of the form defined by CombineData.
+" 
+" Return: dictionary of lines that are currently set. Each line contains the
+" standard elements created by CombineData. Additional possible keys:
+" 
+" 'visible'  - if the line is currently displayed on the screen then this would
+"              be set to '1'.
+" 'metaline' - when in 'meta' mode this is the line that represents the %
+"              offset of the actual line.
+" 
+" Also makes some global variables for all the hilighting options that have
+" possibly been created (so that they don't have to be recreated). These are
+" created before the paintFunction is called, so that the paintFunction
+" doesn't actually have to create any hilighting itself.
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}

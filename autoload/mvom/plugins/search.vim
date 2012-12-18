@@ -40,31 +40,39 @@ function! mvom#plugins#search#data()
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-	while len(@/) > 0 && search(@/,"We") > 0 && n < s:max_searches " search forwards
-		let here = line('.')
-		let cnt = 0
-		if has_key(results,here) && has_key(results[here],'count')
-			let cnt = results[here]['count']
+  let here = search(@/,"We")
+	while len(@/) > 0 &&  here > 0 && n < s:max_searches " search forwards
+    " 99% of the time the key isn't there yet, so minimize time there.
+		if has_key(results,here)
+      if has_key(results[here],'count')
+        let cnt = results[here]['count']
+        let cnt = cnt + 1
+        let results[here]['count'] = cnt
+      endif
 		else
 			let results[here] = {}
+			let results[here]['count'] = 1
 		endif
-		let cnt = cnt + 1
-		let results[here]['count'] = cnt
 		let n = n+1
+    let here = search(@/,"We")
 	endwhile
 	exe "". startLine
 	let n = 1
-	while len(@/) > 0 && search(@/,"Wb") > 0 && n < s:max_searches " search backwards
-		let here = line('.')
-		let cnt = 0
-		if has_key(results,here) && has_key(results[here],'count')
-			let cnt = results[here]['count']
+  let here = search(@/,"Wb")
+	while len(@/) > 0 && here > 0 && n < s:max_searches " search backwards
+    " 99% of the time the key isn't there yet, so minimize time there.
+		if has_key(results,here)
+      if has_key(results[here],'count')
+        let cnt = results[here]['count']
+        let cnt = cnt + 1
+        let results[here]['count'] = cnt
+      endif
 		else
 			let results[here] = {}
+			let results[here]['count'] = 1
 		endif
-		let cnt = cnt + 1
-		let results[here]['count'] = cnt
 		let n = n+1
+    let here = search(@/,"Wb")
 	endwhile
 	exe "". startLine
 	return results

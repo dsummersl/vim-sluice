@@ -4,6 +4,7 @@
 
 " UnderCursor: show matches for the 'word' the cursor is currently on
 function! mvom#plugins#undercursor#init(options)
+  call mvom#plugins#search#init(a:options)
 	exe "highlight! UnderCursor guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#". a:options['fg'] ." guibg=#". a:options['bg']
 endfunction
