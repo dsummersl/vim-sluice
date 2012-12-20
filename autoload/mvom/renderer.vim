@@ -288,7 +288,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 			endfor
 		endif
 	endfor
-	sign unplace *
 	for [line,val] in items(results)
 		"echo "val = ". string(val)
 		if !has_key(val,'text')
@@ -316,9 +315,10 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       let fname = mvom#util#color#GetSignName(val)
       if !exists('g:mvom_hi_'. fname)
         exe "let g:mvom_hi_". fname ."=1"
-        if has_key(val,"iconwidth")
+        if has_key(val,"iconwidth") && exists('g:mvom_alpha') && g:mvom_alpha
           let image = mvom#renderers#icon#makeImage()
           call image.addRectangle(val['bg'],0,0,50,50)
+          " TODO place all including conflicts.
           call image.placeRectangle(val['iconcolor'],float2nr(modulo/2.0),val['iconwidth'],4,val['iconalign'])
           call image.generatePNGFile(fname)
           exe "sign define ". fname ." icon=/Users/danesummers/.vim/mvom-cache/". fname .".png text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
@@ -327,8 +327,25 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         endif
       endif
 		endif
-		call {a:paintFunction}(line,val)
+    " did we paint this line previously?
+    if has_key(b:cached_signs,line)
+      " did we paint something different this time?
+      if b:cached_signs[line] != val
+        " if so, unpaint what we did before, and paint the new thing.
+        call {a:unpaintFunction}(line,b:cached_signs[line])
+        call {a:paintFunction}(line,val)
+      endif
+    else
+      " something new, paint it.
+      call {a:paintFunction}(line,val)
+    endif
 	endfor
+  " Finally, is there anything old that doesn't exist anymore?
+	for [line,val] in items(b:cached_signs)
+    if !has_key(results,line)
+      call {a:unpaintFunction}(line,b:cached_signs[line])
+    endif
+  endfor
 	let b:cached_signs = results
 	return results
 endfunction"}}}

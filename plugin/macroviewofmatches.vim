@@ -17,10 +17,6 @@
 " TODO a plugin that shows you where the other match for the keyword that
 " you'veplaced your keyboard on is located (and use the matchit plugin if it
 " esists for for/endfor/etc).
-"
-" For icon support:
-" 	- requires imagemagick to convert between xpm and png.
-" 	- Make a new 'dash renderer' that has hte following options...:
 
 " mappings"{{{
 
@@ -44,6 +40,9 @@ set updatetime=200
 " default background color of the gutter:
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
+
+" Enable any not ready for primetime features?
+if !exists('g:mvom_alpha') | let g:mvom_alpha=0 | endif
 
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')

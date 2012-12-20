@@ -4,6 +4,8 @@ function! mvom#util#color#GetHighlightName(dictionary)
 endfunction
 
 function! mvom#util#color#GetSignName(dictionary)
+  " TODO the key should contain all the conflicts that are pasted onto the
+  " sign (all plugins)
 	let result = mvom#util#color#GetHighlightName(a:dictionary)
         \."_"
         \.a:dictionary['modulo']

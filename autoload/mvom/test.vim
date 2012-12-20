@@ -35,7 +35,7 @@ function! TestRGBToHSVAndBack()
 endfunction
 
 function! TestGetSignName()
-	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--'}),"MVOM_000000111111_dada")
+	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--', 'modulo': 5}),"MVOM_000000111111_5_dada")
 endfunction
 " }}}
 " util#location "{{{
@@ -195,11 +195,11 @@ function! TestDoPaintMatches()
 	unlet! g:mvom_hi_MVOM_00000000000066
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(6,1,5,
         \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
-        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}},
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000','modulo': 66}},
         \"UnpaintTestStub","PaintTestStub"),
         \
         \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
-        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000','modulo': 66}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_00000000000066"),1)
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_hi_MVOM_00000000000066
