@@ -14,7 +14,7 @@ function! mvom#plugins#undercursor#deinit()
   " TODO also make the undercursor highlighting optional
 endfunction
 
-function! mvom#plugins#undercursor#data()
+function! mvom#plugins#undercursor#data(options)
 	" TODO words that are reserved aren't hilighted (probably b/c they're
 	" already hilighted for their language...how do I add my highlighting to
 	" theirs?
@@ -30,7 +30,7 @@ function! mvom#plugins#undercursor#data()
       return {}
     endif
     exe "silent normal! *"
-    let results=mvom#plugins#search#data()
+    let results=mvom#plugins#search#data(a:options)
     execute 'silent syntax clear UnderCursor'
     execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
     return results
@@ -40,7 +40,7 @@ function! mvom#plugins#undercursor#data()
   endtry
 endfunction
 
-function! mvom#plugins#undercursor#enabled()
+function! mvom#plugins#undercursor#enabled(options)
 	if &hls == 0 || (exists('w:mvom_lastcalldisabled') && w:mvom_lastcalldisabled)
 		execute 'silent syntax clear UnderCursor'
 	endif

@@ -51,3 +51,15 @@ function! mvom#util#location#GetHumanReadables(chars)
 	return result
 endfunction
 
+" Get specific details of window dimensions as a dictionary:
+function! mvom#util#location#getwindowdimensions(data)
+  let cached_dim = {}
+	let cached_dim['top'] = line('w0')
+	let cached_dim['bottom'] = line('w$')
+	let cached_dim['height'] = winheight(0)
+	let cached_dim['pos'] = line('.')
+	let cached_dim['hls'] = &hls
+	let cached_dim['data'] = a:data
+  return cached_dim
+endf
+

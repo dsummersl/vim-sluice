@@ -27,9 +27,48 @@ endfunction
 function! mvom#plugins#search#deinit()
 endfunction
 
-function! mvom#plugins#search#data()
+" TODO add a max timeout function to this method...this would then require
+" some kind of...'resume' functionality... get rid of the 'max searches'
+" completely
+"
+" Use reltime() to get the start time. Says its system dependend but it
+" apepars to be seconds and ... milliseconds.
+"
+" TODO add a paramter to this for max time...
+function! mvom#plugins#search#data(options)
+  " max number of milliseconds
+  "let maxtime = 500
+  "let starttime = reltime()
+  "" there just isn't a way to do this quickly at this point:
+  "if maxtime < 50
+  "  return {}
+  "endif
+
+  " if the search is hte same and the palce is the same, return the previous
+  " results
+  if has_key(a:options,'previoussearch')
+    " TODO check that the previous line is within some wiggle of the current
+    " line...and that changedtick hasn't changed.
+    if a:options['previoussearch'] == @/ && 
+          \a:options['previousline'] < line('.') + s:max_searches &&
+          \a:options['previousline'] > line('.') - s:max_searches &&
+          \a:options['previoustick'] == b:changedtick
+      return a:options['previousdata']
+    endif
+  endif
+
+  " TODO this only needs to return NEW values if... @/ has changed, or the
+  " cursor position has changed (or the file.
+
 	" for this search make it match up and down a max # of times (performance fixing)
-	let results = {}
+  "if exists('s:partialresults')
+  "  let results = s:partialresults
+  "else
+  let results = {}
+  "endif
+  let a:options['previoustick'] = b:changedtick
+  let a:options['previoussearch'] = @/
+  let a:options['previousline'] = line('.')
 	let n = 1
 	let startLine = 1
 	" TODO cache results so as to avoid researching on duplicates (save last
@@ -75,10 +114,11 @@ function! mvom#plugins#search#data()
     let here = search(@/,"Wb")
 	endwhile
 	exe "". startLine
+  let a:options['previousdata'] = results
 	return results
 endfunction
 
-function! mvom#plugins#search#enabled()
+function! mvom#plugins#search#enabled(options)
   if s:respect_hls == 1
     return &hls == 1
   endif

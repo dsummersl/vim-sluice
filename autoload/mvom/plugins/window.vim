@@ -10,7 +10,7 @@ endfunction
 function! mvom#plugins#search#deinit()
 endfunction
 
-function! mvom#plugins#window#data()
+function! mvom#plugins#window#data(options)
 	let firstVisible = line("w0")
 	let lastVisible = line("w$")
 	let totalLines = line("$")
@@ -29,6 +29,6 @@ function! mvom#plugins#window#data()
 	return results
 endfunction
 
-function! mvom#plugins#window#enabled()
+function! mvom#plugins#window#enabled(options)
 	return &hls == 1
 endfunction

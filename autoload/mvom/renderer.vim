@@ -6,16 +6,11 @@ function! mvom#renderer#RePaintMatches()"{{{
 	endif
 	let w:save_cursor = winsaveview()
 	let w:save_registers = mvom#util#location#SaveRegisters()
+  let current_dims = mvom#util#location#getwindowdimensions(mvom#renderer#CombineData(g:mv_plugins))
 	" if there are no cached_dim then this is the first call to the
 	" repaintfunction. Make the cache and paint.
 	if !exists('w:cached_dim')
-		let w:cached_dim = {}
-		let w:cached_dim['top'] = line('w0')
-		let w:cached_dim['bottom'] = line('w$')
-		let w:cached_dim['height'] = winheight(0)
-		let w:cached_dim['pos'] = line('.')
-		let w:cached_dim['hls'] = &hls
-		let w:cached_dim['data'] = mvom#renderer#CombineData(g:mv_plugins)
+		let w:cached_dim = current_dims
 		call mvom#renderer#PaintMV(w:cached_dim['data'])
 		" TODO possible optimization: don't restore the view if it hasn't changed?
 		call winrestview(w:save_cursor)
@@ -23,21 +18,21 @@ function! mvom#renderer#RePaintMatches()"{{{
 		call mvom#util#location#LoadRegisters(w:save_registers)
 		return 1
 	endif
-	let firstVisible = line('w0')
-	let lastVisible = line('w$')
-	let winHeight = winheight(0)
-	let cursorPos = line('.')
-	let data = mvom#renderer#CombineData(g:mv_plugins)
-	if firstVisible != w:cached_dim['top'] || lastVisible != w:cached_dim['bottom'] || winHeight != w:cached_dim['height'] || cursorPos != w:cached_dim['pos'] || &hls != w:cached_dim['hls'] || data != w:cached_dim['data']
-		call mvom#renderer#PaintMV(data)
+  " TODO major bad thing here. If the file hasn't changed, and none of the
+  " plugins need updates then...don't do anything!
+  "if current_dims['data'] != w:cached_dim['data']
+  "  " echom "current data ". string(current_dims['data']) ." != ". string(w:cached_dim['data'])
+  "  echom "current data different "
+  "endif
+	if current_dims['top'] != w:cached_dim['top'] ||
+        \current_dims['bottom'] != w:cached_dim['bottom'] ||
+        \current_dims['height'] != w:cached_dim['height'] ||
+        \&hls != w:cached_dim['hls'] ||
+        \current_dims['data'] != w:cached_dim['data']
+		call mvom#renderer#PaintMV(current_dims['data'])
 		let painted = 1
 	endif
-	let w:cached_dim['top'] = line('w0')
-	let w:cached_dim['bottom'] = line('w$')
-	let w:cached_dim['height'] = winheight(0)
-	let w:cached_dim['pos'] = line('.')
-	let w:cached_dim['hls'] = &hls
-	let w:cached_dim['data'] = data
+	let w:cached_dim = current_dims
 	call winrestview(w:save_cursor)
 	call mvom#util#location#LoadRegisters(w:save_registers)
 	return painted
@@ -91,17 +86,14 @@ endfunction
 " paint the matches for real, on the screen. With signs.
 function! mvom#renderer#PaintMV(data)"{{{
 	if !exists('g:mv_plugins') | return | endif
-	"TODO add in some cacheing? IE: if you call this method should it always
-	"repaint everything, or should it only do it if dimensions have changed
-	"and locations have changed. For now. The simpler.
-
 	let totalLines = line('$')
 	let firstVisible = line('w0')
 	let lastVisible = line('w$')
 	let anyEnabled = 0
 	for pluginInstance in g:mv_plugins
 		let plugin = pluginInstance['plugin']
-		if {plugin}#enabled()
+		let options = pluginInstance['plugin']['options']
+		if {plugin}#enabled(options)
 			let anyEnabled = 1
 			break
 		endif
@@ -152,11 +144,12 @@ function! mvom#renderer#CombineData(plugins)"{{{
   " Generate data for each plugin, and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
 		let plugin = pluginInstance['plugin']
-		if !{plugin}#enabled()
+		let options = pluginInstance['options']
+		if !{plugin}#enabled(options)
 			continue
 		endif
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
-		let data={plugin}#data()
+		let data={plugin}#data(options)
 		for line in keys(data) " loop through all the data and add it to my own master list.
 			"echo "plg ". plugin ." line ". line
 			if has_key(allData,line)
@@ -312,6 +305,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 				exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 			endif
 			exe "let g:mvom_hi_".mvom#util#color#GetHighlightName(val)."=1"
+      " TODO make the icon, and stick it in this definition.
 			exe "sign define ".mvom#util#color#GetSignName(val)." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
 		endif
 		call {a:paintFunction}(key,val)

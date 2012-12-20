@@ -39,7 +39,7 @@ if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 "}}}
 " Default Configuration"{{{
 " This handles all the slow/fastness of responsiveness of the entire plugin:
-set updatetime=100
+set updatetime=200
 
 " default background color of the gutter:
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif

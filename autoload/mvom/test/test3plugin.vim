@@ -1,4 +1,4 @@
-function! mvom#test#test3plugin#data()
+function! mvom#test#test3plugin#data(options)
 	return {'1':{'count':1},'2':{'count':2}}
 endfunction
 
@@ -8,6 +8,6 @@ endfunction
 function! mvom#test#test3plugin#deinit()
 endfunction
 
-function! mvom#test#test3plugin#enabled()
+function! mvom#test#test3plugin#enabled(options)
 	return 1 
 endfunction
