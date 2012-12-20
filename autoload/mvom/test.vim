@@ -49,13 +49,24 @@ function! TestLoadRegisters()
 	call VUAssertEquals(from ."2",@8)
 endfunction
 
+function! TestConvertToModuloOffset()
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,31,31),96)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(31,1,31,31),0)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,70,100,100),30)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(100,70,100,100),0)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(50,70,100,100),0)
+endf
+
 function! TestConvertToPercentOffset()
-  " put your curser in this block somwhere and then type ":call VUAutoRun()"
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,1,5,1),41)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(6,1,5,1),25)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,6,10,1),46)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,6,10,10),10)
 endfunction
 
 function! TestGetHumanReadables()
@@ -72,18 +83,40 @@ endfunction
 function! TestMakeImage()
   let image = mvom#renderers#icon#makeImage()
   " base case:
-  call VUAssertEquals(mvom#renderers#icon#generateSVG(image),'<svg width="50px" height="50px"></svg>')
+  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px"></svg>')
   " one line on the top row:
-  call mvom#renderers#icon#addRectangle(image,'000000',0,0,50,2)
-  call VUAssertEquals(mvom#renderers#icon#generateSVG(image),'<svg width="50px" height="50px">'.
+  call image.addRectangle('000000',0,0,50,2)
+  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
         \'<rect x="0" y="0" height="2" width="50" style="fill: #000000;"/>'.
         \'</svg>')
 endfunction
 
 function! TestGeneratePNGFile()
   let image = mvom#renderers#icon#makeImage()
-  call mvom#renderers#icon#addRectangle(image,'000000',0,0,50,2)
-  call mvom#renderers#icon#generatePNGFile(image,'test')
+  call image.addRectangle('000000',0,0,50,2)
+  call image.generatePNGFile('test')
+endfunction
+
+function! TestAddRectangleWithAlign()
+  " Base case
+  let aligns = [ 'left', 'right', 'center' ]
+  for a in aligns
+    let image = mvom#renderers#icon#makeImage()
+    call image.placeRectangle('000000',10,100,2,a)
+    call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
+          \'<rect x="0" y="10" height="2" width="50" style="fill: #000000;"/>'.
+          \'</svg>')
+  endfor
+  let image = mvom#renderers#icon#makeImage()
+  call image.placeRectangle('000000',10,50,2,'right')
+  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
+        \'<rect x="25" y="10" height="2" width="25" style="fill: #000000;"/>'.
+        \'</svg>')
+  let image = mvom#renderers#icon#makeImage()
+  call image.placeRectangle('000000',10,50,2,'center')
+  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
+        \'<rect x="12" y="10" height="2" width="25" style="fill: #000000;"/>'.
+        \'</svg>')
 endfunction
 
 ""}}}
@@ -159,18 +192,42 @@ function! TestDoPaintMatches()
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,
 	" and that the highlight group is created (and 'mvom#test#test1plugin' is called).
-	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(mvom#renderer#DoPaintMatches(6,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
+	unlet! g:mvom_hi_MVOM_00000000000066
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(6,1,5,
+        \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}},
+        \"UnpaintTestStub","PaintTestStub"),
+        \
+        \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_00000000000066"),1)
 	" two lines, implies some reconciliation should be happening here:
-	unlet! g:mvom_hi_MVOM_000000000000
+	unlet! g:mvom_hi_MVOM_00000000000066
 	let g:mv_plugins = []
 	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
 	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
-	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,1,5,{1:{'count':1,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},2:{'count':1,'plugins':['mvom#test#test1plugin'],'line':2,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
-	unlet! g:mvom_hi_MVOM_000000000000
-	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,6,10,{1:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000'},10:{'count':1,'plugins':['mvom#test#test1plugin'],'line':10,'text':'XX','fg':'000000','bg':'000000'}},"UnpaintTestStub","PaintTestStub"),{6:{'count':1,'plugins':['mvom#test#test1plugin'],'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},10:{'count':1,'plugins':['mvom#test#test1plugin'],'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,1,5,
+        \{1:{'count':1,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'},
+        \2:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':2,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}},
+        \"UnpaintTestStub","PaintTestStub"),
+        \
+        \{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],
+        \  'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_00000000000040"),1)
+	unlet! g:mvom_hi_MVOM_00000000000040
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,6,10,
+        \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000'},
+        \10:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':10,'text':'XX','fg':'000000','bg':'000000'}},
+        \"UnpaintTestStub","PaintTestStub"),
+        \
+        \{6:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},
+        \10:{'count':1,'plugins':['mvom#test#test1plugin'],
+        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
 	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
 	" dubgging call
 	" echo mvom#renderer#DoPaintMatches(line('$'),line('w0'),line('w$'),mvom#renderer#CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")

@@ -1,7 +1,7 @@
 " Slash (//) painter
 
 function! mvom#renderers#slash#paint(options,vals)
-	return mvom#renderers#util#TypicalPaint(a:vals,a:options['chars'],a:options['color'])
+	return mvom#renderers#util#TypicalPaint(a:vals,a:options)
 endfunction
 
 function! mvom#renderers#slash#reconcile(options,vals)

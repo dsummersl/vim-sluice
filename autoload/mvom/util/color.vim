@@ -4,7 +4,12 @@ function! mvom#util#color#GetHighlightName(dictionary)
 endfunction
 
 function! mvom#util#color#GetSignName(dictionary)
-	return mvom#util#color#GetHighlightName(a:dictionary)."_".mvom#util#location#GetHumanReadables(a:dictionary['text'])
+	let result = mvom#util#color#GetHighlightName(a:dictionary)
+        \."_"
+        \.a:dictionary['modulo']
+        \."_"
+        \.mvom#util#location#GetHumanReadables(a:dictionary['text'])
+  return substitute(result,'\s*','','g')
 endfunction
 
 " Convert a 6 character hex RGB to a 3 part (0-255) array.

@@ -56,7 +56,7 @@ if !exists('g:mvom_loaded')
 				\ 'xchars': 'X ',
 				\ 'iconcolor': '0055ff',
 				\ 'iconalign': 'center',
-				\ 'iconwidth': '50%',
+				\ 'iconwidth': 50,
 				\ 'xcolor': '0055ff'
 				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
@@ -68,7 +68,7 @@ if !exists('g:mvom_loaded')
 				\ 'xcolor': '0055ff',
 				\ 'iconcolor': 'e5f1ff',
 				\ 'iconalign': 'center',
-				\ 'iconwidth': '50%',
+				\ 'iconwidth': 50,
 				\ 'bg': 'e5f1ff',
 				\ 'fg': '000000'
 				\ })
@@ -78,7 +78,7 @@ if !exists('g:mvom_loaded')
 	      \ 'bg': 'dddddd',
 	      \ 'iconcolor': 'dddddd',
 	      \ 'iconalign': 'left',
-	      \ 'iconwidth': '50%',
+	      \ 'iconwidth': 50,
 	      \ 'showinline': 1
 	      \ })
 	let g:mvom_loaded = 1

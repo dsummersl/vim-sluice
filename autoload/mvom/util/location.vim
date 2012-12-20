@@ -29,6 +29,18 @@ function! mvom#util#location#ConvertToPercentOffset(line,start,end,total)
 	return float2nr(percent * lines)+a:start
 endfunction
 
+" Same as ConvertToPercentOffset but return only the module value
+" rather than the line. Down to the 100th
+"
+" It just says what hte partial percent would have been
+" from 0..99 (.00 to .99).
+"
+function! mvom#util#location#ConvertToModuloOffset(line,start,end,total)
+	let percent = a:line / str2float(a:total)
+	let lines = a:end - a:start
+	return float2nr(percent * lines * 100) % 100
+endfunction
+
 function! mvom#util#location#GetHumanReadables(chars)
 	let result = ""
 	let n = 0

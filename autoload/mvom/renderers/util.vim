@@ -10,8 +10,8 @@ function! mvom#renderers#util#FindRenderForPlugin(dataPlugin)
   return mvom#renderers#util#FindPlugin(a:dataPlugin)['options']['render']
 endfunction
 
-function! mvom#renderers#util#TypicalPaint(vals,slashes,matchColor)
-	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:matchColor))
+function! mvom#renderers#util#TypicalPaint(vals,options)
+	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:options['color']))
 	let result = {}
 	for line in keys(a:vals)
 		let modded[2] = 60 + 10*a:vals[line]['count']/len(a:vals[line]['plugins'])
@@ -19,7 +19,12 @@ function! mvom#renderers#util#TypicalPaint(vals,slashes,matchColor)
 			let modded[2] = 100
 		endif
 		let thecolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
-		let result[line] = { 'text': a:slashes, 'fg': thecolor, 'bg':g:mvom_default_bg }
+		let result[line] = { 'text': a:options['chars'], 'fg': thecolor, 'bg':g:mvom_default_bg }
+    for key in ["iconcolor","iconwidth","iconalign"]
+      if has_key(a:options,key)
+        let result[line][key] = a:options[key]
+      endif
+    endfor
 	endfor
 	return result
 endfunction

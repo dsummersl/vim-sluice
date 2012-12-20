@@ -125,16 +125,15 @@ endfunction"}}}
 " matches on which lines. Format is:
 " {
 " 	'<linenumber>': {
-" 		'count': number of matches on the line
-" 		'plugins': an array with the name of the 'Data' plugins that have
-" 		matches on this particular line.
-" 		'line': line number
-" 		'text': text to display in signs area
-"     'fg': foreground
-"     'bg': background
-"     'iconcolor': gui color
-"     'iconalign': how to align the icon
-"     'iconwidth': how wide to paint the icon
+"     'count'     : number of matches on the line
+"     'plugins'   : an array with the name of the 'Data' plugins that have matches on this particular line.
+"     'line'      : line number
+"     'text'      : text to display in signs area
+"     'fg'        : foreground
+"     'bg'        : background
+"     'iconcolor' : gui color
+"     'iconalign' : how to align the icon
+"     'iconwidth' : how wide to paint the icon
 " 		TODO linehi - hilighting for the linelevel option.
 " 	}
 " }
@@ -250,6 +249,14 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 	let results = {}
 	" First colate all of hte search results into the 'macro' line (so several
 	" lines will be condensed to one line:
+  " TODO this should now be 'modulo' aware so that we don't condense multiple
+  " matches if the icon support can handle it. I guess...just don't do it if
+  " icons are supported.
+  "
+  " Additinoal keys added:
+  " - count
+  " - plugins
+  " - visible
 	for [line, trash] in items(a:searchResults)
 		"echo "doing ". line ." which is ". string( trash['plugins'] )
 		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
@@ -282,7 +289,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 		endif
 	endfor
 	sign unplace *
-	for [key,val] in items(results)
+	for [line,val] in items(results)
 		"echo "val = ". string(val)
 		if !has_key(val,'text')
 			let val['text'] = '..'
@@ -295,7 +302,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 				if len(val['plugins']) == 1
 					" hack for the window plugin
 					" TODO NR-16 ctermcolor support. Thisi s jsut NR8 (we could use dark
-					" gray)
+					" gray). Or ansi-128?
 					exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 				else
 					" hack for the window plugin
@@ -304,11 +311,23 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 			else
 				exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 			endif
-			exe "let g:mvom_hi_".mvom#util#color#GetHighlightName(val)."=1"
-      " TODO make the icon, and stick it in this definition.
-			exe "sign define ".mvom#util#color#GetSignName(val)." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+      let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+      let val['modulo'] = modulo
+      let fname = mvom#util#color#GetSignName(val)
+      if !exists('g:mvom_hi_'. fname)
+        exe "let g:mvom_hi_". fname ."=1"
+        if has_key(val,"iconwidth")
+          let image = mvom#renderers#icon#makeImage()
+          call image.addRectangle(val['bg'],0,0,50,50)
+          call image.placeRectangle(val['iconcolor'],float2nr(modulo/2.0),val['iconwidth'],4,val['iconalign'])
+          call image.generatePNGFile(fname)
+          exe "sign define ". fname ." icon=/Users/danesummers/.vim/mvom-cache/". fname .".png text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+        else
+          exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+        endif
+      endif
 		endif
-		call {a:paintFunction}(key,val)
+		call {a:paintFunction}(line,val)
 	endfor
 	let b:cached_signs = results
 	return results
