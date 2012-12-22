@@ -100,3 +100,15 @@ function! mvom#util#color#Uniq(list)
 	endfor
 	return result
 endfunction
+
+function! mvom#util#color#darker(color)
+	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
+  let modded[2] = float2nr(modded[2]*0.9)
+	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
+endfunction
+
+function! mvom#util#color#lighter(color)
+	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
+  let modded[2] = float2nr(modded[2]+modded[2]*0.1)
+	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
+endfunction

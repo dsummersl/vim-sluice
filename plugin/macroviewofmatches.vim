@@ -17,6 +17,12 @@
 " TODO a plugin that shows you where the other match for the keyword that
 " you'veplaced your keyboard on is located (and use the matchit plugin if it
 " esists for for/endfor/etc).
+"
+" NEXT:
+" - cache icon images.
+" - icons with conflicts. Currently only one data source is shown. They should
+"   all paint onto the icon.
+" - Seamlessly work on console or GUI mode.
 
 " mappings"{{{
 

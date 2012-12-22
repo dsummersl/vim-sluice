@@ -10,7 +10,6 @@
 
 " Background Painter
 function! mvom#renderers#background#init(options)
-	"echom "bg init". reltime()[0]
 endfunction
 
 function! mvom#renderers#background#paint(options,vals)
@@ -23,20 +22,17 @@ function! mvom#renderers#background#paint(options,vals)
 	let result = {}
 	let bgcolor = a:options['bg']
 	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
-	" TODO if the bg is dark this code doesn't really color correctly (needs to
+	" If the bg is dark this code doesn't really color correctly (needs to
 	" change by more and by something fixed I think
 	if modded[2] > 50 " if its really light, lets darken, otherwise we'll lighten
-		let modded[2] = float2nr(modded[2]*0.9)
+    let bgcolor = mvom#util#color#darker(bgcolor)
 	else
-		let modded[2] = float2nr(modded[2]+modded[2]*0.1)
+    let bgcolor = mvom#util#color#lighter(bgcolor)
 	endif
-	let bgcolor = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 	for line in keys(a:vals)
 		let color = bgcolor
 		if has_key(a:vals[line],'iscurrentline') && showinline
-			let darkened = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(bgcolor))
-			let darkened[2] = float2nr(darkened[2]*0.9)
-			let color = mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(darkened))
+			let color = mvom#util#color#darker(bgcolor)
 		endif
 		if has_key(a:vals[line],'text')
 			let result[line] = { 'bg':color }

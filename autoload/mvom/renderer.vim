@@ -1,3 +1,17 @@
+" New implementations:
+" - data sources (that can pretty much stay as is.
+"     - stateless
+" - Signs: a wrapper around the gutter implementation (point to cache what is
+"   currently there.
+"     - state (tie to window)
+" - MacroSigns: a wrapper around the gutter implementation that only paints on
+"   the signs in the current viewpoint.
+"     - state (tie to window)
+" - Window: encapsulate the entire state of the current window (size,
+"   location?)
+"     - state (tie to window)
+" - Painter (takes Signs or MacroSigns):
+"     - stateless
 
 function! mvom#renderer#RePaintMatches()"{{{
 	let painted = 0
@@ -117,6 +131,7 @@ function! mvom#renderer#PaintMV(data)"{{{
 		let w:mvom_lastcalldisabled = 0
 	else
 		let w:mvom_lastcalldisabled = 1
+    " TODO remove this - it unplaces everything in every window.
 		sign unplace *
 	endif
 endfunction"}}}
@@ -140,7 +155,7 @@ endfunction"}}}
 function! mvom#renderer#CombineData(plugins)"{{{
 	"echo "START"
 	let allData = {}
-  " Generate data for each plugin, and combine it into one master list:
+  " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
 		let plugin = pluginInstance['plugin']
 		let options = pluginInstance['options']
@@ -177,7 +192,7 @@ function! mvom#renderer#CombineData(plugins)"{{{
 		endfor
 	endfor"}}}
 	let resultData = {}
-  " Render all the data"{{{
+  " Generate the paint data"{{{
 	for pluginInstance in a:plugins " now render everything
 		let render = pluginInstance['options']['render']
 		let plugin = pluginInstance['plugin']
@@ -230,7 +245,7 @@ endfunction
 " Actual logic that paints the matches. Painting and searching are abstracted
 " out so that it can be tested by itself.
 " 
-" Parameters: searchResults are of the form defined by CombineData.
+" Parameters: searchResults are of the form returned by CombineData.
 " 
 " Return: dictionary of lines that are currently set. Each line contains the
 " standard elements created by CombineData. Additional possible keys:
@@ -296,37 +311,23 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 		if !has_key(val,'fg')
 			let val['fg'] = val['bg']
 		endif
-		if has_key(val,'fg')
-			if count(val['plugins'],"Window") > 0
-				if len(val['plugins']) == 1
-					" hack for the window plugin
-					" TODO NR-16 ctermcolor support. Thisi s jsut NR8 (we could use dark
-					" gray). Or ansi-128?
-					exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-				else
-					" hack for the window plugin
-					exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-				endif
-			else
-				exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-			endif
-      let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-      let val['modulo'] = modulo
-      let fname = mvom#util#color#GetSignName(val)
-      if !exists('g:mvom_hi_'. fname)
-        exe "let g:mvom_hi_". fname ."=1"
-        if has_key(val,"iconwidth") && exists('g:mvom_alpha') && g:mvom_alpha
-          let image = mvom#renderers#icon#makeImage()
-          call image.addRectangle(val['bg'],0,0,50,50)
-          " TODO place all including conflicts.
-          call image.placeRectangle(val['iconcolor'],float2nr(modulo/2.0),val['iconwidth'],4,val['iconalign'])
-          call image.generatePNGFile(fname)
-          exe "sign define ". fname ." icon=/Users/danesummers/.vim/mvom-cache/". fname .".png text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
-        else
-          exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
-        endif
+    exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+    let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+    let val['modulo'] = modulo
+    let fname = mvom#util#color#GetSignName(val)
+    if !exists('g:mvom_hi_'. fname)
+      exe "let g:mvom_hi_". fname ."=1"
+      if has_key(val,"iconwidth") && exists('g:mvom_alpha') && g:mvom_alpha
+        let image = mvom#renderers#icon#makeImage()
+        call image.addRectangle(val['bg'],0,0,50,50)
+        " TODO place all including conflicts.
+        call image.placeRectangle(val['iconcolor'],float2nr(modulo/2.0),val['iconwidth'],4,val['iconalign'])
+        call image.generatePNGFile(fname)
+        exe "sign define ". fname ." icon=/Users/danesummers/.vim/mvom-cache/". fname .".png text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+      else
+        exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       endif
-		endif
+    endif
     " did we paint this line previously?
     if has_key(b:cached_signs,line)
       " did we paint something different this time?
