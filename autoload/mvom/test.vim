@@ -184,10 +184,12 @@ endfunction
 
 function! PaintTestStub(line,onscreen)
 endfunction
-function! UnpaintTestStub(line)
+function! UnpaintTestStub(line,dict)
 endfunction
 
 function! TestDoPaintMatches()
+  " TODO make mocks of paint and unpaint. verify that unpaint and paint were never
+  " called.
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,
@@ -195,14 +197,14 @@ function! TestDoPaintMatches()
 	unlet! g:mvom_hi_MVOM_00000000000066
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(6,1,5,
         \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
-        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000','modulo': 66}},
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}},
         \"UnpaintTestStub","PaintTestStub"),
         \
         \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
         \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000','modulo': 66}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_00000000000066"),1)
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000_66_XX"),1)
 	" two lines, implies some reconciliation should be happening here:
-	unlet! g:mvom_hi_MVOM_00000000000066
+	unlet! g:mvom_hi_MVOM_000000000000_66_XX
 	let g:mv_plugins = []
 	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
 	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
@@ -214,9 +216,9 @@ function! TestDoPaintMatches()
         \"UnpaintTestStub","PaintTestStub"),
         \
         \{1:{'count':2,'plugins':['mvom#test#test1plugin','mvom#test#test2plugin'],
-        \  'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_00000000000040"),1)
-	unlet! g:mvom_hi_MVOM_00000000000040
+        \  'line':2,'text':'RR','fg':'000000','bg':'000000','visible':1,'iconwidth':50,'iconalign':'left','iconcolor':'000000','modulo':40}})
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000_40_RR"),1)
+	unlet! g:mvom_hi_MVOM_000000000000_40_RR
 	call VUAssertEquals(mvom#renderer#DoPaintMatches(10,6,10,
         \{1:{'count':1,'plugins':['mvom#test#test1plugin'],
         \  'line':1,'text':'XX','fg':'000000','bg':'000000'},
@@ -225,10 +227,11 @@ function! TestDoPaintMatches()
         \"UnpaintTestStub","PaintTestStub"),
         \
         \{6:{'count':1,'plugins':['mvom#test#test1plugin'],
-        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0},
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000','visible':0,'modulo': 40},
         \10:{'count':1,'plugins':['mvom#test#test1plugin'],
-        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1}})
-	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000"),1)
+        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1,'modulo': 0}})
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000_0_XX"),1)
+	call VUAssertEquals(exists("g:mvom_hi_MVOM_000000000000_40_XX"),1)
 	" dubgging call
 	" echo mvom#renderer#DoPaintMatches(line('$'),line('w0'),line('w$'),mvom#renderer#CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
 

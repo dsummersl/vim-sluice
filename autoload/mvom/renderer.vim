@@ -119,7 +119,7 @@ function! mvom#renderer#PaintMV(data)"{{{
 	if anyEnabled == 1
 		" finally, if we are enabled by any means...check to make sure that there
 		" aren't any folds. We don't work with folds.
-		1
+		exe "keepjumps 1"
 		exe "silent normal! zj"
 		if line('.') != 1
 			let anyEnabled = 0
@@ -274,7 +274,9 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - visible
 	for [line, trash] in items(a:searchResults)
 		"echo "doing ". line ." which is ". string( trash['plugins'] )
+    "TODO If using icons, then we want the true offset, not the locinFile...
 		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+    let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
 		if has_key(results,locinInFile) && has_key(results[locinInFile],'count')
 			" we already have a rendering for this line, add up the counts, and Reconcile for all the plugins involved.
 			"echo "pluginsa: ". string( results[locinInFile]['plugins'] )
@@ -316,6 +318,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     let val['modulo'] = modulo
     let fname = mvom#util#color#GetSignName(val)
     if !exists('g:mvom_hi_'. fname)
+      call VULog("let g:mvom_hi_". fname ."=1")
       exe "let g:mvom_hi_". fname ."=1"
       if has_key(val,"iconwidth") && exists('g:mvom_alpha') && g:mvom_alpha
         let image = mvom#renderers#icon#makeImage()

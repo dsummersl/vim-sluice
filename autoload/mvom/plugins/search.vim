@@ -75,7 +75,7 @@ function! mvom#plugins#search#data(options)
 	" search and save state of file (if file changed or if search changed then
 	" redo)
 	let startLine = line('.')
-	exe "". startLine
+	exe "keepjumps ". startLine
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
@@ -95,7 +95,7 @@ function! mvom#plugins#search#data(options)
 		let n = n+1
     let here = search(@/,"We")
 	endwhile
-	exe "". startLine
+	exe "keepjumps ". startLine
 	let n = 1
   let here = search(@/,"Wb")
 	while len(@/) > 0 && here > 0 && n < s:max_searches " search backwards
@@ -113,7 +113,7 @@ function! mvom#plugins#search#data(options)
 		let n = n+1
     let here = search(@/,"Wb")
 	endwhile
-	exe "". startLine
+	exe "keepjumps ". startLine
   let a:options['previousdata'] = results
 	return results
 endfunction
