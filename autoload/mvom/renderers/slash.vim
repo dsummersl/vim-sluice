@@ -9,10 +9,12 @@ function! mvom#renderers#slash#reconcile(options,vals)
 	" TODO this still isn't quite right - I don't think its counting correctly
 	let cnt = 0
 	for plugin in a:vals['plugins']
-		let render = mvom#renderers#util#FindRenderForPlugin(plugin)
-		if render == 'mvom#renderers#slash'
-			let cnt = cnt + 1
-		endif
+    for match in plugin['plugins']
+      let render = mvom#renderers#util#FindRenderForPlugin(match)
+      if render == 'mvom#renderers#slash'
+        let cnt = cnt + 1
+      endif
+    endfor
 	endfor
 	if cnt > 1
 		let a:vals['text'] = a:options['xchars']

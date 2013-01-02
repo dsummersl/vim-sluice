@@ -112,7 +112,7 @@ function! mvom#renderer#PaintMV(data)"{{{
 			break
 		endif
 	endfor
-	if &buftype == "help" || &buftype == "nofile" || &diff == 1
+	if &buftype == "help" || &buftype == "nofile" || &diff == 1 || &buftype == 'quickfix'
 		" situations in which we don't want this: help files, nofiles, diff mode
 		let anyEnabled = 0
 	endif
@@ -252,81 +252,77 @@ endfunction
 " 
 " 'visible'  - if the line is currently displayed on the screen then this would
 "              be set to '1'.
-" 'metaline' - when in 'meta' mode this is the line that represents the %
-"              offset of the actual line.
+" 'plugins'  - each plugin that paints on the line.
 " 
-" Also makes some global variables for all the hilighting options that have
-" possibly been created (so that they don't have to be recreated). These are
-" created before the paintFunction is called, so that the paintFunction
-" doesn't actually have to create any hilighting itself.
+" All data is cached in the buffer (b:cached_signs).
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
-	" First colate all of hte search results into the 'macro' line (so several
-	" lines will be condensed to one line:
-  " TODO this should now be 'modulo' aware so that we don't condense multiple
-  " matches if the icon support can handle it. I guess...just don't do it if
-  " icons are supported.
+	" First collate all of the search results into one hash where the 'macro line'
+  " number points to all matching search results.
   "
-  " Additinoal keys added:
-  " - count
-  " - plugins
-  " - visible
-	for [line, trash] in items(a:searchResults)
-		"echo "doing ". line ." which is ". string( trash['plugins'] )
+  " Additional keys added:
+  " - plugins: all matching search results
+  " - visible: if 1, then the results are currently visible in the window.
+	for [line, data] in items(a:searchResults)
     "TODO If using icons, then we want the true offset, not the locinFile...
+    " We need a better way of tracking what has been placed on the screen.
+    "  - a dictionary that shows all the locations of the signs that we're
+    "    managing.
 		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
     let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-		if has_key(results,locinInFile) && has_key(results[locinInFile],'count')
-			" we already have a rendering for this line, add up the counts, and Reconcile for all the plugins involved.
-			"echo "pluginsa: ". string( results[locinInFile]['plugins'] )
-			"echo "pluginsb: ". string( trash['plugins'] )
-			" we need to combine the 'plugins' so that they all get listed in together.
-			let theplugs = mvom#util#color#Uniq(extend(results[locinInFile]['plugins'],a:searchResults[line]['plugins']))
-			call extend(results[locinInFile],a:searchResults[line])
-			let oldcount = results[locinInFile]['count'] 
-			let results[locinInFile]['count'] = oldcount + a:searchResults[line]['count']
-			let results[locinInFile]['plugins'] = theplugs
-		else
-			let results[locinInFile] = copy(trash)
-			"echo "plugins: ". string( results[locinInFile]['plugins'] )
+		if !has_key(results,locinInFile)
+			let results[locinInFile] = copy(data)
 			let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
+			let results[locinInFile]['plugins'] = []
 		endif
+
+    let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
+    let data['modulo'] = modulo
+    call add(results[locinInFile]['plugins'],data)
 	endfor
+
+  " For those lines that have more than one plugin match at this point,
+  " we'll want to call the Reconcile method to get proper UI looks.
+  " paint any new things:
 	for [line, val] in items(results)
-		" for those lines that have more than one plugin match at this point,
-		" we'll want to call the Reconcile method to get proper UI looks.
-		" paint any new things:
 		if len(val['plugins']) > 1
 			for datap in val['plugins']
-				let render = mvom#renderers#util#FindRenderForPlugin(datap)
-				let plugin = mvom#renderers#util#FindPlugin(datap)
-				let results[line] = {render}#reconcile(plugin['options'],val)
+        for p in datap['plugins']
+          let render = mvom#renderers#util#FindRenderForPlugin(p)
+          let plugin = mvom#renderers#util#FindPlugin(p)
+          let results[line] = {render}#reconcile(plugin['options'],val)
+        endfor
 			endfor
 		endif
 	endfor
+
+  " Setup highlighting and signs
 	for [line,val] in items(results)
-		"echo "val = ". string(val)
-		if !has_key(val,'text')
-			let val['text'] = '..'
-		endif
-		if !has_key(val,'fg')
-			let val['fg'] = val['bg']
-		endif
+
+    " Ensure there are defaults.
+		if !has_key(val,'text') | let val['text'] = '..' | endif
+		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
+
+    " Create the fg/bg highlighting for non-icon signs
     exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-    let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-    let val['modulo'] = modulo
+
     let fname = mvom#util#color#GetSignName(val)
-    if !exists('g:mvom_hi_'. fname)
-      call VULog("let g:mvom_hi_". fname ."=1")
-      exe "let g:mvom_hi_". fname ."=1"
-      if has_key(val,"iconwidth") && exists('g:mvom_alpha') && g:mvom_alpha
-        let image = mvom#renderers#icon#makeImage()
-        call image.addRectangle(val['bg'],0,0,50,50)
-        " TODO place all including conflicts.
-        call image.placeRectangle(val['iconcolor'],float2nr(modulo/2.0),val['iconwidth'],4,val['iconalign'])
+    if !exists('g:mvom_sign_'. fname)
+      call VULog( "let g:mvom_sign_". fname ."=1")
+      exe "let g:mvom_sign_". fname ."=1"
+      if exists('g:mvom_alpha') && g:mvom_alpha
+        " TODO make a standard cache directory
+        let image = mvom#renderers#icon#makeImage(10,10)
+        call image.addRectangle(val['bg'],0,0,10,10)
+        for pl in val['plugins']
+          if has_key(pl,'iconcolor')
+            call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],1,pl['iconalign'])
+          endif
+        endfor
         call image.generatePNGFile(fname)
-        exe "sign define ". fname ." icon=/Users/danesummers/.vim/mvom-cache/". fname .".png text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+        let results[line]['icon'] = image['cachedir'] . fname .'.png'
+        exe "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       else
         exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       endif
@@ -344,12 +340,14 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       call {a:paintFunction}(line,val)
     endif
 	endfor
+
   " Finally, is there anything old that doesn't exist anymore?
 	for [line,val] in items(b:cached_signs)
     if !has_key(results,line)
       call {a:unpaintFunction}(line,b:cached_signs[line])
     endif
   endfor
+
 	let b:cached_signs = results
 	return results
 endfunction"}}}

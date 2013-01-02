@@ -48,7 +48,7 @@ if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
 
 " Enable any not ready for primetime features?
-if !exists('g:mvom_alpha') | let g:mvom_alpha=0 | endif
+if !exists('g:mvom_alpha') | let g:mvom_alpha=1 | endif
 
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_loaded')
@@ -72,7 +72,7 @@ if !exists('g:mvom_loaded')
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
 				\ 'iconcolor': 'e5f1ff',
-				\ 'iconalign': 'center',
+				\ 'iconalign': 'right',
 				\ 'iconwidth': 50,
 				\ 'bg': 'e5f1ff',
 				\ 'fg': '000000'
@@ -83,7 +83,7 @@ if !exists('g:mvom_loaded')
 	      \ 'bg': 'dddddd',
 	      \ 'iconcolor': 'dddddd',
 	      \ 'iconalign': 'left',
-	      \ 'iconwidth': 50,
+	      \ 'iconwidth': 10,
 	      \ 'showinline': 1
 	      \ })
 	let g:mvom_loaded = 1

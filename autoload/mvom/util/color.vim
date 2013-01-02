@@ -3,15 +3,22 @@ function! mvom#util#color#GetHighlightName(dictionary)
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
+" Create a key that uniquely describes all the marks that would be
+" on an icon.
 function! mvom#util#color#GetSignName(dictionary)
-  " TODO the key should contain all the conflicts that are pasted onto the
-  " sign (all plugins)
-	let result = mvom#util#color#GetHighlightName(a:dictionary)
-        \."_"
-        \.a:dictionary['modulo']
-        \."_"
-        \.mvom#util#location#GetHumanReadables(a:dictionary['text'])
-  return substitute(result,'\s*','','g')
+	let result = "MVOM"
+    for pl in a:dictionary['plugins']
+      if has_key(pl,'iconcolor')
+        let result = result.
+              \"_". pl['modulo'] ."_".
+              \pl['iconcolor'].
+              \pl['iconwidth'].
+              \pl['iconalign']
+      else
+        let result = result .'x'
+      endif
+    endfor
+    return result
 endfunction
 
 " Convert a 6 character hex RGB to a 3 part (0-255) array.
