@@ -312,16 +312,18 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
       if exists('g:mvom_alpha') && g:mvom_alpha
-        " TODO make a standard cache directory
-        let image = mvom#renderers#icon#makeImage(10,10)
-        call image.addRectangle(val['bg'],0,0,10,10)
-        for pl in val['plugins']
-          if has_key(pl,'iconcolor')
-            call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],1,pl['iconalign'])
-          endif
-        endfor
-        call image.generatePNGFile(fname)
-        let results[line]['icon'] = image['cachedir'] . fname .'.png'
+        " if an icon doesn't exist yet, generate it.
+        if !filereadable(g:mvom_icon_cache . fname .'.png')
+          let image = mvom#renderers#icon#makeImage(10,10)
+          call image.addRectangle(val['bg'],0,0,10,10)
+          for pl in val['plugins']
+            if has_key(pl,'iconcolor')
+              call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],1,pl['iconalign'])
+            endif
+          endfor
+          call image.generatePNGFile(g:mvom_icon_cache . fname)
+        endif
+        let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
         exe "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       else
         exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)

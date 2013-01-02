@@ -44,7 +44,6 @@ function! mvom#renderers#icon#makeImage(...)
   let results = { 'data': [],
         \'width': width,
         \'height': height,
-        \'cachedir': '/Users/danesummers/.vim/mvom-cache/',
         \'addRectangle': function('mvom#renderers#icon#addRectangle'),
         \'placeRectangle': function('mvom#renderers#icon#placeRectangle'),
         \'generateSVG': function('mvom#renderers#icon#generateSVG'),
@@ -65,8 +64,6 @@ endfunction
 
 function! mvom#renderers#icon#generatePNGFile(name) dict
   let convert = 'convert'
-  let cachefolder = expand('~/.vim/mvom-cache')
-  exec "silent ! mkdir -p ". cachefolder
-  call writefile([self.generateSVG()], cachefolder ."/". a:name .".svg")
-  exec "silent ! ". convert ." ". cachefolder ."/". a:name .".svg ". cachefolder ."/". a:name .".png"
+  call writefile([self.generateSVG()], a:name .".svg")
+  exec "silent ! ". convert ." ". a:name .".svg ". a:name .".png"
 endfunction

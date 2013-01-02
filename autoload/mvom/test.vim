@@ -213,7 +213,7 @@ function! TestDoPaintMatches()
         \{1:{'plugins':[ { 'plugins': ['mvom#test#test1plugin'],
         \  'line': 1, 'modulo': 6, 'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
         \],
-        \  'line': 1, 'icon': image['cachedir'] .'MVOM_6_00000050left.png', 'text':'XX','fg':'000000','bg':'000000','visible':1, 'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+        \  'line': 1, 'icon': g:mvom_icon_cache .'MVOM_6_00000050left.png', 'text':'XX','fg':'000000','bg':'000000','visible':1, 'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 	call VUAssertEquals(exists("g:mvom_sign_MVOM_6_00000050left"),1)
 	" two lines, implies some reconciliation should be happening here:
@@ -234,7 +234,7 @@ function! TestDoPaintMatches()
         \  'line': 2, 'modulo': 8, 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}]
         \,
         \  'line': 1, 'iconwidth': 50, 'iconalign': 'right', 'iconcolor': '000000',
-        \  'text':'RR','fg':'000000','bg':'000000','visible':1, 'icon': image['cachedir'] .'MVOM_4_00000050right_8_00000050left.png'}})
+        \  'text':'RR','fg':'000000','bg':'000000','visible':1, 'icon': g:mvom_icon_cache .'MVOM_4_00000050right_8_00000050left.png'}})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 	call VUAssertEquals(exists("g:mvom_sign_MVOM_4_00000050right_8_00000050left"),1)
 	unlet! g:mvom_sign_MVOM_4_00000050right_8_00000050left
@@ -251,7 +251,7 @@ function! TestDoPaintMatches()
         \  'line': 1, 'text':'XX','fg':'000000','bg':'000000','visible':0},
         \10:{'plugins': [{ 'plugins': ['mvom#test#test1plugin'],
         \  'line':10, 'text':'XX','fg':'000000','bg':'000000','modulo': 0 }],
-        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1,'icon': image['cachedir'] .'MVOMx.png'}
+        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1,'icon': g:mvom_icon_cache .'MVOMx.png'}
         \})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 	call VUAssertEquals(exists("g:mvom_sign_MVOMx"),1)
