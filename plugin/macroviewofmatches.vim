@@ -62,7 +62,7 @@ if !exists('g:mvom_loaded')
 				\ 'color': '0055ff',
 				\ 'xchars': 'X ',
 				\ 'iconcolor': '0055ff',
-				\ 'iconalign': 'center',
+				\ 'iconalign': 'left',
 				\ 'iconwidth': 50,
 				\ 'xcolor': '0055ff'
 				\ })
@@ -70,7 +70,7 @@ if !exists('g:mvom_loaded')
 	call mvom#renderer#add('mvom#plugins#undercursor', {
 				\ 'render': 'mvom#renderers#slash',
 				\ 'chars': '\ ',
-				\ 'color': 'e5f1ff',
+				\ 'color': 'b5f1ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
 				\ 'iconcolor': 'e5f1ff',

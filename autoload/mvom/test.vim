@@ -57,23 +57,48 @@ function! TestLoadRegisters()
 endfunction
 
 function! TestConvertToModuloOffset()
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,31,31),96)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,2,2),0)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(2,1,2,2),0)
+
+  " if you are on the first line it should be 0
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,31,31),0)
+  " if you are on the last line of the file, it'll be something >= 0
   call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(31,1,31,31),0)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,70,100,100),30)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(100,70,100,100),0)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(50,70,100,100),0)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,70,100,100),0)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(100,70,100,100),69)
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(50,70,100,100),19)
+
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,45,170),0)
 endf
 
 function! TestConvertToPercentOffset()
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,2,2),1)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(2,1,2,2),2)
+
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,1,5,1),41)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(6,1,5,1),25)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,6,10,1),46)
   call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,6,10,10),10)
+endfunction
+
+function! TestPercentAndModule()
+  " test several lines one after another. The value should be logical..
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,45,170),0)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,45,170),1)
+
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(2,1,45,170),26)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(2,1,45,170),1)
+
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(3,1,45,170),52)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(3,1,45,170),1)
+
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(4,1,45,170),79)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(4,1,45,170),1)
+
+  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(5,1,45,170),5)
+  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(5,1,45,170),2)
 endfunction
 
 function! TestGetHumanReadables()
@@ -211,13 +236,13 @@ function! TestDoPaintMatches()
         \"UnpaintTestStub","PaintTestStub"),
         \
         \{1:{'plugins':[ { 'plugins': ['mvom#test#test1plugin'],
-        \  'line': 1, 'modulo': 6, 'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
+        \  'line': 1, 'modulo': 0, 'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
         \],
-        \  'line': 1, 'icon': g:mvom_icon_cache .'MVOM_6_00000050left.png', 'text':'XX','fg':'000000','bg':'000000','visible':1, 'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+        \  'line': 1, 'icon': g:mvom_icon_cache .'MVOM_0_00000050left.png', 'text':'XX','fg':'000000','bg':'000000','visible':1, 'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-	call VUAssertEquals(exists("g:mvom_sign_MVOM_6_00000050left"),1)
+	call VUAssertEquals(exists("g:mvom_sign_MVOM_0_00000050left"),1)
 	" two lines, implies some reconciliation should be happening here:
-	unlet! g:mvom_sign_MVOM_6_00000050left
+	unlet! g:mvom_sign_MVOM_0_00000050left
 	let g:mv_plugins = []
 	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
 	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })

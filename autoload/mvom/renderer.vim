@@ -258,6 +258,12 @@ endfunction
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
+
+  " compute the current 'height' of the window. that would be used by an
+  " icon so that a line can be accurately rendered (TODO if the height is big it
+  " should really 'fall' into the next line).
+  let pixelsperline = float2nr(10 / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+
 	" First collate all of the search results into one hash where the 'macro line'
   " number points to all matching search results.
   "
@@ -265,10 +271,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - plugins: all matching search results
   " - visible: if 1, then the results are currently visible in the window.
 	for [line, data] in items(a:searchResults)
-    "TODO If using icons, then we want the true offset, not the locinFile...
-    " We need a better way of tracking what has been placed on the screen.
-    "  - a dictionary that shows all the locations of the signs that we're
-    "    managing.
 		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
     let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
 		if !has_key(results,locinInFile)
@@ -318,7 +320,20 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
           call image.addRectangle(val['bg'],0,0,10,10)
           for pl in val['plugins']
             if has_key(pl,'iconcolor')
-              call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],1,pl['iconalign'])
+              " TODO provide a generic key 'iconfunction' that allows plugins
+              " to provide their own custom icons. Move this into the 'slash'
+              " definition.
+              "
+              " TODO use one SVG image for the entire gutter. All the plugins
+              " can then paint to that one image.
+              " - provide a method to save to png one region defined by a
+              "   window (matching some offset down the gutter).
+              " - provide a method for naming the png based on the contents in
+              "   some unique way (so we can do the same !exists() don't save
+              "   method).
+              "
+              " TODO fix combine data so each plugin has its own data.
+              call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],pixelsperline,pl['iconalign'])
             endif
           endfor
           call image.generatePNGFile(g:mvom_icon_cache . fname)
