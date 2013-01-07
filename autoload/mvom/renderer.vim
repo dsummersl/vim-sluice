@@ -140,20 +140,18 @@ endfunction"}}}
 " matches on which lines. Format is:
 " {
 " 	'<linenumber>': {
-"     'count'     : number of matches on the line
-"     'plugins'   : an array with the name of the 'Data' plugins that have matches on this particular line.
-"     'line'      : line number
-"     'text'      : text to display in signs area
-"     'fg'        : foreground
-"     'bg'        : background
-"     'iconcolor' : gui color
-"     'iconalign' : how to align the icon
-"     'iconwidth' : how wide to paint the icon
-" 		TODO linehi - hilighting for the linelevel option.
+" 	  'plugin name': {
+"       'text'      : text to display in signs area
+"       'fg'        : foreground
+"       'bg'        : background
+"       'iconcolor' : gui color
+"       'iconalign' : how to align the icon
+"       'iconwidth' : how wide to paint the icon
+" 	    TODO linehi - hilighting for the linelevel option.
+" 	  }
 " 	}
 " }
 function! mvom#renderer#CombineData(plugins)"{{{
-	"echo "START"
 	let allData = {}
   " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
@@ -165,29 +163,14 @@ function! mvom#renderer#CombineData(plugins)"{{{
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
 		let data={plugin}#data(options)
 		for line in keys(data) " loop through all the data and add it to my own master list.
-			"echo "plg ". plugin ." line ". line
 			if has_key(allData,line)
-				"echo "have entry: ". plugin
-				"echo data
-				"echo allData
-				if count(allData[line]['plugins'],plugin) == 0
-					"echo "and its not listed"
-					" do we have the current plugin already? If not:
-					let oldcount = allData[line]['count']
-					let oldcount = oldcount + data[line]['count']
-					call extend(allData[line],data[line])
-					let allData[line]['count'] = oldcount
-					call add(allData[line]['plugins'],plugin)
-				end
+        let allData[line][plugin] = data[line]
+				let allData[line]['count'] = allData[line]['count'] + 1
 			else
+        " do we have the current plugin already? If not:
 				let allData[line] = {}
-				"echo "new entry: ". plugin
-				"echo data
-				"echo allData
-				call extend(allData[line],data[line])
-				let allData[line] = data[line] " count variable
-				let allData[line]['line'] = line+0
-				let allData[line]['plugins'] = [plugin]
+				let allData[line]['count'] = 1
+				let allData[line][plugin] = data[line]
 			endif
 		endfor
 	endfor"}}}
@@ -199,26 +182,19 @@ function! mvom#renderer#CombineData(plugins)"{{{
 		let pluginData = {}
     " Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
-			if count(allData[line]['plugins'],plugin) > 0
-				let pluginData[line] = allData[line]
+			if has_key(allData[line],plugin) > 0
+				let pluginData[line] = allData[line][plugin]
 			endif
 		endfor
 		let paintData = {render}#paint(pluginInstance['options'],pluginData)
+    " once painted, store the results.
 		for line in keys(paintData)
-			"echo "looking at line ".line." plugin ".plugin
-			"echo allData
-			"echo pluginData
-			"echo paintData
-			if has_key(resultData,line)
-				let resultData[line] = extend(resultData[line],allData[line])
-			else
-				let resultData[line] = copy(allData[line])
+			if !has_key(resultData,line)
+				let resultData[line] = {}
 			endif
-      for key in ["text","fg","bg","iconcolor","iconwidth","iconalign"]
-        if has_key(paintData[line],key)
-          let resultData[line][key] = paintData[line][key]
-          let pluginData[line][key] = paintData[line][key]
-        endif
+      let resultData[line][plugin] = copy(allData[line][plugin])
+      for value in keys(paintData[line])
+        let resultData[line][plugin][value] = paintData[line][value]
       endfor
 		endfor
 	endfor"}}}
@@ -272,42 +248,58 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - visible: if 1, then the results are currently visible in the window.
 	for [line, data] in items(a:searchResults)
 		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-    let modulo = mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+    let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
+
 		if !has_key(results,locinInFile)
-			let results[locinInFile] = copy(data)
-			let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
+			let results[locinInFile] = {}
 			let results[locinInFile]['plugins'] = []
 		endif
 
-    let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
-    let data['modulo'] = modulo
-    call add(results[locinInFile]['plugins'],data)
+    " if the line is within the visible range, set it so:
+    let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
+
+    " setup the top level data values that are ultimately used for the signs
+    " (the combination of all the plugins).
+    for plugin in keys(data)
+      call add(results[locinInFile]['plugins'],data[plugin])
+      let offset = len(results[locinInFile]['plugins'])-1
+      for key in keys(data[plugin])
+        let results[locinInFile][key] = data[plugin][key]
+      endfor
+      let results[locinInFile]['plugins'][offset]['plugin'] = plugin
+      let results[locinInFile]['plugins'][offset]['modulo'] = modulo
+      unlet plugin
+    endfor
 	endfor
+
+  call VULog("R0s = ". string(results))
 
   " For those lines that have more than one plugin match at this point,
   " we'll want to call the Reconcile method to get proper UI looks.
   " paint any new things:
 	for [line, val] in items(results)
 		if len(val['plugins']) > 1
-			for datap in val['plugins']
-        for p in datap['plugins']
-          let render = mvom#renderers#util#FindRenderForPlugin(p)
-          let plugin = mvom#renderers#util#FindPlugin(p)
-          let results[line] = {render}#reconcile(plugin['options'],val)
+			for p in val['plugins']
+        let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
+        let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
+        let reconciled = {render}#reconcile(plugin['options'],p)
+        for key in keys(reconciled)
+          let results[line][key] = reconciled[key]
         endfor
-			endfor
+      endfor
 		endif
 	endfor
 
   " Setup highlighting and signs
 	for [line,val] in items(results)
-
     " Ensure there are defaults.
 		if !has_key(val,'text') | let val['text'] = '..' | endif
 		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
 
     " Create the fg/bg highlighting for non-icon signs
     exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+
+    call VULog("Rs = ". string(val))
 
     let fname = mvom#util#color#GetSignName(val)
     if !exists('g:mvom_sign_'. fname)
@@ -318,7 +310,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         if !filereadable(g:mvom_icon_cache . fname .'.png')
           let image = mvom#renderers#icon#makeImage(10,10)
           call image.addRectangle(val['bg'],0,0,10,10)
-          for pl in val['plugins']
+          for pl in (val['plugins'])
             if has_key(pl,'iconcolor')
               " TODO provide a generic key 'iconfunction' that allows plugins
               " to provide their own custom icons. Move this into the 'slash'
@@ -333,7 +325,9 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
               "   method).
               "
               " TODO fix combine data so each plugin has its own data.
-              call image.placeRectangle(pl['iconcolor'],pl['modulo'],pl['iconwidth'],pixelsperline,pl['iconalign'])
+              call image.placeRectangle(pl['iconcolor'],
+                    \pl['modulo'],pl['iconwidth'],
+                    \pixelsperline,pl['iconalign'])
             endif
           endfor
           call image.generatePNGFile(g:mvom_icon_cache . fname)
