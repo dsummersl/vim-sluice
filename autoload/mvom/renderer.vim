@@ -232,7 +232,8 @@ endfunction
 " 
 " All data is cached in the buffer (b:cached_signs).
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
-	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
+	"if !exists('b:cached_signs') | let b:cached_signs = {} | endif
+	let b:cached_signs = {}
 	let results = {}
 
   " compute the current 'height' of the window. that would be used by an
@@ -260,6 +261,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 
     " setup the top level data values that are ultimately used for the signs
     " (the combination of all the plugins).
+    call VULog("data = ". string(data))
     for plugin in keys(data)
       call add(results[locinInFile]['plugins'],data[plugin])
       let offset = len(results[locinInFile]['plugins'])-1

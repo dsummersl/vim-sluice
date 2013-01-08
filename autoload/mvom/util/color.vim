@@ -1,12 +1,25 @@
+
+" Given a string, return a much smaller hash of the string.
+function! mvom#util#color#hash(str)
+	python import sys
+	exe "python sys.argv = ['". a:str ."']"
+  python import hashlib
+  python import sys
+  python import vim
+  python str = sys.argv[0]
+  python hash = hashlib.md5(str).hexdigest()[0:15]
+  python vim.command('let s:hash = "'+ hash +'"')
+  return s:hash
+endfunction
+
 function! mvom#util#color#GetHighlightName(dictionary)
-  " TODO include icon attributes if in gui mode
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
 " Create a key that uniquely describes all the marks that would be
 " on an icon.
 function! mvom#util#color#GetSignName(dictionary)
-	let result = "MVOM"
+	let result = ""
     for pl in a:dictionary['plugins']
       if has_key(pl,'iconcolor')
         let result = result.
@@ -18,7 +31,7 @@ function! mvom#util#color#GetSignName(dictionary)
         let result = result .'x'
       endif
     endfor
-    return result
+    return mvom#util#color#hash(result)
 endfunction
 
 " Convert a 6 character hex RGB to a 3 part (0-255) array.
