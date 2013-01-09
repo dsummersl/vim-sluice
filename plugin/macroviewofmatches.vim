@@ -48,8 +48,8 @@ if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
 
 " Enable any not ready for primetime features?
-if !exists('g:mvom_alpha') | let g:mvom_alpha=0 | endif
-if !exists('g:mvom_enabled') | let g:mvom_enabled=0 | endif
+if !exists('g:mvom_alpha') | let g:mvom_alpha=1 | endif
+if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/mvom-cache/' | endif
 exec "silent ! mkdir -p ". g:mvom_icon_cache
 

@@ -5,7 +5,8 @@ function! mvom#renderers#slash#paint(options,vals)
 endfunction
 
 function! mvom#renderers#slash#reconcile(options,vals)
-  let a:vals['text'] = a:options['xchars']
-  let a:vals['fg'] = a:options['xcolor']
-	return a:vals
+  let result = {}
+  let result['text'] = a:options['xchars']
+  let result['fg'] = a:options['xcolor']
+	return result
 endfunction

@@ -202,11 +202,8 @@ function! mvom#renderer#CombineData(plugins)"{{{
 endfunction"}}}
 
 function! mvom#renderer#PaintSign(line,dict)"{{{
-	" echom "here is ". here ." and firstVisible = ". firstVisible ." and lastVisible = ". lastVisible ." gonna do ". locinInFile
-	" echom "fg with ". hiType
 	if has_key(a:dict,'fg')
 		let thesign=mvom#util#color#GetSignName(a:dict)
-		"echom "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 		exe "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
 	else
 		" if 'visible' then this is a non-matching line that's currently
@@ -230,11 +227,14 @@ endfunction
 "              be set to '1'.
 " 'plugins'  - each plugin that paints on the line.
 " 
-" All data is cached in the buffer (b:cached_signs).
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
-	"if !exists('b:cached_signs') | let b:cached_signs = {} | endif
-	let b:cached_signs = {}
+	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
+
+  " Remove any previously painted signs
+	for [line,val] in items(b:cached_signs)
+    call {a:unpaintFunction}(line,b:cached_signs[line])
+  endfor
 
   " compute the current 'height' of the window. that would be used by an
   " icon so that a line can be accurately rendered (TODO if the height is big it
@@ -274,25 +274,39 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     endfor
 	endfor
 
-  call VULog("R0s = ". string(results))
-
   " For those lines that have more than one plugin match at this point,
   " we'll want to call the Reconcile method to get proper UI looks.
   " paint any new things:
 	for [line, val] in items(results)
 		if len(val['plugins']) > 1
+      " for each plugin that overlaps, call reconcile. First come first serve
+      " for overlapping key values.
 			for p in val['plugins']
         let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
         let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
+        " TODO the slash reconcile plugins need to know what other plugins it
+        " is clashing with, otherwise they cannot figure out what sign to use
+        " (clashing with background means nothing. Only clashing with another
+        " slash is important).
         let reconciled = {render}#reconcile(plugin['options'],p)
         for key in keys(reconciled)
           let results[line][key] = reconciled[key]
+        endfor
+      endfor
+      " make sure that any other options are also included, if they weren't
+      " in any of the reconcile lists.
+			for p in val['plugins']
+        for key in keys(p)
+          if !has_key(results[line],key)
+            let results[line][key] = p[key]
+          endif
         endfor
       endfor
 		endif
 	endfor
 
   " Setup highlighting and signs
+  echom "..."
 	for [line,val] in items(results)
     " Ensure there are defaults.
 		if !has_key(val,'text') | let val['text'] = '..' | endif
@@ -300,8 +314,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 
     " Create the fg/bg highlighting for non-icon signs
     exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-
-    call VULog("Rs = ". string(val))
 
     let fname = mvom#util#color#GetSignName(val)
     if !exists('g:mvom_sign_'. fname)
@@ -335,33 +347,19 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
           call image.generatePNGFile(g:mvom_icon_cache . fname)
         endif
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
+        echom "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
         exe "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       else
+        echom "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
         exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       endif
     endif
     " did we paint this line previously?
-    if has_key(b:cached_signs,line)
-      " did we paint something different this time?
-      if b:cached_signs[line] != val
-        " if so, unpaint what we did before, and paint the new thing.
-        call {a:unpaintFunction}(line,b:cached_signs[line])
-        call {a:paintFunction}(line,val)
-      endif
-    else
-      " something new, paint it.
-      call {a:paintFunction}(line,val)
-    endif
+    call {a:unpaintFunction}(line,val)
+    call {a:paintFunction}(line,val)
 	endfor
 
-  " Finally, is there anything old that doesn't exist anymore?
-	for [line,val] in items(b:cached_signs)
-    if !has_key(results,line)
-      call {a:unpaintFunction}(line,b:cached_signs[line])
-    endif
-  endfor
-
-	let b:cached_signs = results
+  let b:cached_signs = results
 	return results
 endfunction"}}}
 

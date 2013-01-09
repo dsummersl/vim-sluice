@@ -21,7 +21,8 @@ function! mvom#renderers#background#paint(options,vals)
   endif
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
 	for line in keys(a:vals)
-    call mvom#renderers#background#setBG(bgcolor,a:vals[line],showinline)
+    let newbg = mvom#renderers#background#setBG(bgcolor,a:vals[line],showinline)
+    let a:vals[line]['bg'] = newbg['bg']
 	endfor
 	return a:vals
 endfunction
@@ -43,8 +44,7 @@ function! mvom#renderers#background#setBG(bgcolor,line,showinline)
   else
     let bgcolor = a:bgcolor
   endif
-  let a:line['bg'] = bgcolor
-  return a:line
+  return {'bg': bgcolor}
 endfunction
 
 function! mvom#renderers#background#reconcile(options,vals)
