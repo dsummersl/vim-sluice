@@ -352,6 +352,54 @@ function! TestDoPaintMatches()
 endfunction
 
 "}}}
+" renderer admin function tests {{{
+function! TestEnableDisable()
+  " base case - no globals == disabled.
+  unlet g:mvom_enabled
+  unlet g:mvom_default_enabled
+  call VUAssertFalse(mvom#renderer#getenabled())
+
+  " global MVOM setting disabled both functions should be useless.
+  let g:mvom_enabled = 0
+  let g:mvom_default_enabled = 0
+
+  call VUAssertFalse(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(1)
+  call VUAssertFalse(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(0)
+
+  " new files aren't enabled either
+  split 0file.txt
+  call VUAssertFalse(mvom#renderer#getenabled())
+  quit
+
+  " When enabled (but not mvom_default_enabled) the enable/disable should
+  " enable and disable: 
+  let g:mvom_enabled = 1
+  call VUAssertFalse(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(1)
+  call VUAssertTrue(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(0)
+  call VUAssertFalse(mvom#renderer#getenabled())
+
+  " TODO make a split and verify that when going into a new window, that MVOM
+  " isn't enabled by default.
+  split 1file.txt
+  call VUAssertFalse(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(1)
+  call VUAssertTrue(mvom#renderer#getenabled())
+  quit
+
+  " When mvom_default_enabled is setup, then opening a new file would have
+  " MVOM turned on.
+  let g:mvom_default_enabled = 1
+  split 2file.txt
+  call VUAssertTrue(mvom#renderer#getenabled())
+  call mvom#renderer#setenabled(0)
+  call VUAssertFalse(mvom#renderer#getenabled())
+  quit
+endfunction
+"}}}
 
 "call VURunAllTests()
 

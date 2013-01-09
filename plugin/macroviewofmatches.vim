@@ -35,6 +35,16 @@ if has( "signs" ) == 0 || has("float") == 0 || v:version/100 < 7
 endif
 
 au! CursorHold * nested call mvom#renderer#RePaintMatches()
+
+" Toggle the status of MVOM in the current buffer:
+command! -bar MVOMtoggle call mvom#renderer#setenabled(!mvom#renderer#getenabled())
+
+" Enable the status of MVOM in the current buffer:
+command! -bar MVOMenable call mvom#renderer#setenabled(1)
+
+" Disable the status of MVOM in the current buffer:
+command! -bar MVOMdisable call mvom#renderer#setenabled(0)
+
 "}}}
 " Private Variables "{{{
 if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
@@ -44,12 +54,20 @@ if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 set updatetime=200
 
 " default background color of the gutter:
+" if unset, then use the background of the existing window
 if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
 
 " Enable any not ready for primetime features?
 if !exists('g:mvom_alpha') | let g:mvom_alpha=1 | endif
+
+" Global variable to enable/disable MVOM
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
+
+" Global variable to enable/disable MVOM by default when opening files.
+if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
+
+" Where icons are stored (by default, where the MVOM plugin is located).
 if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/mvom-cache/' | endif
 exec "silent ! mkdir -p ". g:mvom_icon_cache
 

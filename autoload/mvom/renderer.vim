@@ -15,7 +15,7 @@
 
 function! mvom#renderer#RePaintMatches()"{{{
 	let painted = 0
-	if !exists('g:mvom_loaded') || g:mvom_loaded==0 || !exists('g:mvom_enabled') || g:mvom_enabled==0
+	if !mvom#renderer#getenabled()
 		return painted
 	endif
 	let w:save_cursor = winsaveview()
@@ -52,6 +52,7 @@ function! mvom#renderer#RePaintMatches()"{{{
 	return painted
 endfunction"}}}
 
+" Configuration and enable/disable functions {{{
 " Add a specific plugin and rendering.
 "
 " Parameters:
@@ -96,6 +97,33 @@ function! mvom#renderer#setOption(pluginName,option,value)
   let options = mvom#renderers#util#FindPlugin(a:pluginName)['options']
   let options[a:option] = a:value
 endfunction
+
+" Set the status of the MVOM plugin in the current buffer.
+" Sends a warning if the plugin is currently disabled.
+function! mvom#renderer#setenabled(enable)
+  let b:mvom_enabled = a:enable
+  if mvom#renderer#getenabled()
+    call mvom#renderer#RePaintMatches()
+  else
+		sign unplace *
+  endif
+endfunction
+
+" Get the status of the MVOM plugin in the current buffer.
+function! mvom#renderer#getenabled()
+  if !exists('g:mvom_enabled')
+    return 0
+  endif
+  if !g:mvom_enabled
+    return 0
+  endif
+  if !exists('b:mvom_enabled')
+    let b:mvom_enabled = g:mvom_default_enabled
+  endif
+  return b:mvom_enabled
+endfunction
+
+" }}}
 
 " paint the matches for real, on the screen. With signs.
 function! mvom#renderer#PaintMV(data)"{{{
@@ -306,7 +334,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 	endfor
 
   " Setup highlighting and signs
-  echom "..."
 	for [line,val] in items(results)
     " Ensure there are defaults.
 		if !has_key(val,'text') | let val['text'] = '..' | endif
@@ -347,10 +374,8 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
           call image.generatePNGFile(g:mvom_icon_cache . fname)
         endif
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
-        echom "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
         exe "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       else
-        echom "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
         exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
       endif
     endif

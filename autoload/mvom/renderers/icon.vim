@@ -1,31 +1,5 @@
 " Logic that creates a PNG that can be put into the signs gutter.
 
-" Add a rectangle to the final image.
-function! mvom#renderers#icon#addRectangle(color,x,y,width,height) dict
-  call add(self.data,'<rect x="'. a:x .'" y="'. a:y .'" height="'. a:height .'" width="'. a:width .'" style="fill: #'. a:color .';"/>')
-endfunction
-
-" Add a rectangle with alignment properties
-" - color: the color
-" -     y: y
-" - width: an integer. Percent of the width to take up.
-" - height: pixels height. an integer.
-" - align: left|center|right where to align the line to.
-function! mvom#renderers#icon#placeRectangle(color,y,width,height,align) dict
-  let pixwidth = float2nr(a:width / 100.0 * self.width)
-  let startpoint = 0
-  if a:align == 'left'
-    let startpoint = 0
-  elseif a:align == 'right'
-    let startpoint = self.width - pixwidth
-  elseif a:align == 'center'
-    let startpoint = float2nr((self.width-pixwidth)/2)
-  else
-    throw "Unknown alignment '". a:align ."'. Must be one of: left, right, center."
-  endif
-  call add(self.data,'<rect x="'. startpoint .'" y="'. a:y .'" height="'. a:height .'" width="'. pixwidth .'" style="fill: #'. a:color .';"/>')
-endfunction
-
 " Make a new Image dictionary - used by #add and #generateFile, etc.
 " Parameters:
 " - width    : the width in pixels. defaults to 50.
@@ -53,6 +27,10 @@ function! mvom#renderers#icon#makeImage(...)
   return results
 endfunction
 
+" TODO provide a generateSVG that specifies a window to translate and clip to.
+" TODO provide a hash of that resulting SVG that reliably describes its
+" contents.
+
 " Given an image object (mvom#renderers#icon#makeImage), return a string of the XPM.
 function! mvom#renderers#icon#generateSVG() dict
   let data = '<svg width="'. self.width .'px" height="'. self.height .'px">'
@@ -66,4 +44,30 @@ function! mvom#renderers#icon#generatePNGFile(name) dict
   let convert = 'convert'
   call writefile([self.generateSVG()], a:name .".svg")
   exec "silent ! ". convert ." ". a:name .".svg ". a:name .".png"
+endfunction
+
+" Add a rectangle to the final image.
+function! mvom#renderers#icon#addRectangle(color,x,y,width,height) dict
+  call add(self.data,'<rect x="'. a:x .'" y="'. a:y .'" height="'. a:height .'" width="'. a:width .'" style="fill: #'. a:color .';"/>')
+endfunction
+
+" Add a rectangle with alignment properties
+" - color: the color
+" -     y: y
+" - width: an integer. Percent of the width to take up.
+" - height: pixels height. an integer.
+" - align: left|center|right where to align the line to.
+function! mvom#renderers#icon#placeRectangle(color,y,width,height,align) dict
+  let pixwidth = float2nr(a:width / 100.0 * self.width)
+  let startpoint = 0
+  if a:align == 'left'
+    let startpoint = 0
+  elseif a:align == 'right'
+    let startpoint = self.width - pixwidth
+  elseif a:align == 'center'
+    let startpoint = float2nr((self.width-pixwidth)/2)
+  else
+    throw "Unknown alignment '". a:align ."'. Must be one of: left, right, center."
+  endif
+  call add(self.data,'<rect x="'. startpoint .'" y="'. a:y .'" height="'. a:height .'" width="'. pixwidth .'" style="fill: #'. a:color .';"/>')
 endfunction
