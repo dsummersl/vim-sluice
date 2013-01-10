@@ -117,7 +117,7 @@ endfunction
 " - width
 " - height
 function! mvom#renderers#icon#generatePNGFile(name,...) dict
-  let convert = 'convert'
+  let convert = g:mvom_convert_command
   if exists('a:1')
     let x = a:1
     let y = a:2

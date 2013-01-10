@@ -400,7 +400,7 @@ function! TestEnableDisable()
   " new files aren't enabled either
   split 0file.txt
   call VUAssertFalse(mvom#renderer#getenabled())
-  quit
+  bd
 
   " When enabled (but not mvom_default_enabled) the enable/disable should
   " enable and disable: 
@@ -417,7 +417,7 @@ function! TestEnableDisable()
   call VUAssertFalse(mvom#renderer#getenabled())
   call mvom#renderer#setenabled(1)
   call VUAssertTrue(mvom#renderer#getenabled())
-  quit
+  bd
 
   " When mvom_default_enabled is setup, then opening a new file would have
   " MVOM turned on.
@@ -428,6 +428,35 @@ function! TestEnableDisable()
   call VUAssertFalse(mvom#renderer#getenabled())
   quit
 endfunction
+
+function! TestToggleMacroMode()
+  " base case - no globals == disabled.
+  let g:mvom_enabled = 1
+  let g:mvom_default_enabled = 1
+  let g:mvom_default_macromode = 1
+  if exists('b:mvom_enabled') | unlet b:mvom_enabled | endif
+  if exists('b:mvom_macromode') | unlet b:mvom_macromode | endif
+ 
+  call VUAssertTrue(mvom#renderer#getenabled())
+  call VUAssertEquals(b:mvom_macromode,1)
+
+  call mvom#renderer#setmacromode(0)
+  call VUAssertEquals(mvom#renderer#getmacromode(),0)
+  call mvom#renderer#setmacromode(1)
+  call VUAssertEquals(mvom#renderer#getmacromode(),1)
+
+  split 0file.txt
+  call VUAssertTrue(mvom#renderer#getenabled())
+  call VUAssertEquals(mvom#renderer#getmacromode(),1)
+  bd
+
+  let g:mvom_default_macromode = 0
+  split 1file.txt
+  call VUAssertTrue(mvom#renderer#getenabled())
+  call VUAssertEquals(mvom#renderer#getmacromode(),0)
+  bd
+endfunction
+
 "}}}
 
 " vim: set fdm=marker :

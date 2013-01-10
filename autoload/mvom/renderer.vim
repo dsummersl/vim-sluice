@@ -87,6 +87,9 @@ endfunction
 " Sends a warning if the plugin is currently disabled.
 function! mvom#renderer#setenabled(enable)
   let b:mvom_enabled = a:enable
+  if !exists('b:mvom_macromode')
+    let b:mvom_macromode = g:mvom_default_macromode
+  endif
   if mvom#renderer#getenabled()
     " TODO the undercursor plugin still highlights things when its disabled.
     " Make sure that all the plugin deinit methods get called.
@@ -94,6 +97,7 @@ function! mvom#renderer#setenabled(enable)
   else
 		sign unplace *
   endif
+  return b:mvom_enabled
 endfunction
 
 " Get the status of the MVOM plugin in the current buffer.
@@ -105,9 +109,27 @@ function! mvom#renderer#getenabled()
     return 0
   endif
   if !exists('b:mvom_enabled')
-    let b:mvom_enabled = g:mvom_default_enabled
+    return mvom#renderer#setenabled(g:mvom_default_enabled)
   endif
   return b:mvom_enabled
+endfunction
+
+" Change whether this is in 'macro mode' or non macro mode.
+"
+" Toggles the setting, and returns true/false based on the new
+" status.
+function! mvom#renderer#setmacromode(enable)
+  let b:mvom_macromode = a:enable
+  if mvom#renderer#getenabled()
+    call mvom#renderer#RePaintMatches()
+  endif
+endfunction
+
+function! mvom#renderer#getmacromode()
+  if !exists('b:mvom_macromode')
+    let b:mvom_macromode = g:mvom_default_macromode
+  endif
+  return b:mvom_macromode
 endfunction
 
 " }}}
@@ -254,7 +276,11 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " compute the current 'height' of the window. that would be used by an
   " icon so that a line can be accurately rendered (TODO if the height is big it
   " should really 'fall' into the next line).
-  let pixelsperline = float2nr(10 / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+  if mvom#renderer#getmacromode()
+    let pixelsperline = float2nr(10 / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+  else
+    let pixelsperline = 10
+  endif
   let gutterImage = mvom#renderers#icon#makeImage(10,10*a:totalLines)
 
 	" First collate all of the search results into one hash where the 'macro line'
@@ -264,8 +290,13 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - plugins: all matching search results
   " - visible: if 1, then the results are currently visible in the window.
 	for [line, data] in items(a:searchResults)
-		let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-    let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
+    if mvom#renderer#getmacromode()
+      let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+      let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
+    else
+      let locinInFile = line
+      let modulo = 0
+    endif
 
 		if !has_key(results,locinInFile)
 			let results[locinInFile] = {}
@@ -277,7 +308,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 
     " setup the top level data values that are ultimately used for the signs
     " (the combination of all the plugins).
-    call VULog("data = ". string(data))
     for plugin in keys(data)
       call add(results[locinInFile]['plugins'],data[plugin])
       let offset = len(results[locinInFile]['plugins'])-1

@@ -32,31 +32,14 @@
 " - Painter (takes Signs or MacroSigns):
 "     - stateless
 
-
-" mappings"{{{
-
-" Sanity checks
-if has( "signs" ) == 0 || has("float") == 0 || v:version/100 < 7
+" Dependency check:"{{{
+if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
+	let g:mvom_enabled = 0
 	echohl ErrorMsg
-	echo "MacroViewOfMatches requires Vim to have +signs and +float support and Vim v7+"
+	echo "MVOM requires Vim 7+ to have +signs, +float, and +python."
 	echohl None
 	finish
 endif
-
-au! CursorHold * nested call mvom#renderer#RePaintMatches()
-
-" Toggle the status of MVOM in the current buffer:
-command! -bar MVOMtoggle call mvom#renderer#setenabled(!mvom#renderer#getenabled())
-
-" Enable the status of MVOM in the current buffer:
-command! -bar MVOMenable call mvom#renderer#setenabled(1)
-
-" Disable the status of MVOM in the current buffer:
-command! -bar MVOMdisable call mvom#renderer#setenabled(0)
-
-"}}}
-" Private Variables "{{{
-if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
 "}}}
 " Default Configuration"{{{
 " This handles all the slow/fastness of responsiveness of the entire plugin:
@@ -76,9 +59,11 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 " Global variable to enable/disable MVOM by default when opening files.
 if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
 
-" Where icons are stored (by default, where the MVOM plugin is located).
-if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/mvom-cache/' | endif
-exec "silent ! mkdir -p ". g:mvom_icon_cache
+" Global variable for default macro/non-macro mode.
+if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=1 | endif
+
+" ImageMagick 'convert' command location
+if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
 
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
@@ -117,5 +102,50 @@ if !exists('g:mvom_loaded')
 	      \ })
 	let g:mvom_loaded = 1
 endif
+"}}}
+" mappings"{{{
+
+au! CursorHold * nested call mvom#renderer#RePaintMatches()
+
+" Toggle the status of MVOM in the current buffer:
+command! -bar MVOMtoggle call mvom#renderer#setenabled(!mvom#renderer#getenabled())
+
+" Enable the status of MVOM in the current buffer:
+command! -bar MVOMenable call mvom#renderer#setenabled(1)
+
+" Disable the status of MVOM in the current buffer:
+command! -bar MVOMdisable call mvom#renderer#setenabled(0)
+
+" Toggle the macro/micro mode gutter
+command! -bar MVOMmacroToggle call mvom#renderer#setmacromode(!mvom#renderer#getmacromode())
+
+" Turn on micro mode gutter
+command! -bar MVOMmacroOff call mvom#renderer#setmacromode(0)
+
+" Turn on macro mode gutter
+command! -bar MVOMmacroOn call mvom#renderer#setmacromode(1)
+
+"}}}
+" Private Variables "{{{
+
+if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
+
+if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/mvom-cache/' | endif
+
+" Check to see if GUI mode is on, and we can find the 'convert' function. If
+" not, turn it off.
+let g:mvom_imagemagic_supported = 0
+if has("gui")
+	exe "silent !". g:mvom_convert_command ." -version"
+	if !v:shell_error
+		let g:mvom_imagemagic_supported = 1
+		exec "silent ! mkdir -p ". g:mvom_icon_cache
+		echohl ErrorMsg
+		echo "MVOM imagemagick 'convert' command not found. Graphic icons disabled."
+		echohl None
+	else
+	endif
+endif
+
 "}}}
 " vim: set fdm=marker noet:
