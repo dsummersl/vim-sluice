@@ -334,28 +334,24 @@ function! TestDoPaintMatches()
 	" first just paint one line. We expect that the line '1' would be painted,
 	" and that the highlight group is created (and 'mvom#test#test1plugin' is called).
 	unlet! b:cached_signs
-  let diff = vimunit#util#diff(mvom#renderer#DoPaintMatches(6,1,5,
+  let result = mvom#renderer#DoPaintMatches(6,1,5,
         \{1:{'mvom#test#test1plugin': {
         \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
         \ }},
         \"UnpaintTestStub","PaintTestStub")
-        \,
-        \{1:{
-        \  'plugins':[ 
+  let diff = vimunit#util#diff(result['1']['plugins'],[ 
         \    { 'plugin': 'mvom#test#test1plugin', 'line': 1, 'modulo': 0, 'text':'XX',
         \      'fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \  ],
-        \  'line': 1, 'icon': g:mvom_icon_cache .'d0bf1e398e5763d.png',
-        \  'text':'XX','fg':'000000','bg':'000000','visible':1,
-        \  'iconwidth':50,'iconalign':'left','iconcolor':'000000'}})
+        \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-	call VUAssertEquals(exists("g:mvom_sign_d0bf1e398e5763d"),1)
+  call VUAssertEquals(keys(result),['1'])
+
 	" two lines, implies some reconciliation should be happening here:
 	unlet! g:mvom_sign_d0bf1e398e5763d
 	let g:mv_plugins = []
 	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
 	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
-  let diff = vimunit#util#diff(mvom#renderer#DoPaintMatches(10,1,5,
+  let result = mvom#renderer#DoPaintMatches(10,1,5,
         \{1:{ 'mvom#test#test1plugin': 
         \  { 'line':1,'text':'//','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
         \  'mvom#test#test2plugin':
@@ -364,37 +360,20 @@ function! TestDoPaintMatches()
         \2:{'mvom#test#test1plugin':
         \  { 'line':2,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
         \}},
-        \"UnpaintTestStub","PaintTestStub"),
-        \
-        \{1:{
-        \  'plugins': [
+        \"UnpaintTestStub","PaintTestStub")
+
+  let diff = vimunit#util#diff(result['1']['plugins'],[ 
         \    {'plugin': 'mvom#test#test1plugin','line': 1, 'modulo': 0, 'text': '//', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
         \    {'plugin': 'mvom#test#test2plugin', 'line':1,'text':'RR','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000', 'modulo': 0},
         \    {'plugin': 'mvom#test#test1plugin','line': 2, 'modulo': 5, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
-        \  ],
-        \  'plugin': 'mvom#test#test1plugin','line': 2, 'iconwidth': 50, 'iconalign': 'left', 'iconcolor': '000000', 'modulo': 5,
-        \  'text':'XX','fg':'000000','bg':'000000','visible':1, 'icon': g:mvom_icon_cache .'caa11b4fcd55986.png'
-        \ }
-        \})
+        \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-	call VUAssertEquals(exists("g:mvom_sign_caa11b4fcd55986"),1)
-	unlet! g:mvom_sign_caa11b4fcd55986
-  let diff = vimunit#util#diff(mvom#renderer#DoPaintMatches(10,6,10,
+
+  let result = mvom#renderer#DoPaintMatches(10,6,10,
         \{1:{'mvom#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
         \10:{'mvom#test#test1plugin': { 'line':10,'text':'XX','fg':'000000','bg':'000000'}} },
-        \"UnpaintTestStub","PaintTestStub"),
-        \
-        \{6:{'plugins':
-        \  [{'plugin': 'mvom#test#test1plugin', 'line': 1, 'text':'XX','fg':'000000','bg':'000000','modulo': 0}],
-        \  'line': 1, 'text':'XX','fg':'000000','bg':'000000','visible':0},
-        \10:{'plugins':
-        \  [{ 'plugin': 'mvom#test#test1plugin', 'line':10, 'text':'XX','fg':'000000','bg':'000000','modulo': 5 }],
-        \  'line':10,'text':'XX','fg':'000000','bg':'000000','visible':1,'icon': g:mvom_icon_cache .'9dd4e461268c803.png'}
-        \})
-  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-	call VUAssertEquals(exists("g:mvom_sign_9dd4e461268c803"),1)
-	" dubgging call
-	" echo mvom#renderer#DoPaintMatches(line('$'),line('w0'),line('w$'),mvom#renderer#CombineData(g:mv_plugins),"UnpaintTestSign","PaintTestStub")
+        \"UnpaintTestStub","PaintTestStub")
+  call VUAssertEquals(sort(keys(result)),sort(['6','10']))
 
   " When a plugin is removed, it should not longer be in the list of plugins
 	call mvom#renderer#remove('mvom#test#test2plugin')
