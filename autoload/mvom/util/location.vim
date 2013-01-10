@@ -2,8 +2,6 @@
 
 " Return a list of the state of all the registers.
 function! mvom#util#location#SaveRegisters()
-	" TODO the a-z registers should be saved too? Myabe not..only if the plugin
-	" uses them.
 	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
 	let result = {}
 	for r in keys(registers)

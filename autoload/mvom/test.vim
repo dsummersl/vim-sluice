@@ -118,7 +118,7 @@ function! TestMakeImage()
   " one line on the top row:
   call image.addRectangle('000000',0,0,50,2)
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="0" y="0" height="2" width="50" style="fill: #000000;"/>'.
+        \'<rect x="0" y="0" height="2" width="50" style="fill: #000000;" />'.
         \'</svg>')
 endfunction
 
@@ -135,18 +135,18 @@ function! TestAddRectangleWithAlign()
     let image = mvom#renderers#icon#makeImage()
     call image.placeRectangle('000000',10,100,2,a)
     call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-          \'<rect x="0" y="10" height="2" width="50" style="fill: #000000;"/>'.
+          \'<rect x="0" y="10" height="2" width="50" style="fill: #000000;" />'.
           \'</svg>')
   endfor
   let image = mvom#renderers#icon#makeImage()
   call image.placeRectangle('000000',10,50,2,'right')
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="25" y="10" height="2" width="25" style="fill: #000000;"/>'.
+        \'<rect x="25" y="10" height="2" width="25" style="fill: #000000;" />'.
         \'</svg>')
   let image = mvom#renderers#icon#makeImage()
   call image.placeRectangle('000000',10,50,2,'center')
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="12" y="10" height="2" width="25" style="fill: #000000;"/>'.
+        \'<rect x="12" y="10" height="2" width="25" style="fill: #000000;" />'.
         \'</svg>')
 endfunction
 
@@ -208,18 +208,19 @@ function! TestCombineData()
 	let w:save_cursor = winsaveview()
 	call VUAssertEquals(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint' }}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ {})
   let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test2paint'}}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ {'1':{'mvom#test#test2plugin': {
         \   'count': 1,
         \   'bg': 'testbg',
         \   'fg': 'testhi',
-        \   'text': '..'
+        \   'text': '..',
+        \   'modulo': 0
         \ } }}
         \)
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -227,26 +228,28 @@ function! TestCombineData()
 	let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint'}},
         \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \ 
         \ {'1': {'mvom#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
 	let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test1paint'}},
         \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ {'1': {'mvom#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
@@ -254,13 +257,14 @@ function! TestCombineData()
 	let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test3plugin', 'options': { 'render': 'mvom#test#test1paint'}},
         \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint' }}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ {'1': {'mvom#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
@@ -269,19 +273,21 @@ function! TestCombineData()
 	let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test2paint'}},
         \ {'plugin':'mvom#test#test3plugin','options': { 'render': 'mvom#test#test2paint' }}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ {'1': {'mvom#test#test3plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ }, 'mvom#test#test4plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
-        \  'isvis':1
+        \  'isvis':1,
+        \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
@@ -289,32 +295,36 @@ function! TestCombineData()
 	let diff = vimunit#util#diff(mvom#renderer#CombineData([
         \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test3paint'}},
         \ {'plugin':'mvom#test#test5plugin','options': { 'render': 'mvom#test#test3paint'}}
-        \ ]),
+        \ ],10,1,10)['lines'],
         \
         \ { '1': {'mvom#test#test4plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
-        \  'isvis':1
+        \  'isvis':1,
+        \  'modulo': 0
         \ }},
         \ '2': {'mvom#test#test4plugin': {
         \  'count':2,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ }},
         \ '5': {'mvom#test#test5plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ }},
         \ '6': {'mvom#test#test5plugin': {
         \  'count':2,
         \  'text':'..',
         \  'fg':'testhi',
-        \  'bg':'testbg'
+        \  'bg':'testbg',
+        \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 endfunction

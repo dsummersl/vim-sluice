@@ -1,10 +1,10 @@
 function! mvom#test#test3paint#paint(options,data)
-	let results = {}
-	for line in keys(a:data)
-		let results[line] = copy(a:data[line])
-		let results[line]['fg'] = 'testhi'
-		let results[line]['bg'] = 'testbg'
-		let results[line]['text'] = '..'
+	let results = {'lines': {}}
+	for line in keys(a:data['lines'])
+		let results['lines'][line] = copy(a:data['lines'][line])
+		let results['lines'][line]['fg'] = 'testhi'
+		let results['lines'][line]['bg'] = 'testbg'
+		let results['lines'][line]['text'] = '..'
 	endfor
 	return results
 endfunction

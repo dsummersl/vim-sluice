@@ -42,6 +42,7 @@ if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
 endif
 "}}}
 " Default Configuration"{{{
+
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=200
 
@@ -64,6 +65,8 @@ if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=1 | endif
 
 " ImageMagick 'convert' command location
 if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
+
+if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=20 | endif
 
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
@@ -135,7 +138,7 @@ if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),
 " Check to see if GUI mode is on, and we can find the 'convert' function. If
 " not, turn it off.
 let g:mvom_imagemagic_supported = 0
-if has("gui")
+if has("gui_running")
 	exe "silent !". g:mvom_convert_command ." -version"
 	if !v:shell_error
 		let g:mvom_imagemagic_supported = 1

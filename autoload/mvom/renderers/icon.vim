@@ -132,19 +132,38 @@ function! mvom#renderers#icon#generatePNGFile(name,...) dict
 endfunction
 
 " Add a rectangle to the final image.
-function! mvom#renderers#icon#addRectangle(color,x,y,width,height) dict
-  call add(self.svg,printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;"/>',a:x, a:y, a:height, a:width, a:color))
-  call add(self.data,{ 'x': a:x, 'y': a:y, 'width': a:width, 'height': a:height, 'type': 'rect', 'color': a:color })
+"
+" Optional Parameters:
+" - style: string to go into the svg style area
+" - params: extra <rect> keys (ie, rx,ry)
+function! mvom#renderers#icon#addRectangle(color,x,y,width,height,...) dict
+  let style=''
+  if exists('a:1')
+    let style = a:1
+  endif
+  let extra=''
+  if exists('a:2')
+    let extra = a:2
+  endif
+  call add(self.svg,printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',a:x, a:y, a:height, a:width, a:color, style, extra))
+  call add(self.data,{ 'x': a:x, 'y': a:y, 'width': a:width, 'height': a:height, 'type': 'rect', 'color': a:color, 'style': style, 'extra':extra})
 endfunction
 
 " Place text. The x/y location correspond to the lower right corner of the
 " bounding box for the text. Only one character fits reliably on a line but...
 " one could easily shrink things down by messing with the font-size attribute.
-function! mvom#renderers#icon#addText(text,color,x,y) dict
+"
+" Optional Parameters:
+" - style: string to go into the svg style area
+function! mvom#renderers#icon#addText(text,color,x,y,...) dict
   " TODO use a monospace font.
-  call add(self.svg,printf('<text x="%d" y="%d" fill="%s" text-anchor="end" font-size="9">%s</text>',a:x,a:y,a:color,a:text))
+  let style=''
+  if exists('a:1')
+    let style = a:1
+  endif
+  call add(self.svg,printf('<text x="%d" y="%d" fill="%s" text-anchor="end" font-size="9" style="%s">%s</text>',a:x,a:y,a:color,style,a:text))
   " TODO this doesn't properly define the boundary for 'g' and the like.
-  call add(self.data,{ 'x': a:x-len(a:text)*4, 'y': a:y-9, 'width': len(a:text)*4, 'height': 9, 'type': 'text', 'color': a:color, 'text': a:text })
+  call add(self.data,{ 'x': a:x-len(a:text)*4, 'y': a:y-9, 'width': len(a:text)*4, 'height': 9, 'type': 'text', 'color': a:color, 'text': a:text, 'style': style })
 endfunction
 
 " Add a rectangle with alignment properties
@@ -153,7 +172,19 @@ endfunction
 " - width: an integer. Percent of the width to take up.
 " - height: pixels height. an integer.
 " - align: left|center|right where to align the line to.
-function! mvom#renderers#icon#placeRectangle(color,y,width,height,align) dict
+"
+" Optional Parameters:
+" - style: string to go into the svg style area
+" - params: extra <rect> keys (ie, rx,ry)
+function! mvom#renderers#icon#placeRectangle(color,y,width,height,align,...) dict
+  let style=''
+  if exists('a:1')
+    let style = a:1
+  endif
+  let extra=''
+  if exists('a:2')
+    let extra = a:2
+  endif
   let pixwidth = float2nr(a:width / 100.0 * self.width)
   let startpoint = 0
   if a:align == 'left'
@@ -165,6 +196,6 @@ function! mvom#renderers#icon#placeRectangle(color,y,width,height,align) dict
   else
     throw "Unknown alignment '". a:align ."'. Must be one of: left, right, center."
   endif
-  call add(self.svg,'<rect x="'. startpoint .'" y="'. a:y .'" height="'. a:height .'" width="'. pixwidth .'" style="fill: #'. a:color .';"/>')
-  call add(self.data,{ 'x': startpoint, 'y': a:y, 'width': pixwidth, 'height': a:height, 'type': 'rect', 'color': a:color })
+  call add(self.svg,printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',startpoint, a:y, a:height, pixwidth, a:color, style,extra))
+  call add(self.data,{ 'x': startpoint, 'y': a:y, 'width': pixwidth, 'height': a:height, 'type': 'rect', 'color': a:color, 'style': style, 'extra': extra})
 endfunction

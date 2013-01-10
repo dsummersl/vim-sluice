@@ -20,9 +20,9 @@ function! mvom#renderers#background#paint(options,vals)
     let showinline = 0
   endif
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
-	for line in keys(a:vals)
-    let newbg = mvom#renderers#background#setBG(bgcolor,a:vals[line],showinline)
-    let a:vals[line]['bg'] = newbg['bg']
+	for line in keys(a:vals['lines'])
+    let newbg = mvom#renderers#background#setBG(bgcolor,a:vals['lines'][line],showinline)
+    let a:vals['lines'][line]['bg'] = newbg['bg']
 	endfor
 	return a:vals
 endfunction

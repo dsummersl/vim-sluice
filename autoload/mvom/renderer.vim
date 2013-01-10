@@ -5,7 +5,10 @@ function! mvom#renderer#RePaintMatches()"{{{
 	endif
 	let w:save_cursor = winsaveview()
 	let w:save_registers = mvom#util#location#SaveRegisters()
-  let current_dims = mvom#util#location#getwindowdimensions(mvom#renderer#CombineData(g:mv_plugins))
+	let totalLines = line('$')
+	let firstVisible = line('w0')
+	let lastVisible = line('w$')
+  let current_dims = mvom#util#location#getwindowdimensions(mvom#renderer#CombineData(g:mv_plugins,totalLines,firstVisible,lastVisible))
 	" if there are no cached_dim then this is the first call to the
 	" repaintfunction. Make the cache and paint.
 	if !exists('w:cached_dim')
@@ -181,14 +184,10 @@ endfunction"}}}
 "       'text'      : text to display in signs area
 "       'fg'        : foreground
 "       'bg'        : background
-"       'iconcolor' : gui color
-"       'iconalign' : how to align the icon
-"       'iconwidth' : how wide to paint the icon
-" 	    TODO linehi - hilighting for the linelevel option.
 " 	  }
 " 	}
 " }
-function! mvom#renderer#CombineData(plugins)"{{{
+function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)"{{{
 	let allData = {}
   " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
@@ -212,26 +211,53 @@ function! mvom#renderer#CombineData(plugins)"{{{
 		endfor
 	endfor"}}}
 	let resultData = {}
+  let resultData['lines'] = {}
+  let resultData['gutterImage'] = mvom#renderers#icon#makeImage(g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+  " setup the background color for the image:
+  call resultData['gutterImage'].addRectangle(g:mvom_default_bg,0,0,g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+
+  " compute the current 'height' of the window. that would be used by an
+  " icon so that a line can be accurately rendered (TODO if the height is big it
+  " should really 'fall' into the next line).
+  if mvom#renderer#getmacromode()
+    let pixelsperline = float2nr(g:mvom_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+  else
+    let pixelsperline = g:mvom_pixel_density-1
+  endif
+  let resultData['pixelsperline'] = pixelsperline
+
   " Generate the paint data"{{{
 	for pluginInstance in a:plugins " now render everything
 		let render = pluginInstance['options']['render']
 		let plugin = pluginInstance['plugin']
 		let pluginData = {}
+    let pluginData['gutterImage'] = resultData['gutterImage']
+    let pluginData['pixelsperline'] = resultData['pixelsperline']
+    let pluginData['lines'] = {}
     " Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
+      if mvom#renderer#getmacromode()
+        let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+        let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:mvom_pixel_density)
+      else
+        let locinInFile = line
+        let modulo = 0
+      endif
 			if has_key(allData[line],plugin) > 0
-				let pluginData[line] = allData[line][plugin]
+				let pluginData['lines'][line] = allData[line][plugin]
+        let pluginData['lines'][line]['modulo'] = modulo
+        let pluginData['lines'][line]['locinInFile'] = locinInFile
 			endif
 		endfor
 		let paintData = {render}#paint(pluginInstance['options'],pluginData)
     " once painted, store the results.
-		for line in keys(paintData)
-			if !has_key(resultData,line)
-				let resultData[line] = {}
+		for line in keys(paintData['lines'])
+			if !has_key(resultData['lines'],line)
+				let resultData['lines'][line] = {}
 			endif
-      let resultData[line][plugin] = copy(allData[line][plugin])
-      for value in keys(paintData[line])
-        let resultData[line][plugin][value] = paintData[line][value]
+      let resultData['lines'][line][plugin] = copy(allData[line][plugin])
+      for value in keys(paintData['lines'][line])
+        let resultData['lines'][line][plugin][value] = paintData['lines'][line][value]
       endfor
 		endfor
 	endfor"}}}
@@ -273,29 +299,17 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     call {a:unpaintFunction}(line,b:cached_signs[line])
   endfor
 
-  " compute the current 'height' of the window. that would be used by an
-  " icon so that a line can be accurately rendered (TODO if the height is big it
-  " should really 'fall' into the next line).
-  if mvom#renderer#getmacromode()
-    let pixelsperline = float2nr(10 / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
-  else
-    let pixelsperline = 10
-  endif
-  let gutterImage = mvom#renderers#icon#makeImage(10,10*a:totalLines)
-
 	" First collate all of the search results into one hash where the 'macro line'
   " number points to all matching search results.
   "
   " Additional keys added:
   " - plugins: all matching search results
   " - visible: if 1, then the results are currently visible in the window.
-	for [line, data] in items(a:searchResults)
+	for [line, data] in items(a:searchResults['lines'])
     if mvom#renderer#getmacromode()
       let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-      let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 10.0)
     else
       let locinInFile = line
-      let modulo = 0
     endif
 
 		if !has_key(results,locinInFile)
@@ -315,7 +329,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         let results[locinInFile][key] = data[plugin][key]
       endfor
       let results[locinInFile]['plugins'][offset]['plugin'] = plugin
-      let results[locinInFile]['plugins'][offset]['modulo'] = modulo
       unlet plugin
     endfor
 	endfor
@@ -359,38 +372,23 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 
     " Create the fg/bg highlighting for non-icon signs
     exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
-
-    call gutterImage.addRectangle(val['bg'],0,10*(line-1),10,10)
-    for pl in (val['plugins'])
-      if has_key(pl,'iconcolor')
-        " TODO provide a generic key 'iconfunction' that allows plugins
-        " to provide their own custom icons. Move this into the 'slash'
-        " definition. --- and work in the window backgrounds into the icon.
-        "
-        " TODO fix combine data so each plugin has its own data.
-        " Place the actual plugin's mark:
-        call gutterImage.placeRectangle(pl['iconcolor'],
-              \pl['modulo']+10*(line-1),pl['iconwidth'],
-              \pixelsperline,pl['iconalign'])
-      endif
-    endfor
   endfor
 
   " after the gutterimage is completely painted, define any missing
   " icon/signs, and then paint.
 	for [line,val] in items(results)
-    let fname = gutterImage.generateHash(0,10*(line-1),10,10)
+    let fname = a:searchResults['gutterImage'].generateHash(0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
     let results[line]['hash'] = fname
     if !exists('g:mvom_sign_'. fname)
-      call VULog( "let g:mvom_sign_". fname ."=1")
+      "call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
       if exists('g:mvom_alpha') && g:mvom_alpha
         " if an icon doesn't exist yet, generate it.
         if !filereadable(g:mvom_icon_cache . fname .'.png')
           " place the background color
           " DEBUG print the whole gutter. One long strip: :)
-          "call gutterImage.generatePNGFile(g:mvom_icon_cache . 'gutter')
-          call gutterImage.generatePNGFile(g:mvom_icon_cache . fname,0,10*(line-1),10,10)
+          call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . 'gutter')
+          call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . fname,0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
         endif
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
         exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],mvom#util#color#GetHighlightName(val))

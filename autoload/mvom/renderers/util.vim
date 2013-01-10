@@ -12,13 +12,23 @@ endfunction
 
 function! mvom#renderers#util#TypicalPaint(vals,options)
 	let result = {}
-	for line in keys(a:vals)
-		let result[line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg':g:mvom_default_bg }
+  let result['lines'] = {}
+	for line in keys(a:vals['lines'])
+		let result['lines'][line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg':g:mvom_default_bg }
     for key in ["iconcolor","iconwidth","iconalign"]
       if has_key(a:options,key)
-        let result[line][key] = a:options[key]
+        let result['lines'][line][key] = a:options[key]
       endif
     endfor
+    " pain a graphic icon, if icon settings are present.
+    if has_key(a:options,'iconcolor')
+      call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
+            \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['locinInFile']-1),
+            \a:options['iconwidth'],
+            \a:vals['pixelsperline'],a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
+    else
+      " TODO do some default painting. a brick for the whole thing maybe.
+    endif
 	endfor
 	return result
 endfunction
