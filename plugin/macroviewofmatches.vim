@@ -8,9 +8,6 @@
 "function! MarkClearAll()
 "endfunction
 "
-" TODO add a plugin that shows you the other matches if they are off screen.
-" TODO I might want to not show search/undercursor/etc if they are onscreen
-" (less clutter).
 " TODO git plugin for additions and subtractions
 " TODO a gundo compatible plugin - it shows you where you've been making
 " changes (colors boldly the recent changes).
@@ -19,10 +16,22 @@
 " esists for for/endfor/etc).
 "
 " NEXT:
-" - cache icon images.
-" - icons with conflicts. Currently only one data source is shown. They should
-"   all paint onto the icon.
 " - Seamlessly work on console or GUI mode.
+" New implementations:
+" - data sources (that can pretty much stay as is.
+"     - stateless
+" - Signs: a wrapper around the gutter implementation (point to cache what is
+"   currently there.
+"     - state (tie to window)
+" - MacroSigns: a wrapper around the gutter implementation that only paints on
+"   the signs in the current viewpoint.
+"     - state (tie to window)
+" - Window: encapsulate the entire state of the current window (size,
+"   location?)
+"     - state (tie to window)
+" - Painter (takes Signs or MacroSigns):
+"     - stateless
+
 
 " mappings"{{{
 
@@ -91,7 +100,7 @@ if !exists('g:mvom_loaded')
 				\ 'color': 'b5f1ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
-				\ 'iconcolor': 'e5f1ff',
+				\ 'iconcolor': 'cceecc',
 				\ 'iconalign': 'right',
 				\ 'iconwidth': 50,
 				\ 'bg': 'e5f1ff',

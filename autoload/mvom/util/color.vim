@@ -2,7 +2,8 @@
 " Given a string, return a much smaller hash of the string.
 function! mvom#util#color#hash(str)
 	python import sys
-	exe "python sys.argv = ['". a:str ."']"
+  let cleaned = substitute(a:str,"'","\\\\'","g")
+	exe "python sys.argv = ['". cleaned ."']"
   python import hashlib
   python import sys
   python import vim

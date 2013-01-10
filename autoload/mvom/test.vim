@@ -150,6 +150,56 @@ function! TestAddRectangleWithAlign()
         \'</svg>')
 endfunction
 
+function! TestGeneratePNGOffset()
+  " make the image, add a couple things by line...
+  " I was thinking that adding the line number into the ultimate image file
+  " would be handy (so you say how many lines there are and it computes the
+  " size? width = 10, height = # lines * 10
+  "
+  " then translate
+  let lines = 10
+  let image = mvom#renderers#icon#makeImage(10,10*lines)
+  for i in range(lines)
+    if i % 2 == 0
+      call image.addRectangle('000000',0,i*10,50,10)
+      call image.addText(string(i%2),'red',9,i*10+9)
+      call image.placeRectangle('000000',i*10,50,2,'left')
+    else
+      call image.addRectangle('ff0000',0,i*10,50,10)
+      call image.addText(string(i%2),'black',9,i*10+9)
+      call image.placeRectangle('0000ff',i*10,50,2,'right')
+    endif
+  endfor
+  call image.generatePNGFile('nooffset',0,10,10,10)
+  " ensure that a hash is a big string.
+  let filehash = image.generateHash()
+  call VUAssertTrue(len(filehash) > 0)
+
+  call VULog("one")
+  let onehash = image.generateHash(0,10,10,10)
+  call VUAssertNotSame(filehash,onehash)
+
+  call VULog("two")
+  let twohash = image.generateHash(0,20,10,10)
+  call VUAssertNotSame(twohash,onehash)
+  call VUAssertNotSame(twohash,filehash)
+
+  call VULog("three")
+  let threehash = image.generateHash(0,30,10,10)
+  call VUAssertEquals(threehash,onehash)
+  call VUAssertNotSame(threehash,filehash)
+
+  let fourhash = image.generateHash(0,40,10,10)
+  call VUAssertEquals(fourhash,twohash)
+  call VUAssertNotSame(fourhash,filehash)
+
+  call VULog("onehalf")
+  let onehalfhash = image.generateHash(0,5,10,10)
+  call VULog("threehalf")
+  let threehalfhash = image.generateHash(0,25,10,10)
+  call VUAssertEquals(onehalfhash,threehalfhash)
+endfunction
+
 ""}}}
 " renderer tests"{{{
 function! TestCombineData()
@@ -400,7 +450,5 @@ function! TestEnableDisable()
   quit
 endfunction
 "}}}
-
-"call VURunAllTests()
 
 " vim: set fdm=marker :

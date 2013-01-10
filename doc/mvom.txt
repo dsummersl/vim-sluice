@@ -6,7 +6,7 @@ CONTENTS ~
 ===========================================================================
 
 1. About                                           |mvom-about|
-2. Quick Start
+2. Quick Start                                     |mvom-install|
 3. Options
 4. Builtin Functions
     4.1 Search
@@ -18,6 +18,18 @@ CONTENTS ~
 ===========================================================================
 
 ABOUT                                              *mvom-about*
+
+Quick Start                                        *mvom-install*
+
+To support graphical icons in the gutter you must have ImageMagick installed on
+your system. On OSX you can do this easily with homebrew:
+
+brew install imagemagick
+
+TODO if we want to support text in the graphics we'll need to ensure that
+ghostscript is installed (at least on OSX):
+
+brew install ghostscript
 
 Plugins                                            *mvom-plugins*
 

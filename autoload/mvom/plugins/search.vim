@@ -35,6 +35,9 @@ endfunction
 " apepars to be seconds and ... milliseconds.
 "
 " TODO add a paramter to this for max time...
+" TODO do NOT use @/ -- rather, have the parameter passed in...specifically
+" for undercursor. And whereever @/ is referenced...wrap it in a try/catch
+" block; it may not be defined.
 function! mvom#plugins#search#data(options)
   " max number of milliseconds
   "let maxtime = 500

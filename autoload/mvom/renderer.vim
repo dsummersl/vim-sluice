@@ -1,18 +1,3 @@
-" New implementations:
-" - data sources (that can pretty much stay as is.
-"     - stateless
-" - Signs: a wrapper around the gutter implementation (point to cache what is
-"   currently there.
-"     - state (tie to window)
-" - MacroSigns: a wrapper around the gutter implementation that only paints on
-"   the signs in the current viewpoint.
-"     - state (tie to window)
-" - Window: encapsulate the entire state of the current window (size,
-"   location?)
-"     - state (tie to window)
-" - Painter (takes Signs or MacroSigns):
-"     - stateless
-
 function! mvom#renderer#RePaintMatches()"{{{
 	let painted = 0
 	if !mvom#renderer#getenabled()
@@ -103,6 +88,8 @@ endfunction
 function! mvom#renderer#setenabled(enable)
   let b:mvom_enabled = a:enable
   if mvom#renderer#getenabled()
+    " TODO the undercursor plugin still highlights things when its disabled.
+    " Make sure that all the plugin deinit methods get called.
     call mvom#renderer#RePaintMatches()
   else
 		sign unplace *
@@ -231,8 +218,8 @@ endfunction"}}}
 
 function! mvom#renderer#PaintSign(line,dict)"{{{
 	if has_key(a:dict,'fg')
-		let thesign=mvom#util#color#GetSignName(a:dict)
-		exe "sign place ".a:line." name=".thesign." line=".a:line." buffer=".winbufnr(0)
+		let thesign=a:dict['hash']
+    exe printf("sign place %s name=%s line=%s buffer=%s",a:line,a:dict['hash'],a:line,winbufnr(0))
 	else
 		" if 'visible' then this is a non-matching line that's currently
 		" 'visible'.
@@ -268,6 +255,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " icon so that a line can be accurately rendered (TODO if the height is big it
   " should really 'fall' into the next line).
   let pixelsperline = float2nr(10 / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+  let gutterImage = mvom#renderers#icon#makeImage(10,10*a:totalLines)
 
 	" First collate all of the search results into one hash where the 'macro line'
   " number points to all matching search results.
@@ -342,41 +330,42 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     " Create the fg/bg highlighting for non-icon signs
     exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
 
-    let fname = mvom#util#color#GetSignName(val)
+    call gutterImage.addRectangle(val['bg'],0,10*(line-1),10,10)
+    for pl in (val['plugins'])
+      if has_key(pl,'iconcolor')
+        " TODO provide a generic key 'iconfunction' that allows plugins
+        " to provide their own custom icons. Move this into the 'slash'
+        " definition. --- and work in the window backgrounds into the icon.
+        "
+        " TODO fix combine data so each plugin has its own data.
+        " Place the actual plugin's mark:
+        call gutterImage.placeRectangle(pl['iconcolor'],
+              \pl['modulo']+10*(line-1),pl['iconwidth'],
+              \pixelsperline,pl['iconalign'])
+      endif
+    endfor
+  endfor
+
+  " after the gutterimage is completely painted, define any missing
+  " icon/signs, and then paint.
+	for [line,val] in items(results)
+    let fname = gutterImage.generateHash(0,10*(line-1),10,10)
+    let results[line]['hash'] = fname
     if !exists('g:mvom_sign_'. fname)
       call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
       if exists('g:mvom_alpha') && g:mvom_alpha
         " if an icon doesn't exist yet, generate it.
         if !filereadable(g:mvom_icon_cache . fname .'.png')
-          let image = mvom#renderers#icon#makeImage(10,10)
-          call image.addRectangle(val['bg'],0,0,10,10)
-          for pl in (val['plugins'])
-            if has_key(pl,'iconcolor')
-              " TODO provide a generic key 'iconfunction' that allows plugins
-              " to provide their own custom icons. Move this into the 'slash'
-              " definition.
-              "
-              " TODO use one SVG image for the entire gutter. All the plugins
-              " can then paint to that one image.
-              " - provide a method to save to png one region defined by a
-              "   window (matching some offset down the gutter).
-              " - provide a method for naming the png based on the contents in
-              "   some unique way (so we can do the same !exists() don't save
-              "   method).
-              "
-              " TODO fix combine data so each plugin has its own data.
-              call image.placeRectangle(pl['iconcolor'],
-                    \pl['modulo'],pl['iconwidth'],
-                    \pixelsperline,pl['iconalign'])
-            endif
-          endfor
-          call image.generatePNGFile(g:mvom_icon_cache . fname)
+          " place the background color
+          " DEBUG print the whole gutter. One long strip: :)
+          "call gutterImage.generatePNGFile(g:mvom_icon_cache . 'gutter')
+          call gutterImage.generatePNGFile(g:mvom_icon_cache . fname,0,10*(line-1),10,10)
         endif
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
-        exe "sign define ". fname ." icon=". results[line]['icon'] ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+        exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],mvom#util#color#GetHighlightName(val))
       else
-        exe "sign define ". fname ." text=".val['text']." texthl=".mvom#util#color#GetHighlightName(val)
+        exe printf("sign define %s text=%s texthl=%s",fname,val['text'],mvom#util#color#GetHighlightName(val))
       endif
     endif
     " did we paint this line previously?
