@@ -47,7 +47,7 @@ function! mvom#renderers#background#setBG(bgcolor,line,showinline)
   return {'bg': bgcolor}
 endfunction
 
-function! mvom#renderers#background#reconcile(options,vals)
+function! mvom#renderers#background#reconcile(options,vals,plugin)
   " override any bg color options with our own setting:
   if has_key(a:options,'showinline') && a:options['showinline']
     let showinline = 1
@@ -55,5 +55,5 @@ function! mvom#renderers#background#reconcile(options,vals)
     let showinline = 0
   endif
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
-  return mvom#renderers#background#setBG(bgcolor,a:vals,showinline)
+  return mvom#renderers#background#setBG(bgcolor,a:plugin,showinline)
 endfunction

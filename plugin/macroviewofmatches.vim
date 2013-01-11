@@ -48,11 +48,8 @@ set updatetime=200
 
 " default background color of the gutter:
 " if unset, then use the background of the existing window
-if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'dddddd' | endif
+if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'eeeeee' | endif
 exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
-
-" Enable any not ready for primetime features?
-if !exists('g:mvom_alpha') | let g:mvom_alpha=1 | endif
 
 " Global variable to enable/disable MVOM
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
@@ -62,6 +59,9 @@ if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
 
 " Global variable for default macro/non-macro mode.
 if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=1 | endif
+
+" Global to enable graphical icons
+if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=0 | endif
 
 " ImageMagick 'convert' command location
 if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
@@ -77,8 +77,8 @@ if !exists('g:mvom_loaded')
 				\ 'color': '0055ff',
 				\ 'xchars': 'X ',
 				\ 'iconcolor': '0055ff',
-				\ 'iconalign': 'left',
-				\ 'iconwidth': 50,
+				\ 'iconalign': 'center',
+				\ 'iconwidth': 80,
 				\ 'xcolor': '0055ff'
 				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
@@ -88,7 +88,7 @@ if !exists('g:mvom_loaded')
 				\ 'color': 'b5f1ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
-				\ 'iconcolor': 'cceecc',
+				\ 'iconcolor': 'b5f1ff',
 				\ 'iconalign': 'right',
 				\ 'iconwidth': 50,
 				\ 'bg': 'e5f1ff',
@@ -138,7 +138,7 @@ if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),
 " Check to see if GUI mode is on, and we can find the 'convert' function. If
 " not, turn it off.
 let g:mvom_imagemagic_supported = 0
-if has("gui_running")
+if has("gui_running") && g:mvom_graphics_enabled
 	exe "silent !". g:mvom_convert_command ." -version"
 	if !v:shell_error
 		let g:mvom_imagemagic_supported = 1

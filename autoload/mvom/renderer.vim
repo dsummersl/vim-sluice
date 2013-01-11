@@ -240,12 +240,13 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
         let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
         let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:mvom_pixel_density)
       else
-        let locinInFile = line
+        let locinInFile = str2nr(line)
         let modulo = 0
       endif
 			if has_key(allData[line],plugin) > 0
 				let pluginData['lines'][line] = allData[line][plugin]
         let pluginData['lines'][line]['modulo'] = modulo
+        let pluginData['lines'][line]['line'] = str2nr(line)
         let pluginData['lines'][line]['locinInFile'] = locinInFile
 			endif
 		endfor
@@ -343,11 +344,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 			for p in val['plugins']
         let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
         let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
-        " TODO the slash reconcile plugins need to know what other plugins it
-        " is clashing with, otherwise they cannot figure out what sign to use
-        " (clashing with background means nothing. Only clashing with another
-        " slash is important).
-        let reconciled = {render}#reconcile(plugin['options'],p)
+        let reconciled = {render}#reconcile(plugin['options'],val['plugins'],p)
         for key in keys(reconciled)
           let results[line][key] = reconciled[key]
         endfor
@@ -382,7 +379,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     if !exists('g:mvom_sign_'. fname)
       "call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
-      if exists('g:mvom_alpha') && g:mvom_alpha
+      if g:mvom_graphics_enabled
         " if an icon doesn't exist yet, generate it.
         if !filereadable(g:mvom_icon_cache . fname .'.png')
           " place the background color

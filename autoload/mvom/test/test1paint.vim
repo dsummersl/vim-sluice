@@ -1,3 +1,3 @@
-function! mvom#test#test1paint#paint(options,data)
+function! mvom#test#test1paint#paint(options,vals)
 	return {'lines': {}}
 endfunction

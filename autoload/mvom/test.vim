@@ -220,6 +220,8 @@ function! TestCombineData()
         \   'bg': 'testbg',
         \   'fg': 'testhi',
         \   'text': '..',
+        \   'line': 1,
+        \   'locinInFile': 1,
         \   'modulo': 0
         \ } }}
         \)
@@ -235,6 +237,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -249,6 +253,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -264,6 +270,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -280,6 +288,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ }, 'mvom#test#test4plugin': {
         \  'count':1,
@@ -287,6 +297,8 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'isvis':1,
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -303,6 +315,8 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'isvis':1,
+        \  'line': 1,
+        \  'locinInFile': 1,
         \  'modulo': 0
         \ }},
         \ '2': {'mvom#test#test4plugin': {
@@ -310,6 +324,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 2,
+        \  'locinInFile': 2,
         \  'modulo': 0
         \ }},
         \ '5': {'mvom#test#test5plugin': {
@@ -317,6 +333,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 5,
+        \  'locinInFile': 5,
         \  'modulo': 0
         \ }},
         \ '6': {'mvom#test#test5plugin': {
@@ -324,6 +342,8 @@ function! TestCombineData()
         \  'text':'..',
         \  'fg':'testhi',
         \  'bg':'testbg',
+        \  'line': 6,
+        \  'locinInFile': 6,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -339,49 +359,50 @@ function! TestDoPaintMatches()
   " called.
   let g:mvom_alpha = 1
 
-	call VUAssertEquals(mvom#renderer#DoPaintMatches(5,1,5,{},"UnpaintTestStub","PaintTestStub"),{})
+	call VUAssertEquals(mvom#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,
 	" and that the highlight group is created (and 'mvom#test#test1plugin' is called).
 	unlet! b:cached_signs
   let result = mvom#renderer#DoPaintMatches(6,1,5,
-        \{1:{'mvom#test#test1plugin': {
+        \{'lines':{1:{'mvom#test#test1plugin': {
         \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \ }},
+        \ }}, 'gutterImage': mvom#renderers#icon#makeImage()},
         \"UnpaintTestStub","PaintTestStub")
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
-        \    { 'plugin': 'mvom#test#test1plugin', 'line': 1, 'modulo': 0, 'text':'XX',
-        \      'fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
+        \    { 'plugin': 'mvom#test#test1plugin', 'line': 1, 'text':'XX',
+        \      'fg':'000000','bg':'000000','iconwidth':50,
+        \      'iconalign':'left','iconcolor':'000000'}
         \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
   call VUAssertEquals(keys(result),['1'])
 
 	" two lines, implies some reconciliation should be happening here:
-	unlet! g:mvom_sign_d0bf1e398e5763d
 	let g:mv_plugins = []
 	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
 	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
   let result = mvom#renderer#DoPaintMatches(10,1,5,
-        \{1:{ 'mvom#test#test1plugin': 
+        \{'lines':{1:{ 'mvom#test#test1plugin': 
         \  { 'line':1,'text':'//','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
         \  'mvom#test#test2plugin':
         \  { 'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'}
         \},
         \2:{'mvom#test#test1plugin':
         \  { 'line':2,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \}},
+        \}}, 'gutterImage': mvom#renderers#icon#makeImage() },
         \"UnpaintTestStub","PaintTestStub")
 
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
-        \    {'plugin': 'mvom#test#test1plugin','line': 1, 'modulo': 0, 'text': '//', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
-        \    {'plugin': 'mvom#test#test2plugin', 'line':1,'text':'RR','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000', 'modulo': 0},
-        \    {'plugin': 'mvom#test#test1plugin','line': 2, 'modulo': 5, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
+        \    {'plugin': 'mvom#test#test1plugin','line': 1, 'text': '//', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
+        \    {'plugin': 'mvom#test#test2plugin', 'line':1,'text':'RR','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
+        \    {'plugin': 'mvom#test#test1plugin','line': 2, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
         \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
   let result = mvom#renderer#DoPaintMatches(10,6,10,
-        \{1:{'mvom#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
+        \{'lines':{1:{'mvom#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
         \10:{'mvom#test#test1plugin': { 'line':10,'text':'XX','fg':'000000','bg':'000000'}} },
+        \  'gutterImage': mvom#renderers#icon#makeImage()},
         \"UnpaintTestStub","PaintTestStub")
   call VUAssertEquals(sort(keys(result)),sort(['6','10']))
 
