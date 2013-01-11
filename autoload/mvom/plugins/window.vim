@@ -16,19 +16,19 @@ function! mvom#plugins#window#data(options)
 	let totalLines = line("$")
 	let currentLine = line(".")
 	let n = firstVisible
-	let results = {}
+	let results = { 'lines': {}}
   if mvom#renderer#getmacromode()
     let offsetOfCursor = mvom#util#location#ConvertToPercentOffset(currentLine,firstVisible,lastVisible,totalLines)
   else
     let offsetOfCursor = currentLine
   endif
 	while n <= lastVisible
-		let results[n] = {}
-		let results[n]['count'] = 1
+		let results['lines'][n] = {}
+		let results['lines'][n]['count'] = 1
     if mvom#renderer#getmacromode() && offsetOfCursor == mvom#util#location#ConvertToPercentOffset(n,firstVisible,lastVisible,totalLines) 
-      let results[n]['iscurrentline'] = 1
+      let results['lines'][n]['iscurrentline'] = 1
     elseif offsetOfCursor == n
-      let results[n]['iscurrentline'] = 1
+      let results['lines'][n]['iscurrentline'] = 1
     endif
 		let n = n+1
 	endwhile

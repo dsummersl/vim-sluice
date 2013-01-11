@@ -198,15 +198,15 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 		endif
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
 		let data={plugin}#data(options)
-		for line in keys(data) " loop through all the data and add it to my own master list.
+		for line in keys(data['lines']) " loop through all the data and add it to my own master list.
 			if has_key(allData,line)
-        let allData[line][plugin] = data[line]
+        let allData[line][plugin] = data['lines'][line]
 				let allData[line]['count'] = allData[line]['count'] + 1
 			else
         " do we have the current plugin already? If not:
 				let allData[line] = {}
 				let allData[line]['count'] = 1
-				let allData[line][plugin] = data[line]
+				let allData[line][plugin] = data['lines'][line]
 			endif
 		endfor
 	endfor"}}}

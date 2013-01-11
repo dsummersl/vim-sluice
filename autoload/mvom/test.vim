@@ -1,3 +1,85 @@
+" plugins#search tests"{{{
+
+function! TestSearch()
+  " Given a file full of the same deal, perform searches from various points
+  " in the file. It should return the same results every time (well, taking
+  " into consideration the 'max' searches.
+  let @/='nothing'
+  let options = { 'max_searches': 10, 'needle': 'line'}
+
+  try
+    " create a file with 60 total lines. The liens are of the pattern:
+    " line
+    " line line
+    " line
+    " line line
+    " ...
+    " ...
+    sp abid
+    normal iline line
+    normal Oline
+    normal 2yy29P
+    $
+    let bottomresults = mvom#plugins#search#data(options)
+    1 
+    let topresults = mvom#plugins#search#data(options)
+    30 
+    let middleresults = mvom#plugins#search#data(options)
+  finally
+    " ensure that if there are any function errors, we still close the temp
+    " buffer
+    bd!
+  endtry
+
+  " seven total lines, b/c some lines have two matches
+  call VUAssertEquals(len(bottomresults['lines']),8)
+  " but the total count should be at least 10
+  call VUAssertTrue(vimunit#util#sum(
+        \vimunit#util#map(bottomresults['lines'],
+        \'let result = val["count"]'
+        \)) >= 10)
+  call VUAssertEquals(@/,'nothing')
+  " the search didn't finish searching up:
+  call VUAssertTrue(bottomresults['upmax'])
+  " but it did finish searching down:
+  call VUAssertFalse(bottomresults['downmax'])
+  for i in range(8)
+    call VUAssertTrue(has_key(bottomresults['lines'],60-i),"Not found line:". (60-i))
+  endfor
+
+  " seven total lines, b/c some lines have two matches
+  call VUAssertEquals(len(topresults['lines']),7)
+  " but the total count should be at least 10
+  call VUAssertTrue(vimunit#util#sum(
+        \vimunit#util#map(topresults['lines'],
+        \'let result = val["count"]'
+        \)) >= 10)
+  " the search didn't finish searching up:
+  call VUAssertFalse(topresults['upmax'])
+  " but it did finish searching down:
+  call VUAssertTrue(topresults['downmax'])
+  for i in range(7)
+    call VUAssertTrue(has_key(topresults['lines'],i+1),"Not found line:". (i+1))
+  endfor
+
+  " matches both up and down
+  call VUAssertEquals(len(middleresults['lines']),14)
+  " but the total count should be at least 10
+  call VUAssertTrue(vimunit#util#sum(
+        \vimunit#util#map(middleresults['lines'],
+        \'let result = val["count"]'
+        \)) >= 10)
+  " the search didn't finish searching up:
+  call VUAssertTrue(middleresults['upmax'])
+  " but it did finish searching down:
+  call VUAssertTrue(middleresults['downmax'])
+  call VULog("middle results = ". string(middleresults))
+  for i in range(14)
+    call VUAssertTrue(has_key(middleresults['lines'],30+i-7),"Not found line:". (30+i-7))
+  endfor
+endfunction
+
+""}}}
 " util#color tests {{{
 
 function! TestUniq()

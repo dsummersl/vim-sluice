@@ -12,16 +12,12 @@
 "
 
 function! mvom#plugins#search#init(options)
-  if has_key(a:options,'respect_hls')
-    let s:respect_hls=a:options['respect_hls']
-  else
-    let s:respect_hls=1
-  end
-  if has_key(a:options,'max_searches')
-    let s:max_searches=a:options['max_searches']
-  else
-    let s:max_searches=25
-  end
+  if !has_key(a:options,'respect_hls')
+    let a:options['respect_hls'] = 1
+  endif
+  if !has_key(a:options,'max_searches')
+    let a:options['max_searches'] = 25
+  endif
 endfunction
 
 function! mvom#plugins#search#deinit()
@@ -35,9 +31,21 @@ endfunction
 " apepars to be seconds and ... milliseconds.
 "
 " TODO add a paramter to this for max time...
-" TODO do NOT use @/ -- rather, have the parameter passed in...specifically
-" for undercursor. And whereever @/ is referenced...wrap it in a try/catch
-" block; it may not be defined.
+"
+" Parameters:
+"   options: Several keys can be included to change this search method...
+"     'max_searches' - must be present. Limits total number of results. Can be
+"                      up to double this value ('max up' and 'max down').
+"     'needle'       - search pattern. If not specified, @/ is used.
+" 
+" Returns: A hash is returned with the following keys:
+"   'lines' - A hash of lines
+"     'count' - number of matches on the line.
+"   'upmax'   - True if the 'max_searches' is reached (potentially more
+"               matches) in the upward direction.
+"   'downmax' - True if the 'max_searches' is reached downward.
+"
+" SideAffects: The 'options' parameter  ... should not be modified...
 function! mvom#plugins#search#data(options)
   " max number of milliseconds
   "let maxtime = 500
@@ -47,33 +55,37 @@ function! mvom#plugins#search#data(options)
   "  return {}
   "endif
 
-  " if the search is hte same and the palce is the same, return the previous
+  " set the search pattern
+  if has_key(a:options,'needle')
+    let pattern = a:options['needle']
+  else
+    let pattern = @/
+  endif
+
+  " if the search is the same and the palce is the same, return the previous
   " results
   if has_key(a:options,'previoussearch')
     " TODO check that the previous line is within some wiggle of the current
     " line...and that changedtick hasn't changed.
-    if a:options['previoussearch'] == @/ && 
-          \a:options['previousline'] < line('.') + s:max_searches &&
-          \a:options['previousline'] > line('.') - s:max_searches &&
+    if a:options['previoussearch'] == pattern && 
+          \a:options['previousline'] < line('.') + a:options['max_searches'] &&
+          \a:options['previousline'] > line('.') - a:options['max_searches'] &&
           \a:options['previoustick'] == b:changedtick
       return a:options['previousdata']
     endif
   endif
 
-  " TODO this only needs to return NEW values if... @/ has changed, or the
+  " TODO this only needs to return NEW values if... pattern has changed, or the
   " cursor position has changed (or the file.
 
-	" for this search make it match up and down a max # of times (performance fixing)
-  "if exists('s:partialresults')
-  "  let results = s:partialresults
-  "else
   let results = {}
-  "endif
+  let results['lines'] = {}
+
   let a:options['previoustick'] = b:changedtick
-  let a:options['previoussearch'] = @/
+  let a:options['previoussearch'] = pattern 
   let a:options['previousline'] = line('.')
-	let n = 1
-	let startLine = 1
+
+	let n = 0
 	" TODO cache results so as to avoid researching on duplicates (save last
 	" search and save state of file (if file changed or if search changed then
 	" redo)
@@ -82,48 +94,42 @@ function! mvom#plugins#search#data(options)
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-  let here = search(@/,"We")
-	while len(@/) > 0 &&  here > 0 && n < s:max_searches " search forwards
+  let here = search(pattern,"We")
+	while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search forwards
     " 99% of the time the key isn't there yet, so minimize time there.
-		if has_key(results,here)
-      if has_key(results[here],'count')
-        let cnt = results[here]['count']
-        let cnt = cnt + 1
-        let results[here]['count'] = cnt
-      endif
+		if has_key(results['lines'],here)
+      let results['lines'][here]['count'] += 1
 		else
-			let results[here] = {}
-			let results[here]['count'] = 1
+			let results['lines'][here] = {}
+			let results['lines'][here]['count'] = 1
 		endif
-		let n = n+1
-    let here = search(@/,"We")
+		let n += 1
+    let here = search(pattern,"We")
 	endwhile
+	let results['downmax'] = here > 0 && n == a:options['max_searches']
 	exe "keepjumps ". startLine
-	let n = 1
-  let here = search(@/,"Wb")
-	while len(@/) > 0 && here > 0 && n < s:max_searches " search backwards
+	let n = 0
+  let here = search(pattern,"Wb")
+	while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search backwards
     " 99% of the time the key isn't there yet, so minimize time there.
-		if has_key(results,here)
-      if has_key(results[here],'count')
-        let cnt = results[here]['count']
-        let cnt = cnt + 1
-        let results[here]['count'] = cnt
-      endif
+		if has_key(results['lines'],here)
+      let results['lines'][here]['count'] += 1
 		else
-			let results[here] = {}
-			let results[here]['count'] = 1
+			let results['lines'][here] = {}
+			let results['lines'][here]['count'] = 1
 		endif
-		let n = n+1
-    let here = search(@/,"Wb")
+		let n += 1
+    let here = search(pattern,"Wb")
 	endwhile
+	let results['upmax'] = here > 0 && n == a:options['max_searches']
 	exe "keepjumps ". startLine
   let a:options['previousdata'] = results
 	return results
 endfunction
 
 function! mvom#plugins#search#enabled(options)
-  if s:respect_hls == 1
+  if a:options['respect_hls']
     return &hls == 1
   endif
-  return true
+  return 1
 endfunction
