@@ -27,7 +27,7 @@ function! mvom#plugins#undercursor#data(options)
       " if the char under the cursor isn't part of the 'isword' then don't
       " search
       execute 'silent syntax clear UnderCursor'
-      return {}
+      return {'lines':{}}
     endif
     let opts = copy(a:options)
     let opts['needle'] = '\<'. wordundercursor .'\>'

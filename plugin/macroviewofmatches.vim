@@ -61,39 +61,15 @@ if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
 if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=1 | endif
 
 " Global to enable graphical icons
-if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=0 | endif
+if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=1 | endif
 
 " ImageMagick 'convert' command location
 if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
 
-if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=20 | endif
+if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=6 | endif
 
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:
-	" Show the last search with //
-	call mvom#renderer#add('mvom#plugins#search', {
-				\ 'render': 'mvom#renderers#slash',
-				\ 'chars': '/ ',
-				\ 'color': '0055ff',
-				\ 'xchars': 'X ',
-				\ 'iconcolor': '0055ff',
-				\ 'iconalign': 'center',
-				\ 'iconwidth': 80,
-				\ 'xcolor': '0055ff'
-				\ })
-	" Show all keywords in the file that match whats under your cursor with \\
-	call mvom#renderer#add('mvom#plugins#undercursor', {
-				\ 'render': 'mvom#renderers#slash',
-				\ 'chars': '\ ',
-				\ 'color': 'b5f1ff',
-				\ 'xchars': 'X ',
-				\ 'xcolor': '0055ff',
-				\ 'iconcolor': 'b5f1ff',
-				\ 'iconalign': 'right',
-				\ 'iconwidth': 50,
-				\ 'bg': 'e5f1ff',
-				\ 'fg': '000000'
-				\ })
 	" Show the visible portion with a darker background
 	call mvom#renderer#add('mvom#plugins#window', {
 	      \ 'render': 'mvom#renderers#background',
@@ -102,6 +78,30 @@ if !exists('g:mvom_loaded')
 	      \ 'iconalign': 'left',
 	      \ 'iconwidth': 10,
 	      \ 'showinline': 1
+	      \ })
+	" Show the last search with //
+	call mvom#renderer#add('mvom#plugins#search', {
+	      \ 'render': 'mvom#renderers#slash',
+	      \ 'chars': '/ ',
+	      \ 'color': '0055ff',
+	      \ 'xchars': 'X ',
+	      \ 'iconcolor': '0055ff',
+	      \ 'iconalign': 'center',
+	      \ 'iconwidth': 80,
+	      \ 'xcolor': '0055ff'
+	      \ })
+	" Show all keywords in the file that match whats under your cursor with \\
+	call mvom#renderer#add('mvom#plugins#undercursor', {
+	      \ 'render': 'mvom#renderers#slash',
+	      \ 'chars': '\ ',
+	      \ 'color': 'b5f1ff',
+	      \ 'xchars': 'X ',
+	      \ 'xcolor': '0055ff',
+	      \ 'iconcolor': 'b5f1ff',
+	      \ 'iconalign': 'right',
+	      \ 'iconwidth': 50,
+	      \ 'bg': 'e5f1ff',
+	      \ 'fg': '000000'
 	      \ })
 	let g:mvom_loaded = 1
 endif

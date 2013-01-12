@@ -17,24 +17,6 @@ function! mvom#util#color#GetHighlightName(dictionary)
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
-" Create a key that uniquely describes all the marks that would be
-" on an icon.
-function! mvom#util#color#GetSignName(dictionary)
-	let result = ""
-    for pl in a:dictionary['plugins']
-      if has_key(pl,'iconcolor')
-        let result = result.
-              \"_". pl['modulo'] ."_".
-              \pl['iconcolor'].
-              \pl['iconwidth'].
-              \pl['iconalign']
-      else
-        let result = result .'x'
-      endif
-    endfor
-    return mvom#util#color#hash(result)
-endfunction
-
 " Convert a 6 character hex RGB to a 3 part (0-255) array.
 function! mvom#util#color#HexToRGB(hex)
 	return ["0x".a:hex[0:1]+0,"0x".a:hex[2:3]+0,"0x".a:hex[4:5]+0]

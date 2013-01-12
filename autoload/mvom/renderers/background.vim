@@ -10,20 +10,67 @@
 
 " Background Painter
 function! mvom#renderers#background#init(options)
+  if !has_key(a:options,'showinline')
+    let a:options['showinline'] = 1
+  endif
 endfunction
 
 function! mvom#renderers#background#paint(options,vals)
 	"echom "bg paint". reltime()[0]
-  if has_key(a:options,'showinline') && a:options['showinline']
-    let showinline = 1
-  else
-    let showinline = 0
-  endif
+  let showinline = a:options['showinline']
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
 	for line in keys(a:vals['lines'])
     let newbg = mvom#renderers#background#setBG(bgcolor,a:vals['lines'][line],showinline)
     let a:vals['lines'][line]['bg'] = newbg['bg']
 	endfor
+
+  " paint to the image generator:
+  let minLine = 0
+  let minModulo = 0
+  let maxLine = 0
+  let maxModulo = 0
+  let currentLine = 0
+	for line in keys(a:vals['lines'])
+    let n = a:vals['lines'][line]['signLine']
+    if has_key(a:vals['lines'][line],'iscurrentline')
+      let currentLine = n
+      if line('.') == line
+        let currentModulo = a:vals['lines'][line]['modulo']
+      endif
+    endif
+    if minLine == 0 || n < minLine
+      let minLine = n
+      let minModulo = a:vals['lines'][line]['modulo']
+    endif
+    if maxLine == 0 || n > maxLine
+      let maxLine = n
+      let maxModulo = a:vals['lines'][line]['modulo']
+    endif
+  endfor
+  if !exists('currentModulo')
+    let currentModulo = 0
+  endif
+
+  " paint two rectangles on the graphic. One is the main background, the other
+  " is the 'highlighted' part.
+  let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
+  call a:vals['gutterImage'].addRectangle(
+        \bgcolor,
+        \0,
+        \g:mvom_pixel_density*(minLine-1) + minModulo,
+        \g:mvom_pixel_density,
+        \g:mvom_pixel_density*(maxLine-minLine-1) + maxModulo
+        \)
+  if showinline
+    let bgcolor = mvom#util#color#darker(bgcolor)
+    call a:vals['gutterImage'].addRectangle(
+          \mvom#renderers#background#makeBGColor(bgcolor),
+          \0,
+          \g:mvom_pixel_density*(currentLine-1) + currentModulo,
+          \g:mvom_pixel_density,
+          \a:vals['pixelsperline']
+          \)
+  endif
 	return a:vals
 endfunction
 

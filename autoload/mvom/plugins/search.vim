@@ -28,7 +28,7 @@ endfunction
 " completely
 "
 " Use reltime() to get the start time. Says its system dependend but it
-" apepars to be seconds and ... milliseconds.
+" appears to be seconds and ... milliseconds.
 "
 " TODO add a paramter to this for max time...
 "
@@ -94,34 +94,42 @@ function! mvom#plugins#search#data(options)
 	let searchResults = {}
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
-  let here = search(pattern,"We")
-	while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search forwards
-    " 99% of the time the key isn't there yet, so minimize time there.
-		if has_key(results['lines'],here)
-      let results['lines'][here]['count'] += 1
-		else
-			let results['lines'][here] = {}
-			let results['lines'][here]['count'] = 1
-		endif
-		let n += 1
+  try
     let here = search(pattern,"We")
-	endwhile
-	let results['downmax'] = here > 0 && n == a:options['max_searches']
+    while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search forwards
+      " 99% of the time the key isn't there yet, so minimize time there.
+      if has_key(results['lines'],here)
+        let results['lines'][here]['count'] += 1
+      else
+        let results['lines'][here] = {}
+        let results['lines'][here]['count'] = 1
+      endif
+      let n += 1
+      let here = search(pattern,"We")
+    endwhile
+    let results['downmax'] = here > 0 && n == a:options['max_searches']
+  catch /.*/
+    let results['downmax'] = 0
+  endtry
 	exe "keepjumps ". startLine
 	let n = 0
-  let here = search(pattern,"Wb")
-	while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search backwards
-    " 99% of the time the key isn't there yet, so minimize time there.
-		if has_key(results['lines'],here)
-      let results['lines'][here]['count'] += 1
-		else
-			let results['lines'][here] = {}
-			let results['lines'][here]['count'] = 1
-		endif
-		let n += 1
+  try
     let here = search(pattern,"Wb")
-	endwhile
-	let results['upmax'] = here > 0 && n == a:options['max_searches']
+    while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search backwards
+      " 99% of the time the key isn't there yet, so minimize time there.
+      if has_key(results['lines'],here)
+        let results['lines'][here]['count'] += 1
+      else
+        let results['lines'][here] = {}
+        let results['lines'][here]['count'] = 1
+      endif
+      let n += 1
+      let here = search(pattern,"Wb")
+    endwhile
+    let results['upmax'] = here > 0 && n == a:options['max_searches']
+  catch /.*/
+    let results['upmax'] = 0
+  endtry
 	exe "keepjumps ". startLine
   let a:options['previousdata'] = results
 	return results

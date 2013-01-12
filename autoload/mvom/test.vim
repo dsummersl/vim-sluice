@@ -115,16 +115,6 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(mvom#util#color#HSVToRGB([120,100,100]),[0,255,0])
 	call VUAssertEquals(mvom#util#color#HSVToRGB([240,100,100]),[0,0,255])
 endfunction
-
-function! TestGetSignName()
-	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--',
-        \'plugins':[ { 'plugin':'a', 'modulo': 3, 'iconcolor': 'bbbbbb', 'iconwidth': 50, 'iconalign': 'left'} ]
-        \}),"a021ace522e51ce")
-	call VUAssertEquals(mvom#util#color#GetSignName({'fg':'000000','bg':'111111','text':'--',
-        \'plugins':[ {'plugin': 'a', 'modulo': 3, 'iconcolor': 'bbbbbb', 'iconwidth': 50, 'iconalign': 'left'},
-        \  { 'plugin': 'b', 'modulo': 5, 'iconcolor': 'cccccc', 'iconwidth': 50, 'iconalign': 'center'}
-        \]}),"3cdc21e65eec1bb")
-endfunction
 " }}}
 " util#location "{{{
 function! TestLoadRegisters()
@@ -303,7 +293,7 @@ function! TestCombineData()
         \   'fg': 'testhi',
         \   'text': '..',
         \   'line': 1,
-        \   'locinInFile': 1,
+        \   'signLine': 1,
         \   'modulo': 0
         \ } }}
         \)
@@ -320,7 +310,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -336,7 +326,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -353,7 +343,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -371,7 +361,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ }, 'mvom#test#test4plugin': {
         \  'count':1,
@@ -380,7 +370,7 @@ function! TestCombineData()
         \  'bg':'testbg',
         \  'isvis':1,
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
@@ -398,7 +388,7 @@ function! TestCombineData()
         \  'bg':'testbg',
         \  'isvis':1,
         \  'line': 1,
-        \  'locinInFile': 1,
+        \  'signLine': 1,
         \  'modulo': 0
         \ }},
         \ '2': {'mvom#test#test4plugin': {
@@ -407,7 +397,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 2,
-        \  'locinInFile': 2,
+        \  'signLine': 2,
         \  'modulo': 0
         \ }},
         \ '5': {'mvom#test#test5plugin': {
@@ -416,7 +406,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 5,
-        \  'locinInFile': 5,
+        \  'signLine': 5,
         \  'modulo': 0
         \ }},
         \ '6': {'mvom#test#test5plugin': {
@@ -425,7 +415,7 @@ function! TestCombineData()
         \  'fg':'testhi',
         \  'bg':'testbg',
         \  'line': 6,
-        \  'locinInFile': 6,
+        \  'signLine': 6,
         \  'modulo': 0
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))

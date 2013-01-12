@@ -237,17 +237,17 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
     " Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
       if mvom#renderer#getmacromode()
-        let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+        let signLine = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
         let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:mvom_pixel_density)
       else
-        let locinInFile = str2nr(line)
+        let signLine = str2nr(line)
         let modulo = 0
       endif
 			if has_key(allData[line],plugin) > 0
 				let pluginData['lines'][line] = allData[line][plugin]
         let pluginData['lines'][line]['modulo'] = modulo
         let pluginData['lines'][line]['line'] = str2nr(line)
-        let pluginData['lines'][line]['locinInFile'] = locinInFile
+        let pluginData['lines'][line]['signLine'] = signLine
 			endif
 		endfor
 		let paintData = {render}#paint(pluginInstance['options'],pluginData)
@@ -264,8 +264,8 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 	endfor"}}}
 	return resultData
 endfunction"}}}
-
-function! mvom#renderer#PaintSign(line,dict)"{{{
+" paint functions {{{
+function! mvom#renderer#PaintSign(line,dict)
 	if has_key(a:dict,'fg')
 		let thesign=a:dict['hash']
     exe printf("sign place %s name=%s line=%s buffer=%s",a:line,a:dict['hash'],a:line,winbufnr(0))
@@ -273,12 +273,13 @@ function! mvom#renderer#PaintSign(line,dict)"{{{
 		" if 'visible' then this is a non-matching line that's currently
 		" 'visible'.
 	endif
-endfunction"}}}
+endfunction
 
 function! mvom#renderer#UnpaintSign(line,dict)
 	exe "sign unplace ".a:line." buffer=".winbufnr(0)
 endfunction
 
+"}}}
 " Actual logic that paints the matches. Painting and searching are abstracted
 " out so that it can be tested by itself.
 " 
@@ -308,28 +309,28 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - visible: if 1, then the results are currently visible in the window.
 	for [line, data] in items(a:searchResults['lines'])
     if mvom#renderer#getmacromode()
-      let locinInFile = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+      let signLine = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
     else
-      let locinInFile = line
+      let signLine = line
     endif
 
-		if !has_key(results,locinInFile)
-			let results[locinInFile] = {}
-			let results[locinInFile]['plugins'] = []
+		if !has_key(results,signLine)
+			let results[signLine] = {}
+			let results[signLine]['plugins'] = []
 		endif
 
     " if the line is within the visible range, set it so:
-    let results[locinInFile]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
+    let results[signLine]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
 
     " setup the top level data values that are ultimately used for the signs
     " (the combination of all the plugins).
     for plugin in keys(data)
-      call add(results[locinInFile]['plugins'],data[plugin])
-      let offset = len(results[locinInFile]['plugins'])-1
+      call add(results[signLine]['plugins'],data[plugin])
+      let offset = len(results[signLine]['plugins'])-1
       for key in keys(data[plugin])
-        let results[locinInFile][key] = data[plugin][key]
+        let results[signLine][key] = data[plugin][key]
       endfor
-      let results[locinInFile]['plugins'][offset]['plugin'] = plugin
+      let results[signLine]['plugins'][offset]['plugin'] = plugin
       unlet plugin
     endfor
 	endfor
@@ -345,10 +346,14 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
         let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
         let reconciled = {render}#reconcile(plugin['options'],val['plugins'],p)
+        "echom line ." : ". render ." - ". string(reconciled)
         for key in keys(reconciled)
           let results[line][key] = reconciled[key]
         endfor
       endfor
+      " TODO its important that the window be place LAST otherwise the fg/bg
+      " gets clobbered.
+      "
       " make sure that any other options are also included, if they weren't
       " in any of the reconcile lists.
 			for p in val['plugins']
@@ -358,24 +363,27 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
           endif
         endfor
       endfor
+      "echom line ." : ". string(results[line])
 		endif
 	endfor
 
-  " Setup highlighting and signs
+  " Setup highlighting
 	for [line,val] in items(results)
     " Ensure there are defaults.
 		if !has_key(val,'text') | let val['text'] = '..' | endif
 		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
 
     " Create the fg/bg highlighting for non-icon signs
-    exe "highlight! ".mvom#util#color#GetHighlightName(val)." guifg=#".val['fg']." guibg=#".val['bg']
+    exe printf("highlight! %s guifg=#%s guibg=#%s",mvom#util#color#GetHighlightName(val),val['fg'],val['bg'])
   endfor
 
   " after the gutterimage is completely painted, define any missing
   " icon/signs, and then paint.
 	for [line,val] in items(results)
+    " the problem is nothign is painted on teh gutter for the bg!
     let fname = a:searchResults['gutterImage'].generateHash(0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
     let results[line]['hash'] = fname
+    " if no icon has been made, and we can do it. then create the icon:
     if !exists('g:mvom_sign_'. fname)
       "call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
@@ -390,6 +398,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
         exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],mvom#util#color#GetHighlightName(val))
       else
+        echo printf("sign define %s text=%s texthl=%s",fname,val['text'],mvom#util#color#GetHighlightName(val))
         exe printf("sign define %s text=%s texthl=%s",fname,val['text'],mvom#util#color#GetHighlightName(val))
       endif
     endif

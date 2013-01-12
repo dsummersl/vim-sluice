@@ -20,10 +20,10 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
         let result['lines'][line][key] = a:options[key]
       endif
     endfor
-    " pain a graphic icon, if icon settings are present.
+    " paint a graphic icon, if icon settings are present.
     if has_key(a:options,'iconcolor')
       call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
-            \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['locinInFile']-1),
+            \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['signLine']-1),
             \a:options['iconwidth'],
             \a:vals['pixelsperline'],a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
     else
