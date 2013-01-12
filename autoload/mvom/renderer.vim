@@ -376,17 +376,12 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 		if !has_key(val,'text') | let val['text'] = '..' | endif
 		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
 
-    " Create the fg/bg highlighting for non-icon signs
-    " TODO support basic console coloring
-    if val['fg'] == val['bg']
-      let ctermfg=7
-      let ctermbg=7
-    else
-      let ctermfg=0
-      let ctermbg=7
-    endif
-    exe printf("highlight! %s guifg=#%s guibg=#%s ctermfg=%d ctermbg=%d",mvom#util#color#GetHighlightName(val),val['fg'],val['bg'],ctermfg,ctermbg)
+    exe printf("highlight! %s guifg=#%s guibg=#%s",mvom#util#color#GetHighlightName(val),val['fg'],val['bg'])
   endfor
+
+  " I'm lazy, and CSApprox works so well at turning GUI colors into cterm
+  " colors. I leave it to it to fix my highlights!
+  silent exec ":CSApprox!"
 
   " after the gutterimage is completely painted, define any missing
   " icon/signs, and then paint.
