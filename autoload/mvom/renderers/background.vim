@@ -26,9 +26,7 @@ function! mvom#renderers#background#paint(options,vals)
 
   " paint to the image generator:
   let minLine = 0
-  let minModulo = 0
   let maxLine = 0
-  let maxModulo = 0
   let currentLine = 0
 	for line in keys(a:vals['lines'])
     let n = a:vals['lines'][line]['signLine']
@@ -40,15 +38,25 @@ function! mvom#renderers#background#paint(options,vals)
     endif
     if minLine == 0 || n < minLine
       let minLine = n
-      let minModulo = a:vals['lines'][line]['modulo']
+      if line('.') == line
+        let minModulo = a:vals['lines'][line]['modulo']
+      endif
     endif
     if maxLine == 0 || n > maxLine
       let maxLine = n
-      let maxModulo = a:vals['lines'][line]['modulo']
+      if line('.') == line
+        let maxModulo = a:vals['lines'][line]['modulo']
+      endif
     endif
   endfor
   if !exists('currentModulo')
     let currentModulo = 0
+  endif
+  if !exists('maxModulo')
+    let maxModulo = 0
+  endif
+  if !exists('minModulo')
+    let minModulo = 0
   endif
 
   " paint two rectangles on the graphic. One is the main background, the other
@@ -59,7 +67,9 @@ function! mvom#renderers#background#paint(options,vals)
         \0,
         \g:mvom_pixel_density*(minLine-1) + minModulo,
         \g:mvom_pixel_density,
-        \g:mvom_pixel_density*(maxLine-minLine-1) + maxModulo
+        \g:mvom_pixel_density*(maxLine-minLine+1) + maxModulo,
+        \"",
+        \'rx="2" ry="2"'
         \)
   if showinline
     let bgcolor = mvom#util#color#darker(bgcolor)
@@ -68,7 +78,9 @@ function! mvom#renderers#background#paint(options,vals)
           \0,
           \g:mvom_pixel_density*(currentLine-1) + currentModulo,
           \g:mvom_pixel_density,
-          \a:vals['pixelsperline']
+          \a:vals['pixelsperline'],
+          \"",
+          \'rx="2" ry="2"'
           \)
   endif
 	return a:vals

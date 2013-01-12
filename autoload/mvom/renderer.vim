@@ -250,6 +250,7 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
         let pluginData['lines'][line]['signLine'] = signLine
 			endif
 		endfor
+    " TODO it looks like this gets called twice on an update. Yikes.
 		let paintData = {render}#paint(pluginInstance['options'],pluginData)
     " once painted, store the results.
 		for line in keys(paintData['lines'])
@@ -295,6 +296,8 @@ endfunction
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
+
+  sign unplace *
 
   " Remove any previously painted signs
 	for [line,val] in items(b:cached_signs)
@@ -403,7 +406,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       endif
     endif
     " did we paint this line previously?
-    call {a:unpaintFunction}(line,val)
+    "call {a:unpaintFunction}(line,val)
     call {a:paintFunction}(line,val)
 	endfor
 
