@@ -5,7 +5,8 @@
 " UnderCursor: show matches for the 'word' the cursor is currently on
 function! mvom#plugins#undercursor#init(options)
   call mvom#plugins#search#init(a:options)
-	exe "highlight! UnderCursor guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
+  " TODO support coloring for cterm
+	exe "highlight! UnderCursor ctermbg=1 guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
 	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#". a:options['fg'] ." guibg=#". a:options['bg']
 endfunction
 
@@ -33,7 +34,7 @@ function! mvom#plugins#undercursor#data(options)
     let opts['needle'] = '\<'. wordundercursor .'\>'
     let results=mvom#plugins#search#data(opts)
     execute 'silent syntax clear UnderCursor'
-    execute 'syntax match UnderCursor "'. @/ .'" containedin=ALL'
+    execute 'syntax match UnderCursor "'. opts['needle'] .'" containedin=ALL'
     return results
   finally
     let @g=oldg
