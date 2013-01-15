@@ -6,20 +6,48 @@ CONTENTS ~
 ===========================================================================
 
 1. About                                           |mvom-about|
+
 2. Quick Start                                     |mvom-install|
-3. Options
-4. Builtin Functions
-    4.1 Search
-    4.2 Under Cursor
+  2.1 Console Install                              |mvom-console-install|
+  2.2 GUI Install                                  |mvom-gui-install|
+
+3. Options                                         |mvom-options|
+  3.1 updatetime                                   |mvom-updatetime|
+  3.2 background                                   |mvom_default_bg|
+  3.3 enabled                                      |mvom_enabled|
+  3.4 enabled on open                              |mvom_default_enabled|
+  3.5 default mode                                 |mvom_default_macromode|
+  3.6 graphics enabled                             |mvom_graphics_enabled|
+  3.7 convert program location                     |mvom_convert_command|
+  3.8 pixel density                                |mvom_pixel_density|
+
+4. Commands                                        |mvom-commands|
+
 5. Plugins                                         |mvom-plugins|
-    5.1 Data Sources                               |mvom-data-sources|
-    5.2 Renderers                                  |mvom-renderers|
+  5.1 Builtin Data Sources
+    5.1.1 Window                                   |mvom-window-plugin|
+    5.1.2 Search                                   |mvom-search-plugin|
+    5.1.3 Under Cursor                             |mvom-undercursor-plugin|
+  5.2 Builtin Renderers
+    5.2.1 Slash                                    |mvom-slash-plugin|
+    5.2.1 Background                               |mvom-background-plugin|
+  5.3 New Plugins
+    5.3.1 Data Sources                             |mvom-data-sources|
+    5.3.2 Renderers                                |mvom-renderers|
 
 ===========================================================================
 
 ABOUT                                              *mvom-about*
 
-Quick Start                                        *mvom-install*
+===========================================================================
+
+QUICKSTART                                         *mvom-install*
+
+CONSOLEINSTALL                                     *mvom-console-install*
+
+Install CSApprox to fully support colors in the gutter.
+
+GUIINSTALL                                         *mvom-gui-install*
 
 To support graphical icons in the gutter you must have ImageMagick installed on
 your system. On OSX you can do this easily with homebrew:
@@ -31,53 +59,198 @@ ghostscript is installed (at least on OSX):
 
 brew install ghostscript
 
+===========================================================================
+OPTIONS                                             *mvom-options*
+
+There are several global options that can be used to change the functionality
+of this plugin.
+
+                                                    *mvom-updatetime*
+
+The updatetime setting handles all of the slow/fastness of responsiveness of
+the entire plugin. By default the value is set to 200 (1/5 of a second):
+
+    set updatetime=200
+
+                                                    *mvom_default_bg*
+
+The background color of the gutter.
+
+    let g:mvom_default_bg = 'eeeeee'
+
+                                                    *mvom_enabled*
+
+The global variable that enables or disables this plugin. By default it is on,
+but you can turn it off by setting it to 0.
+
+    let g:mvom_enabled=1
+
+                                                    *mvom_default_enabled*
+
+Global variable to enable/disable MVOM by default when opening files. The
+default option is for this plugin to be disabled when you first open a file.
+If you would like the gutter to be on when a file is opened, then change this
+setting.
+
+    let g:mvom_default_enabled=0
+
+                                                    *mvom_default_macromode*
+
+Global variable for default macro/non-macro mode.
+
+    let g:mvom_default_macromode=0
+
+                                                    *mvom_graphics_enabled*
+
+Global to enable graphical icons:
+
+    let g:mvom_graphics_enabled=1
+
+                                                    *mvom_convert_command*
+
+ImageMagick 'convert' command location.
+
+    let g:mvom_convert_command='convert'
+
+                                                    *mvom_pixel_density*
+
+The number of pixels that are put into each icon. When the number is low the
+icon looks very pixel-ie, but the overall number of icons generated is
+smaller. When the number is high (ie, 20), many more icons are typically
+generated (slower overall performance, for prettier icons).
+
+    let g:mvom_pixel_density=12
+
+===========================================================================
+COMMANDS                                            *mvom-commands*
+
+                                                    *MVOMtoggle*
+
+Toggles the MVOM gutter on or off in the current buffer depending on its
+current setting. This is a great function for mapping to a hotkey:
+
+    nnoremap <F4> :MVOMtoggle<CR>
+
+                                                    *MVOMenable*
+
+Enable the status of MVOM in the current buffer.
+
+                                                    *MVOMdisable*
+
+Disable the status of MVOM in the current buffer.
+
+                                                    *MVOMmacroToggle*
+
+Toggle the macro/micro mode gutter.
+
+                                                    *MVOMmacroOff*
+
+Turn on the MACRO mode gutter.
+
+                                                    *MVOMmacroOn*
+
+Turn on the MICRO mode gutter.
+
+===========================================================================
+
 Plugins                                            *mvom-plugins*
+
+Builtin Data Sources
+
+Window                                   *mvom-window-plugin*
+
+The window plugin simply returns a list of all row numbers that are currently
+visible on screen. The row that the cursor is also noted. Intended for use
+with the |mvom-background-plugin|.
+
+Search                                   *mvom-search-plugin*
+
+The search plugin returns all lines that contain a match for the last search
+(in the @/ register). By default it is used with the |mvom-search-plugin|.
+
+Under Cursor                             *mvom-undercursor-plugin*
+
+The undercursor plugin returns all lines that contain a match for the word
+under the location of the cursor (taking into account the |isk| setting). By
+default it is used with the |mvom-search-plugin|.
+
+===========================================================================
+
+Builtin Renderers
+
+Slash                                    *mvom-slash-plugin*
+
+Renders a character and an icon that is a row.
+
+TODO define the options that the slash renderer understands.
+
+Background                               *mvom-background-plugin*
+
+The background plugin just changes the background color (making it slightly
+darker) of the gutter w/o changing the content of the gutter. 
+
+===========================================================================
+
+*New* *Plugins*
+
+MVOM is built to support expansion. There are two routes to plugin expansion:
+    * data sources : A data source creates a list of lines (say all lines that
+      match a specific pattern).
+    * renderers    : A renderer is given a set of matches generated by a data
+      source and renders it on the gutter. The renderer must provide both a
+      text and graphic rendering.
+
+Either form of plugin must use the |autoload| file layout.
 
 Data Sources                                       *mvom-data-sources*
 
+Data sources must provide three functions.
 
-" Builtin data sources {{{
-" The basic idea for this is that there are X plugins supported and each
-" plugin is expected to have specific function names:
-"
-" <plugin>Init() -- called the first time its used
-" <plugin>Enabled() -- called on repaints... 1 for true, 0 for false.
-" <plugin>#Data(): return data. 
-" Each data uses a 'num'(row number) as key and then the following:
-" {
-" 	'count': number of occurrances on this line
-" }
-" Note: you can move the cursor around as much as you want as the position has
-" been saved and will be restored after this method call.
+function path#to#plugin#init(options)
 
-" }}}
+The init function allows the plugin to configure itself. The options parameter
+is the dictionary of values passed into the datasource when the
+mvom#renderer#add() function is called (configuration options).
+
+function path#to#plugin#deinit()
+
+The deinit function offers the plugin an opportunity to undo any settings when
+the plugin is disabled.
+
+function path#to#plugin#data(options)
+
+The data function is responsible for returning a dictionary of data. The
+dictionary should contain the following keys:
+    'lines': A dictionary of all lines that this plugin considers to be a
+             'match'. Each line should contain a dictionary.
+
+Example: The mvom#plugins#search plugin's 'data' function returns all lines
+that have a match for the last search by the user (the @/ register). Suppose
+that a file contained two matches: one on line 3 and one on line 6. Excluding
+the search plugin's internal data it returned a dictionary that looked like:
+
+    {
+      'lines': {
+        '3': { }, " specific data useful for the 'slash' renderer plugin.
+        '6': { }
+      },
+      " additional keys used by the 'slash' renderer plugin.
+    }
 
 Renderers                                          *mvom-renderers*
 
-" Builtin rendering types {{{
-" The rendering types are pluggable. Here is the expected format for them:
-" <render>Init() -- init anything it needs to init.
-" <render>PaintMacro() -- return a dictionary telling what symbols to place
-" in macro mode.
-" Should have the following keys for each line:
-" {
-"   'text':  -- 2 symbols to display if there is a match
-"   'fg': -- foreground
-"   'bg': -- background
-"   'linehi': -- highlight for the group. Probably not meaningful for macro mode...
-" }
-" <render>Paint(vals) -- return a dictionary telling what symbols to place
-" in micro mode.
-" vals param has the following keys:
-" {
-" 	'count': --- number of ... whatever... matches, links, etc
-" 	'line': --- line of concern
-" }
-" Should have the following keys:
-" {
-"   'text':  -- (optional) 2 symbols to display if there is a match
-"   'fg': -- foreground
-"   'bg': -- background
-"   'linehi': -- highlight for the group
-" }
-"
+A renderer must provide two functions:
+
+*Paint*
+
+function path#to#plugin#paint(options,vals)
+
+TODO describe the return values for the paint method.
+
+*Reconcile*
+
+function path#to#plugin#reconcile(options,vals,plugin)
+
+TODO describe the return values for the reconcile method.
+
+ vim:tw=78:ts=8:ft=help:norl:
