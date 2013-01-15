@@ -51,7 +51,7 @@ function! mvom#util#color#RGBToHSV(rgb)
 	endif
 	let sat = 0
 	if mx > 0
-		if mn == mx
+		if mn == mx || trunc(mx) == 0
 			let sat = 0
 		else
 			let sat = 1-mn/trunc(mx)
@@ -64,9 +64,12 @@ endfunction
 function! mvom#util#color#HSVToRGB(hsv)
 	let one00 = trunc(100)
 	let normd = copy(a:hsv)
-	let normd[0] = a:hsv[0]
-	let normd[1] = a:hsv[1]/one00
-	let normd[2] = a:hsv[2]/one00
+  if normd[1] > 100 | let normd[1] = 100 | endif
+  if normd[2] > 100 | let normd[2] = 100 | endif
+  if normd[1] < 0 | let normd[1] = 0 | endif
+  if normd[2] < 0 | let normd[2] = 0 | endif
+	let normd[1] = normd[1] / one00
+	let normd[2] = normd[2] / one00
 	let six0 = trunc(60)
 	let hi = float2nr(floor(normd[0]/six0)) % 6
 	let f = normd[0]/six0 - floor(normd[0]/six0)
@@ -106,12 +109,12 @@ endfunction
 
 function! mvom#util#color#darker(color)
 	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
-  let modded[2] = float2nr(modded[2]*0.9)
+  let modded[2] = float2nr(modded[2] - 10)
 	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 endfunction
 
 function! mvom#util#color#lighter(color)
 	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
-  let modded[2] = float2nr(modded[2]+modded[2]*0.1)
+  let modded[2] = float2nr(modded[2] + 10)
 	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
 endfunction

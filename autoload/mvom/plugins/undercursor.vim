@@ -1,17 +1,39 @@
-" Options:
-"   fg: foreground color
-"   bg: background color
-
 " UnderCursor: show matches for the 'word' the cursor is currently on
 function! mvom#plugins#undercursor#init(options)
   call mvom#plugins#search#init(a:options)
-  " TODO support coloring for cterm
-	exe "highlight! UnderCursor ctermbg=1 guifg=#".a:options['fg'] ." guibg=#". a:options['bg']
-	exe "autocmd BufNewFile,BufRead * highlight! UnderCursor guifg=#". a:options['fg'] ." guibg=#". a:options['bg']
+  " get the background color, and make it darker or lighter depending on
+  " the 'background' setting.
+  let bg = mvom#plugins#undercursor#getbg()
+  if &background == 'dark'
+    let cmd = "highlight! UnderCursor guibg=#". mvom#util#color#lighter(bg)
+  else
+    let cmd = "highlight! UnderCursor guibg=#". mvom#util#color#darker(bg)
+  endif
+  exe cmd
+	exe "autocmd BufNewFile,BufRead * ". cmd
+endfunction
+
+function! mvom#plugins#undercursor#getbg()
+  let currenthi=''
+  redir => currenthi
+  silent! highlight Normal
+  redir END
+
+  for line in split(currenthi,'\n')
+    for part in split(line,' ')
+      let ab = split(part,'=')
+      if len(ab) == 2 && ab[0] == 'guibg'
+        return substitute(ab[1],'#','','')
+      endif
+    endfor
+  endfor
+  " TODO if CSApprox exists, then compute the bg from the ctermbg
+  return 'ffffff'
 endfunction
 
 function! mvom#plugins#undercursor#deinit()
-  " TODO remove the autocommands and the highlight
+  " remove the autocommands and the highlight
+  highlight clear UnderCursor
   " TODO also make the undercursor highlighting optional
 endfunction
 

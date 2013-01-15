@@ -46,10 +46,9 @@ endif
 " This handles all the slow/fastness of responsiveness of the entire plugin:
 set updatetime=200
 
-" default background color of the gutter:
+" default background color of the gutter (ie, 'eeeeee'):
 " if unset, then use the background of the existing window
-if !exists('g:mvom_default_bg') | let g:mvom_default_bg = 'eeeeee' | endif
-exe "autocmd BufNewFile,BufRead * highlight! SignColumn guifg=white guibg=#". g:mvom_default_bg
+if !exists('g:mvom_default_bg') | let g:mvom_default_bg = '' | endif
 
 " Global variable to enable/disable MVOM
 if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
@@ -58,7 +57,7 @@ if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
 if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
 
 " Global variable for default macro/non-macro mode.
-if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=1 | endif
+if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=0 | endif
 
 " Global to enable graphical icons
 if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=1 | endif
@@ -73,7 +72,6 @@ if !exists('g:mvom_loaded')
 	" Show the visible portion with a darker background
 	call mvom#renderer#add('mvom#plugins#window', {
 	      \ 'render': 'mvom#renderers#background',
-	      \ 'bg': 'dddddd',
 	      \ 'iconcolor': 'dddddd',
 	      \ 'iconalign': 'left',
 	      \ 'iconwidth': 10,
@@ -87,21 +85,19 @@ if !exists('g:mvom_loaded')
 	      \ 'xchars': 'X ',
 	      \ 'iconcolor': '0055ff',
 	      \ 'iconalign': 'center',
-	      \ 'iconwidth': 80,
+	      \ 'iconwidth': 100,
 	      \ 'xcolor': '0055ff'
 	      \ })
 	" Show all keywords in the file that match whats under your cursor with \\
 	call mvom#renderer#add('mvom#plugins#undercursor', {
 	      \ 'render': 'mvom#renderers#slash',
 	      \ 'chars': '\ ',
-	      \ 'color': 'b5f1ff',
+	      \ 'color': '586ca3',
 	      \ 'xchars': 'X ',
-	      \ 'xcolor': '0055ff',
-	      \ 'iconcolor': 'b5f1ff',
+	      \ 'xcolor': '586ca3',
+	      \ 'iconcolor': '586ca3',
 	      \ 'iconalign': 'right',
-	      \ 'iconwidth': 50,
-	      \ 'bg': 'e5f1ff',
-	      \ 'fg': '000000'
+	      \ 'iconwidth': 60
 	      \ })
 	let g:mvom_loaded = 1
 endif

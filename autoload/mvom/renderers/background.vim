@@ -5,7 +5,8 @@
 " Options:
 "   showinline: If set, then make the location where the cursor is slightly
 "               darker within the scrollbar area. Default: 1
-"           bg: background
+"           bg: Background. If not set, then the current screen background
+"               color is used.
 "
 
 " Background Painter
@@ -18,6 +19,16 @@ endfunction
 function! mvom#renderers#background#paint(options,vals)
 	"echom "bg paint". reltime()[0]
   let showinline = a:options['showinline']
+  if !has_key(a:options,'bg')
+    let bg = mvom#plugins#undercursor#getbg()
+    if &background == 'dark'
+      " TODO possibly lighter X 2
+      let bg = mvom#util#color#lighter(bg)
+    else
+      let bg = mvom#util#color#darker(bg)
+    endif
+    let a:options['bg'] = bg
+  endif
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
 	for line in keys(a:vals['lines'])
     let newbg = mvom#renderers#background#setBG(bgcolor,a:vals['lines'][line],showinline)

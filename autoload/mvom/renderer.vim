@@ -94,11 +94,25 @@ function! mvom#renderer#setenabled(enable)
     let b:mvom_macromode = g:mvom_default_macromode
   endif
   if mvom#renderer#getenabled()
-    " TODO the undercursor plugin still highlights things when its disabled.
-    " Make sure that all the plugin deinit methods get called.
+    " re-init all the plugins
+    if g:mvom_default_bg == ''
+      let bg = mvom#plugins#undercursor#getbg()
+    else
+      let bg = g:mvom_default_bg
+    endif
+    highlight clear SignColumn
+    exe printf("highlight SignColumn guifg=#%s guibg=#%s",bg,bg)
+    for p in g:mv_plugins
+      call {p['plugin']}#init(p['options'])
+    endfor
     call mvom#renderer#RePaintMatches()
   else
+    " remove any signs
 		sign unplace *
+    " let the plugins clean up
+    for p in g:mv_plugins
+      call {p['plugin']}#deinit()
+    endfor
   endif
   return b:mvom_enabled
 endfunction

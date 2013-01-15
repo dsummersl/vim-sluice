@@ -80,7 +80,37 @@ function! TestSearch()
 endfunction
 
 ""}}}
+" plugins#undercursor tests
+
+function! TestGetBG()
+  highlight! Normal guibg=#000000
+  call VUAssertEquals(mvom#plugins#undercursor#getbg(),'000000')
+
+  " doesn't pay attention to cterm...so the bg becomes 'white'
+  highlight clear Normal
+  highlight! Normal ctermbg=17
+  call VUAssertEquals(mvom#plugins#undercursor#getbg(),'ffffff')
+endfunction
+"
 " util#color tests {{{
+
+function! TestHSVToRGB()
+  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,0]),[0,0,0])
+  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,100]),[255,255,255])
+  " make sure that an over-run computes something reasonable
+  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,118]),[255,255,255])
+endfunction
+
+function! TestLighterAndDarker()
+  call VUAssertEquals(mvom#util#color#darker('ffffff'),'e5e5e5')
+  call VUAssertEquals(mvom#util#color#darker('000000'),'000000')
+
+  call VUAssertEquals(mvom#util#color#lighter('ffffff'),'ffffff')
+  call VUAssertEquals(mvom#util#color#lighter('000000'),'191919')
+
+  call VUAssertEquals(mvom#util#color#lighter('fdf6e3'),'ffffff')
+  call VUAssertEquals(mvom#util#color#darker('fdf6e3'),'e2e2e2')
+endfunction
 
 function! TestUniq()
 	call VUAssertEquals(mvom#util#color#Uniq([]),[])
@@ -94,9 +124,11 @@ function! TestHexToRGBAndBack()
 	call VUAssertEquals(mvom#util#color#HexToRGB("000000"),[0,0,0])
 	call VUAssertEquals(mvom#util#color#HexToRGB("ffffff"),[255,255,255])
 	call VUAssertEquals(mvom#util#color#HexToRGB("AAAAAA"),[170,170,170])
+	call VUAssertEquals(mvom#util#color#HexToRGB("fdf6e3"),[253,246,227])
 	call VUAssertEquals(mvom#util#color#RGBToHex([0,0,0]),"000000")
 	call VUAssertEquals(mvom#util#color#RGBToHex([255,255,255]),"ffffff")
 	call VUAssertEquals(mvom#util#color#RGBToHex([32,15,180]),"200fb4")
+	call VUAssertEquals(mvom#util#color#RGBToHex([253,246,227]),"fdf6e3")
 endfunction
 
 function! TestRGBToHSVAndBack()
@@ -114,6 +146,11 @@ function! TestRGBToHSVAndBack()
 	call VUAssertEquals(mvom#util#color#HSVToRGB([0,100,100]),[255,0,0])
 	call VUAssertEquals(mvom#util#color#HSVToRGB([120,100,100]),[0,255,0])
 	call VUAssertEquals(mvom#util#color#HSVToRGB([240,100,100]),[0,0,255])
+
+  " TODO converting between the RGB and back again really wasn't lossless,
+  " try to figure out why?
+	call VUAssertEquals(mvom#util#color#RGBToHSV([253,246,227]),[127,0,99])
+	call VUAssertEquals(mvom#util#color#HSVToRGB([127,0,99]),[252,252,252])
 endfunction
 " }}}
 " util#location "{{{
