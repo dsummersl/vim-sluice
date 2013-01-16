@@ -2,35 +2,12 @@
 " of matches to your current search. It gives you a general idea of all the
 " areas in the file that match the search you performed.
 
-" ie, MarkSearch("Something","green", "*")
-"function! MarkSearch(search,color="auto",character='*')
-"endfunction
-"function! MarkClearAll()
-"endfunction
-"
 " TODO git plugin for additions and subtractions
 " TODO a gundo compatible plugin - it shows you where you've been making
 " changes (colors boldly the recent changes).
 " TODO a plugin that shows you where the other match for the keyword that
 " you'veplaced your keyboard on is located (and use the matchit plugin if it
 " esists for for/endfor/etc).
-"
-" NEXT:
-" - Seamlessly work on console or GUI mode.
-" New implementations:
-" - data sources (that can pretty much stay as is.
-"     - stateless
-" - Signs: a wrapper around the gutter implementation (point to cache what is
-"   currently there.
-"     - state (tie to window)
-" - MacroSigns: a wrapper around the gutter implementation that only paints on
-"   the signs in the current viewpoint.
-"     - state (tie to window)
-" - Window: encapsulate the entire state of the current window (size,
-"   location?)
-"     - state (tie to window)
-" - Painter (takes Signs or MacroSigns):
-"     - stateless
 
 " Dependency check:"{{{
 if !has("python") || !has("signs") || !has("float") || v:version/100 < 7

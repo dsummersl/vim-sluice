@@ -39,6 +39,10 @@ CONTENTS ~
 
 ABOUT                                              *mvom-about*
 
+The MVOM plugin uses the '+signs' gutter to show what lines match your current
+searches at a high level. It uses the gutter as an enhanced scrollbar, showing
+you where you are, and what matches are around you.
+
 ===========================================================================
 
 QUICKSTART                                         *mvom-install*

@@ -204,6 +204,10 @@ endfunction"}}}
 " }
 function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)"{{{
 	let allData = {}
+	let resultData = {}
+  let resultData['lines'] = {}
+  let resultData['gutterImage'] = mvom#renderers#icon#makeImage(g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+
   " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
 		let plugin = pluginInstance['plugin']
@@ -213,6 +217,10 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 		endif
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
 		let data={plugin}#data(options)
+    " TODO search hplugins have other keys apart from 'lines'. And these keys
+    " need to be around for the renderer to use. This method needs to copy all
+    " the data to allData so that it can be put into the final
+    " resultData...the TypicalPaint method is waiting for this...
 		for line in keys(data['lines']) " loop through all the data and add it to my own master list.
 			if has_key(allData,line)
         let allData[line][plugin] = data['lines'][line]
@@ -225,9 +233,7 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 			endif
 		endfor
 	endfor"}}}
-	let resultData = {}
-  let resultData['lines'] = {}
-  let resultData['gutterImage'] = mvom#renderers#icon#makeImage(g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+
   " setup the background color for the image:
   let defaultbg = g:mvom_default_bg
   if len(defaultbg) == 0
