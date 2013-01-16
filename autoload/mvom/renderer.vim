@@ -105,6 +105,7 @@ function! mvom#renderer#setenabled(enable)
     for p in g:mv_plugins
       call {p['plugin']}#init(p['options'])
     endfor
+    if exists('b:cached_signs') | unlet b:cached_signs | endif
     call mvom#renderer#RePaintMatches()
   else
     " remove any signs
@@ -315,13 +316,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
 	let results = {}
 
-  sign unplace *
-
-  " Remove any previously painted signs
-	for [line,val] in items(b:cached_signs)
-    call {a:unpaintFunction}(line,b:cached_signs[line])
-  endfor
-
 	" First collate all of the search results into one hash where the 'macro line'
   " number points to all matching search results.
   "
@@ -367,7 +361,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
         let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
         let reconciled = {render}#reconcile(plugin['options'],val['plugins'],p)
-        "echom line ." : ". render ." - ". string(reconciled)
         for key in keys(reconciled)
           let results[line][key] = reconciled[key]
         endfor
@@ -384,7 +377,6 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
           endif
         endfor
       endfor
-      "echom line ." : ". string(results[line])
 		endif
 	endfor
 
@@ -425,10 +417,30 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
         exe printf("sign define %s text=%s texthl=%s",fname,val['text'],mvom#util#color#GetHighlightName(val))
       endif
     endif
-    " did we paint this line previously?
-    "call {a:unpaintFunction}(line,val)
-    call {a:paintFunction}(line,val)
 	endfor
+
+  " finally, only update the entries that must be modified
+	for [line,val] in items(results)
+    " did we paint this line previously?
+    if has_key(b:cached_signs,line)
+      " did we paint something different this time?
+      if b:cached_signs[line] != val
+        " if so, unpaint what we did before, and paint the new thing.
+        "call {a:unpaintFunction}(line,b:cached_signs[line])
+        call {a:paintFunction}(line,val)
+      endif
+    else
+      " something new, paint it.
+      call {a:paintFunction}(line,val)
+    endif
+	endfor
+
+  " Finally, is there anything old that doesn't exist anymore?
+	for [line,val] in items(b:cached_signs)
+    if !has_key(results,line)
+      call {a:unpaintFunction}(line,b:cached_signs[line])
+    endif
+  endfor
 
   let b:cached_signs = results
 	return results

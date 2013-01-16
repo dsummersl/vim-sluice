@@ -97,7 +97,8 @@ if !exists('g:mvom_loaded')
 	      \ 'xcolor': '586ca3',
 	      \ 'iconcolor': '586ca3',
 	      \ 'iconalign': 'right',
-	      \ 'iconwidth': 60
+	      \ 'iconwidth': 60,
+				\ 'max_searches': 10
 	      \ })
 	let g:mvom_loaded = 1
 endif
