@@ -11,6 +11,7 @@ function! mvom#plugins#undercursor#init(options)
   endif
   exe cmd
 	exe "autocmd BufNewFile,BufRead * ". cmd
+  let a:options['bg'] = bg
 endfunction
 
 function! mvom#plugins#undercursor#getbg()

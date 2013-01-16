@@ -14,11 +14,6 @@ function! mvom#renderers#background#init(options)
   if !has_key(a:options,'showinline')
     let a:options['showinline'] = 1
   endif
-endfunction
-
-function! mvom#renderers#background#paint(options,vals)
-	"echom "bg paint". reltime()[0]
-  let showinline = a:options['showinline']
   if !has_key(a:options,'bg')
     let bg = mvom#plugins#undercursor#getbg()
     if &background == 'dark'
@@ -29,6 +24,12 @@ function! mvom#renderers#background#paint(options,vals)
     endif
     let a:options['bg'] = bg
   endif
+endfunction
+
+function! mvom#renderers#background#paint(options,vals)
+	"echom "bg paint". reltime()[0]
+  call mvom#renderers#background#init(a:options)
+  let showinline = a:options['showinline']
 	let bgcolor = mvom#renderers#background#makeBGColor(a:options['bg'])
 	for line in keys(a:vals['lines'])
     let newbg = mvom#renderers#background#setBG(bgcolor,a:vals['lines'][line],showinline)

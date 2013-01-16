@@ -13,8 +13,12 @@ endfunction
 function! mvom#renderers#util#TypicalPaint(vals,options)
 	let result = {}
   let result['lines'] = {}
+  let defaultbg = g:mvom_default_bg
+  if len(defaultbg) == 0
+    let defaultbg = mvom#plugins#undercursor#getbg()
+  endif
 	for line in keys(a:vals['lines'])
-		let result['lines'][line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg':g:mvom_default_bg }
+		let result['lines'][line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg': defaultbg }
     for key in ["iconcolor","iconwidth","iconalign"]
       if has_key(a:options,key)
         let result['lines'][line][key] = a:options[key]

@@ -228,7 +228,11 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
   let resultData['lines'] = {}
   let resultData['gutterImage'] = mvom#renderers#icon#makeImage(g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
   " setup the background color for the image:
-  call resultData['gutterImage'].addRectangle(g:mvom_default_bg,0,0,g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+  let defaultbg = g:mvom_default_bg
+  if len(defaultbg) == 0
+    let defaultbg = mvom#plugins#undercursor#getbg()
+  endif
+  call resultData['gutterImage'].addRectangle(defaultbg,0,0,g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
 
   " compute the current 'height' of the window. that would be used by an
   " icon so that a line can be accurately rendered (TODO if the height is big it
