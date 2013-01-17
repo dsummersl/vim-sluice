@@ -1,0 +1,65 @@
+diff --git a/plugin/macroviewofmatches.vim b/plugin/macroviewofmatches.vim
+index ca548df..20d62e4 100644
+--- a/plugin/macroviewofmatches.vim
++++ b/plugin/macroviewofmatches.vim
+@@ -1,13 +1,3 @@
+-" This script is intended to use the +signs feature to show a high level list
+-" of matches to your current search. It gives you a general idea of all the
+-" areas in the file that match the search you performed.
+-
+-" TODO git plugin for additions and subtractions
+-" TODO a gundo compatible plugin - it shows you where you've been making
+-" changes (colors boldly the recent changes).
+-" TODO a plugin that shows you where the other match for the keyword that
+-" you'veplaced your keyboard on is located (and use the matchit plugin if it
+-" esists for for/endfor/etc).
+ 
+ " Dependency check:"{{{
+ if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
+@@ -54,16 +44,39 @@ if !exists('g:mvom_loaded')
+ 	      \ 'iconwidth': 10,
+ 	      \ 'showinline': 1
+ 	      \ })
++	" TODO there was some kind of cache-ing support for searching
++	" (search/underscore) - this could be dramatically improved...cache
++	" everything by the 'file version id' and the search parameter...so long as
++	" the file doesn't change we can then use any previously cached value
++	" without having to recompute.
++	"
++	" TODO when not in 'macro' mode we only need to search the contents of the
++	" on screen lines.
++	"
++	"
++	" Show all git changes with +/- icons.
++	"call mvom#renderer#add('mvom#plugins#git', {
++	"      \ 'gitcommand': 'git',
++	"      \ 'render': 'mvom#renderers#slash',
++	"      \ 'chars': ' +',
++	"      \ 'color': '005500',
++	"      \ 'xchars': ' +',
++	"      \ 'xcolor': '005500',
++	"      \ 'iconcolor': '005500',
++	"      \ 'iconalign': 'right',
++	"      \ 'iconwidth': 10
++	"      \ })
+ 	" Show the last search with //
+ 	call mvom#renderer#add('mvom#plugins#search', {
+ 	      \ 'render': 'mvom#renderers#slash',
+ 	      \ 'chars': '/ ',
+ 	      \ 'color': '0055ff',
+ 	      \ 'xchars': 'X ',
++	      \ 'xcolor': '0055ff',
+ 	      \ 'iconcolor': '0055ff',
+ 	      \ 'iconalign': 'center',
+ 	      \ 'iconwidth': 100,
+-	      \ 'xcolor': '0055ff'
++				\ 'max_searches': 25
+ 	      \ })
+ 	" Show all keywords in the file that match whats under your cursor with \\
+ 	call mvom#renderer#add('mvom#plugins#undercursor', {
+@@ -125,4 +138,5 @@ if has("gui_running") && g:mvom_graphics_enabled
+ endif
+ 
+ "}}}
++" some extra lines I don't really want
+ " vim: set fdm=marker noet:

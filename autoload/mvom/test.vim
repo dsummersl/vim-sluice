@@ -1,3 +1,21 @@
+" plugins#git tests {{{
+
+function! TestParseDiff()
+  let diff = mvom#plugins#git#ParsePatchFile('autoload/mvom/test/gitdiff.diff')
+  call VUAssertEquals(sort(keys(diff)), sort(
+        \['1',
+        \'57','58','59','60','61','62','63','64','65','66','67','68','69',
+        \'70','71','72','73','74','75','76','77','78',
+        \'85','89',
+        \'128']))
+  call VUAssertTrue(diff['1']['removed'])
+  call VUAssertTrue(diff['57']['added'])
+  " 89 has both a removed line and an added line.
+  call VUAssertTrue(diff['89']['removed'])
+  call VUAssertTrue(diff['89']['added'])
+endfunction
+
+" }}}
 " plugins#search tests"{{{
 
 function! TestSearch()
@@ -80,7 +98,7 @@ function! TestSearch()
 endfunction
 
 ""}}}
-" plugins#undercursor tests
+" plugins#undercursor tests {{{
 
 function! TestGetBG()
   highlight! Normal guibg=#000000
@@ -91,7 +109,7 @@ function! TestGetBG()
   highlight! Normal ctermbg=17
   call VUAssertEquals(mvom#plugins#undercursor#getbg(),'ffffff')
 endfunction
-"
+" }}}
 " util#color tests {{{
 
 function! TestHSVToRGB()
@@ -307,6 +325,29 @@ function! TestGeneratePNGOffset()
   call VULog("threehalf")
   let threehalfhash = image.generateHash(0,25,10,10)
   call VUAssertEquals(onehalfhash,threehalfhash)
+endfunction
+
+function! Sum(a,b)
+  let b:calls += 1
+  return a:a+a:b
+endfunction
+
+function! TestMemoize()
+  let b:calls = 0
+  let sumfn = mvom#util#location#memoize(function('Sum'))
+  call VUAssertEquals(sumfn.call(1,3),4)
+  call VUAssertEquals(sumfn.data['hits'],0)
+  call VUAssertEquals(sumfn.data['misses'],1)
+
+  call VUAssertEquals(sumfn.call(1,3),4)
+  call VUAssertEquals(sumfn.call(2,3),5)
+  call VUAssertEquals(sumfn.data['hits'],1)
+  call VUAssertEquals(sumfn.data['misses'],2)
+
+  call sumfn.clear()
+  call VUAssertEquals(sumfn.call(2,3),5)
+  call VUAssertEquals(sumfn.data['hits'],0)
+  call VUAssertEquals(sumfn.data['misses'],1)
 endfunction
 
 ""}}}

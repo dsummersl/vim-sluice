@@ -23,6 +23,19 @@ endfunction
 function! mvom#plugins#search#deinit()
 endfunction
 
+function! mvom#plugins#search#data(options)
+  if !exists('b:mvom_searchfn')
+    let b:mvom_searchfn = mvom#util#location#memoize(
+          \function('mvom#plugins#search#search'),
+          \function('mvom#plugins#search#memoizeByLocAndFileVer'))
+  endif
+  " if the # of memoized values gets big maybe purge...
+  if b:mvom_searchfn.data['misses'] > 50
+    b:mvom_searchfn.clear()
+  endif
+  return b:mvom_searchfn.call(a:options)
+endfunction
+
 " TODO add a max timeout function to this method...this would then require
 " some kind of...'resume' functionality... get rid of the 'max searches'
 " completely
@@ -37,6 +50,7 @@ endfunction
 "     'max_searches' - must be present. Limits total number of results. Can be
 "                      up to double this value ('max up' and 'max down').
 "     'needle'       - search pattern. If not specified, @/ is used.
+" TODO min line, max line for 'micro' mode searches
 " 
 " Returns: A hash is returned with the following keys:
 "   'lines' - A hash of lines
@@ -46,7 +60,7 @@ endfunction
 "   'downmax' - True if the 'max_searches' is reached downward.
 "
 " SideAffects: The 'options' parameter  ... should not be modified...
-function! mvom#plugins#search#data(options)
+function! mvom#plugins#search#search(options)
   " max number of milliseconds
   "let maxtime = 500
   "let starttime = reltime()
@@ -62,28 +76,8 @@ function! mvom#plugins#search#data(options)
     let pattern = @/
   endif
 
-  " if the search is the same and the palce is the same, return the previous
-  " results
-  if has_key(a:options,'previoussearch')
-    " TODO check that the previous line is within some wiggle of the current
-    " line...and that changedtick hasn't changed.
-    if a:options['previoussearch'] == pattern && 
-          \a:options['previousline'] < line('.') + a:options['max_searches'] &&
-          \a:options['previousline'] > line('.') - a:options['max_searches'] &&
-          \a:options['previoustick'] == b:changedtick
-      return a:options['previousdata']
-    endif
-  endif
-
-  " TODO this only needs to return NEW values if... pattern has changed, or the
-  " cursor position has changed (or the file.
-
   let results = {}
   let results['lines'] = {}
-
-  let a:options['previoustick'] = b:changedtick
-  let a:options['previoussearch'] = pattern 
-  let a:options['previousline'] = line('.')
 
 	let n = 0
 	" TODO cache results so as to avoid researching on duplicates (save last
@@ -131,7 +125,6 @@ function! mvom#plugins#search#data(options)
     let results['upmax'] = 0
   endtry
 	exe "keepjumps ". startLine
-  let a:options['previousdata'] = results
 	return results
 endfunction
 
@@ -140,4 +133,26 @@ function! mvom#plugins#search#enabled(options)
     return &hls == 1
   endif
   return 1
+endfunction
+
+" A memoization function for the mvom#util#location#memoize
+" function.
+" Memoizes by the current window dimensions, and the changedtick (version of
+" file)
+function! mvom#plugins#search#memoizeByLocAndFileVer(args)
+  let options = a:args[0]
+
+  if has_key(options,'needle')
+    let pattern = options['needle']
+  else
+    let pattern = @/
+  endif
+
+  " TODO check that the previous line is within some wiggle of the current
+  " line...and that changedtick hasn't changed.
+  return mvom#util#color#hash(printf("%s-%s-%s",
+        \b:changedtick,
+        \line('.'),
+        \pattern
+        \))
 endfunction
