@@ -397,7 +397,9 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 
   " I'm lazy, and CSApprox works so well at turning GUI colors into cterm
   " colors. I leave it to it to fix my highlights!
-  silent exec ":CSApprox!"
+  if !has("gui_running")
+    silent exec ":CSApprox!"
+  endif
 
   " after the gutterimage is completely painted, define any missing
   " icon/signs, and then paint.
@@ -409,12 +411,12 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     if !exists('g:mvom_sign_'. fname)
       "call VULog( "let g:mvom_sign_". fname ."=1")
       exe "let g:mvom_sign_". fname ."=1"
-      if g:mvom_graphics_enabled
+      if g:mvom_imagemagic_supported 
         " if an icon doesn't exist yet, generate it.
         if !filereadable(g:mvom_icon_cache . fname .'.png')
           " place the background color
           " DEBUG print the whole gutter. One long strip: :)
-          call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . 'gutter')
+          "call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . 'gutter')
           call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . fname,0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
         endif
         let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'

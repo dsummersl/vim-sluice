@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+set -u
+
+rm -f db-undercursor.result
+
+undertest='*mvom/renderer.vim'
+#undertest='*mvom/*/location.vim'
+/Applications/MacVim.app/Contents/MacOS/Vim \
+  --cmd 'profile start db-undercursor.result' \
+  --cmd "profile! file $undertest" \
+  -c 'MVOMenable' \
+  -c '1000 | call mvom#renderer#RePaintMatches()' \
+  -c '1000 | call mvom#renderer#RePaintMatches()' \
+  -c '3000 | call mvom#renderer#RePaintMatches()' \
+  -c '4000 | call mvom#renderer#RePaintMatches()' \
+  -c '4006 | call mvom#renderer#RePaintMatches()' \
+  -c '4007 | call mvom#renderer#RePaintMatches()' \
+  -c '4008 | call mvom#renderer#RePaintMatches()' \
+  -c "profdel file $undertest" \
+  test.txt
