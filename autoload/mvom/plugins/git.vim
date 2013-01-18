@@ -23,16 +23,16 @@ function! mvom#plugins#git#data(options)
   let filename = mvom#plugins#git#getfilename(expand('%'))
   let branch = mvom#plugins#git#getgitbranch(expand('%'))
   let prefix = mvom#plugins#git#getgitprefix(expand('%'))
-  exec printf("silent !cd %s && git show %s:%s%s > /tmp/aa.txt",
+  exec printf("silent! !cd %s && git show %s:%s%s > /tmp/aa.txt",
         \directory,
         \branch,
         \prefix,
         \filename)
-  exec "silent !w! /tmp/bb.txt"
+  exec "silent! w! /tmp/bb.txt"
 
   " Do a unified diff of the two temp files to get our diff.
-  exec "silent !diff -u /tmp/aa.txt /tmp/bb.txt > /tmp/t.diff"
-  if !v:shell_error
+  exec "silent! !diff -u /tmp/aa.txt /tmp/bb.txt > /tmp/t.diff"
+  if v:shell_error != 0
     " TODO memoize by the filetick.
     let diffs = mvom#plugins#git#ParsePatchFile('/tmp/t.diff')
     return { 'lines': diffs }
@@ -48,34 +48,25 @@ endfunction
 " a file is in include/file.txt
 " this function would return include/
 function! mvom#plugins#git#getgitprefix(file)
-  let dir = ''
-  redir => dir
-  exe printf("silent! !cd %s ; git rev-parse --show-prefix",
+  exe printf("silent! !cd %s ; git rev-parse --show-prefix > /tmp/git.txt",
         \mvom#plugins#git#getdirectory(a:file)
         \)
-  redir END
-  return s:lastwordonly(dir)
+  return readfile('/tmp/git.txt')[0]
 endfunction
 
 function! mvom#plugins#git#getgitroot(file)
-  let gitroot = ''
-  redir => gitroot
-  exe printf("silent! !cd %s ; git rev-parse --show-toplevel",
+  exe printf("silent! !cd %s ; git rev-parse --show-toplevel > /tmp/git.txt",
         \mvom#plugins#git#getdirectory(a:file)
         \)
-  redir END
-  return s:lastwordonly(gitroot)
+  return readfile('/tmp/git.txt')[0]
 endfunction
 
 function! mvom#plugins#git#getgitbranch(file)
-  let cmd = printf('silent! !cd %s && git branch --no-color | grep "*" | sed "s/\* //"',
+  let cmd = printf('silent! !cd %s && git branch --no-color | grep "*" | sed "s/\* //" > /tmp/git.txt',
         \mvom#plugins#git#getdirectory(a:file)
         \)
-  echom cmd
-  redir => gitbranch
   exec cmd
-  redir END
-  return s:lastwordonly(gitbranch)
+  return readfile('/tmp/git.txt')[0]
 endfunction
 
 function! mvom#plugins#git#getdirectory(file)
@@ -85,20 +76,6 @@ function! mvom#plugins#git#getdirectory(file)
     " no path found, must be in the current working directory:
     return '.'
   endif
-endfunction
-
-" The cmd output includes the command itself and a bunch of control
-" characters. This just returns the last interesting bit of data:
-function! s:lastwordonly(output)
-  let lastline = ''
-  for line in split(a:output,'\r')
-    let line = substitute(line,'^\v([^ ]+).*','\=submatch(1)','')
-    let line = substitute(line,'\%x00','','')
-    if len(line) > 0
-      let lastline = line
-    endif
-  endfor
-  return lastline
 endfunction
 
 function! mvom#plugins#git#getfilename(file)
