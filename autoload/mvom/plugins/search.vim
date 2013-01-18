@@ -2,9 +2,6 @@
 " this plugin will display the search location in the gutter.
 "
 " Options:
-"   respect_hls: When this option is set to 1 this plugin will disable itself
-"                if the hls setting is disabled. (default: 1)
-"
 "  max_searches: Maximum number of forward and backward searches to performed.
 "                Smaller numbers will make this a more efficient plugin (but 
 "                won't show all matches in the gutter). (default: 25)
@@ -12,9 +9,6 @@
 "
 
 function! mvom#plugins#search#init(options)
-  if !has_key(a:options,'respect_hls')
-    let a:options['respect_hls'] = 1
-  endif
   if !has_key(a:options,'max_searches')
     let a:options['max_searches'] = 25
   endif
@@ -30,9 +24,9 @@ function! mvom#plugins#search#data(options)
           \function('mvom#plugins#search#memoizeByLocAndFileVer'))
   endif
   " if the # of memoized values gets big maybe purge...
-  if b:mvom_searchfn.data['misses'] > 50
-    b:mvom_searchfn.clear()
-  endif
+  "if b:mvom_searchfn.data['misses'] > 50
+  "  b:mvom_searchfn.clear()
+  "endif
   return b:mvom_searchfn.call(a:options)
 endfunction
 
@@ -129,9 +123,6 @@ function! mvom#plugins#search#search(options)
 endfunction
 
 function! mvom#plugins#search#enabled(options)
-  if a:options['respect_hls']
-    return &hls == 1
-  endif
   return 1
 endfunction
 

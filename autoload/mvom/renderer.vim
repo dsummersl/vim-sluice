@@ -427,6 +427,12 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     endif
 	endfor
 
+  " TODO there is a problem where if you are adding files in micro mode the
+  " new rows don't get the background coloring added to them.
+  "
+  " TODO also the undurcursor doesn't un-highlight when you go to a
+  " non-underword area.
+
   " finally, only update the entries that must be modified
 	for [line,val] in items(results)
     " did we paint this line previously?

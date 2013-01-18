@@ -11,6 +11,15 @@ function! mvom#plugins#git#deinit()
 endfunction
 
 function! mvom#plugins#git#data(options)
+  if !exists('b:mvom_gitfn')
+    let b:mvom_gitfn = mvom#util#location#memoize(
+          \function('mvom#plugins#git#search'),
+          \function('mvom#plugins#git#memoizeByFileTick'))
+  endif
+  return b:mvom_gitfn.call(a:options)
+endfunction
+
+function! mvom#plugins#git#search(options)
   " parse the git diff -p output.
   "
   " for each line with a match return whether it is an addition or subtraction
@@ -125,4 +134,59 @@ function! mvom#plugins#git#ParsePatchFile(filename)
     endif
   endfor
   return results
+endfunction
+
+" A memoization function for the git data function.
+" Memoizes by the file tick only.
+function! mvom#plugins#git#memoizeByFileTick(args)
+  " TODO changedtick sucks. I really want a hash of the file contents. That
+  " would allow us to reuse contents when the user 'undos' something.
+  " probably hooking in a filechange hook and doing a write to a temp file and
+  " then hashing that temp file would do the trick. Over doing it? Maybe...
+  return mvom#util#color#hash(string(b:changedtick))
+endfunction
+
+function! mvom#plugins#git#paint(options,vals)
+  " We need two paint operations - one with the additions, one with the
+  " subtractions
+  let filtered = { 'lines': {},
+        \'gutterImage': a:vals['gutterImage'],
+        \'pixelsperline': a:vals['pixelsperline'],
+        \}
+  for line in keys(a:vals['lines'])
+    if has_key(a:vals['lines'][line],'added')
+      let filtered['lines'][line] = a:vals['lines'][line]
+    endif
+  endfor
+  let a:options['chars'] = a:options['addedchar'] . a:options['addedchar'] 
+  let a:options['color'] = a:options['addedcolor']
+  let a:options['xchars'] = '/' . a:options['addedchar'] 
+  let a:options['xcolor'] = a:options['addedcolor']
+  let a:options['iconcolor'] = a:options['addedcolor']
+	let added = mvom#renderers#util#TypicalPaint(filtered,a:options)
+
+  " paint the removed lines
+  let filtered['lines'] = {}
+  for line in keys(a:vals['lines'])
+    if has_key(a:vals['lines'][line],'removed')
+      let filtered['lines'][line] = a:vals['lines'][line]
+    endif
+  endfor
+  let a:options['chars'] = a:options['removedchar'] . a:options['removedchar'] 
+  let a:options['color'] = a:options['removedcolor']
+  let a:options['xchars'] = '/' . a:options['removedchar'] 
+  let a:options['xcolor'] = a:options['removedcolor']
+  let a:options['iconcolor'] = a:options['removedcolor']
+	let removed = mvom#renderers#util#TypicalPaint(filtered,a:options)
+
+  for line in keys(added['lines'])
+    let removed['lines'][line] = added['lines'][line]
+  endfor
+
+  return removed
+endfunction
+
+function! mvom#plugins#git#reconcile(options,vals,plugin)
+  " do the same slash paint, but once with additions, once with subtractions
+  return mvom#renderers#slash#reconcile(a:options,a:vals,a:plugin)
 endfunction

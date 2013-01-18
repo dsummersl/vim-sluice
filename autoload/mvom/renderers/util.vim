@@ -10,6 +10,27 @@ function! mvom#renderers#util#FindRenderForPlugin(dataPlugin)
   return mvom#renderers#util#FindPlugin(a:dataPlugin)['options']['render']
 endfunction
 
+" Perform text placement and image placement. This covers most cases of what
+" one would need to do to paint to the gutter.
+"
+" It supports several paint modes: plain text icons, and graphical icons (with
+" alignment, coloring, etc).
+"
+" Parameters:
+"   vals   : Dictionary of lines. Keys:
+"     'lines': Dictionary of line numbers. The presence of the line number is
+"              all that is needed.
+"     'gutterImage': the graphical representation of the gutter.
+"     'pixelsperline': the computed pixels per line
+"     'upmax': TODO hint to show that there could be more matches upwards
+"     'downmax': TODO hint to show that there could be more matches downwards
+"     
+"   options: Required values for this dictionary:
+"     'color': The foreground color of the icon.
+"     'chars': The two characters that should go into the gutter.
+"
+" Returns: A dictionary compatible with a renderer function ('lines' key
+" properly populated).
 function! mvom#renderers#util#TypicalPaint(vals,options)
 	let result = {}
   let result['lines'] = {}

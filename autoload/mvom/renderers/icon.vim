@@ -124,11 +124,10 @@ function! mvom#renderers#icon#generatePNGFile(name,...) dict
     let w = a:3
     let h = a:4
     call writefile([self.generateSVG(x,y,w,h)], a:name .".svg")
-    exec "silent ! ". convert ." ". a:name .".svg ". a:name .".png"
   else
     call writefile([self.generateSVG()], a:name .".svg")
-    exec "silent ! ". convert ." ". a:name .".svg ". a:name .".png"
   endif
+  exec printf("silent ! %s %s.svg %s.png && rm %s.svg",convert,a:name,a:name,a:name)
 endfunction
 
 " Add a rectangle to the final image.

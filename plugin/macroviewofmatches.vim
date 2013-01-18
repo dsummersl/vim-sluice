@@ -54,28 +54,47 @@ if !exists('g:mvom_loaded')
 	      \ 'iconwidth': 10,
 	      \ 'showinline': 1
 	      \ })
+	"
+	" TODO when not in 'macro' mode we only need to search the contents of the
+	" on screen lines.
+	"
+	" TODO for the search plugin define the colors by the HighLight group if its
+	" undefined. Same for undercursor, but make it transparent?
+	"
 	" Show the last search with //
 	call mvom#renderer#add('mvom#plugins#search', {
-	      \ 'render': 'mvom#renderers#slash',
-	      \ 'chars': '/ ',
-	      \ 'color': '0055ff',
-	      \ 'xchars': 'X ',
-	      \ 'iconcolor': '0055ff',
-	      \ 'iconalign': 'center',
-	      \ 'iconwidth': 100,
-	      \ 'xcolor': '0055ff'
-	      \ })
+				\ 'render': 'mvom#renderers#slash',
+				\ 'chars': '/ ',
+				\ 'color': '0055ff',
+				\ 'xchars': 'X ',
+				\ 'xcolor': '0055ff',
+				\ 'iconcolor': '0055ff',
+				\ 'iconalign': 'center',
+				\ 'iconwidth': 100,
+				\ 'max_searches': 25
+				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
 	call mvom#renderer#add('mvom#plugins#undercursor', {
-	      \ 'render': 'mvom#renderers#slash',
-	      \ 'chars': '\ ',
-	      \ 'color': '586ca3',
-	      \ 'xchars': 'X ',
-	      \ 'xcolor': '586ca3',
-	      \ 'iconcolor': '586ca3',
-	      \ 'iconalign': 'right',
-	      \ 'iconwidth': 60,
+				\ 'render': 'mvom#renderers#slash',
+				\ 'chars': '\ ',
+				\ 'color': '586ca3',
+				\ 'xchars': 'X ',
+				\ 'xcolor': '586ca3',
+				\ 'iconcolor': '586ca3',
+				\ 'iconalign': 'right',
+				\ 'iconwidth': 60,
 				\ 'max_searches': 10
+				\ })
+	" Show all git changes with +/- icons.
+	call mvom#renderer#add('mvom#plugins#git', {
+	      \ 'gitcommand': 'git',
+	      \ 'render': 'mvom#plugins#git',
+				\ 'addedcolor': '00bb00',
+				\ 'addedchar': '+',
+				\ 'removedcolor': 'bb0000',
+				\ 'removedchar': '-',
+	      \ 'iconalign': 'right',
+	      \ 'iconwidth': 20
 	      \ })
 	let g:mvom_loaded = 1
 endif

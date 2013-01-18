@@ -81,7 +81,7 @@ function! mvom#renderers#background#paint(options,vals)
         \g:mvom_pixel_density,
         \g:mvom_pixel_density*(maxLine-minLine+1) + maxModulo,
         \"",
-        \'rx="2" ry="2"'
+        \''
         \)
   if showinline
     let bgcolor = mvom#util#color#darker(bgcolor)
@@ -91,8 +91,8 @@ function! mvom#renderers#background#paint(options,vals)
           \g:mvom_pixel_density*(currentLine-1) + currentModulo,
           \g:mvom_pixel_density,
           \a:vals['pixelsperline'],
-          \"",
-          \'rx="2" ry="2"'
+          \'',
+          \''
           \)
   endif
 	return a:vals

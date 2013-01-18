@@ -15,6 +15,10 @@ function! TestParseDiff()
   call VUAssertTrue(diff['89']['added'])
 endfunction
 
+function! TestGitFunctions()
+  call VUAssertEquals(mvom#plugins#git#getgitbranch('README'),'master')
+endfunction
+
 " }}}
 " plugins#search tests"{{{
 
@@ -110,6 +114,30 @@ function! TestGetBG()
   call VUAssertEquals(mvom#plugins#undercursor#getbg(),'ffffff')
 endfunction
 " }}}
+" plugins#util tests {{{
+
+function! TestTypicalPaint()
+  let options = {
+        \'color': '123456',
+        \'chars': 'X '
+        \}
+  let results = mvom#renderers#util#TypicalPaint({
+        \'lines': { '1': {}, '2': {} }
+        \},
+        \options)
+  call VULog("results = ". string(results))
+  call VUAssertEquals(results['lines']['1']['fg'],'123456')
+  call VUAssertEquals(results['lines']['2']['text'],'X ')
+endfunction
+
+" }}}
+" renderers#slash tests"{{{
+
+function! TestSlashReconcile()
+  "mvom#renderers#slash#reconcile(options,vals,plugin)
+endfunction
+
+""}}}
 " util#color tests {{{
 
 function! TestHSVToRGB()
