@@ -19,7 +19,7 @@ endfunction
 
 function! mvom#plugins#search#data(options)
   if !exists('b:mvom_searchfn')
-    let b:mvom_searchfn = mvom#util#location#memoize(
+    let b:mvom_searchfn = _#memoize(
           \function('mvom#plugins#search#search'),
           \function('mvom#plugins#search#memoizeByLocAndFileVer'))
   endif
@@ -126,7 +126,7 @@ function! mvom#plugins#search#enabled(options)
   return 1
 endfunction
 
-" A memoization function for the mvom#util#location#memoize
+" A memoization function for the _#memoize
 " function.
 " Memoizes by the current window dimensions, and the changedtick (version of
 " file)
@@ -141,7 +141,7 @@ function! mvom#plugins#search#memoizeByLocAndFileVer(args)
 
   " TODO check that the previous line is within some wiggle of the current
   " line...and that changedtick hasn't changed.
-  return mvom#util#color#hash(printf("%s-%s-%s",
+  return _#hash(printf("%s-%s-%s",
         \b:changedtick,
         \line('.'),
         \pattern

@@ -72,9 +72,9 @@ function! mvom#renderers#icon#generateHash(...) dict
         let matches = matches .string(cp)
       endif
     endfor
-    return mvom#util#color#hash(matches)
+    return _#hash(matches)
   else
-    return mvom#util#color#hash(self.generateSVG())
+    return _#hash(self.generateSVG())
   endif
 endfunction
 

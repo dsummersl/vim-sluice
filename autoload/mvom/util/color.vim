@@ -1,18 +1,4 @@
 
-" Given a string, return a much smaller hash of the string.
-function! mvom#util#color#hash(str)
-	python import sys
-  let cleaned = substitute(a:str,"'","\\\\'","g")
-	exe "python sys.argv = ['". cleaned ."']"
-  python import hashlib
-  python import sys
-  python import vim
-  python str = sys.argv[0]
-  python hash = hashlib.md5(str).hexdigest()[0:15]
-  python vim.command('let s:hash = "'+ hash +'"')
-  return s:hash
-endfunction
-
 function! mvom#util#color#GetHighlightName(dictionary)
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
@@ -93,17 +79,6 @@ function! mvom#util#color#HSVToRGB(hsv)
 	let result[0] = float2nr(result[0]*255)
 	let result[1] = float2nr(result[1]*255)
 	let result[2] = float2nr(result[2]*255)
-	return result
-endfunction
-
-" Return the unique elements in a list.
-function! mvom#util#color#Uniq(list)
-	let result = []
-	for i in a:list
-		if count(result,i) == 0
-			call add(result,i)
-		endif
-	endfor
 	return result
 endfunction
 

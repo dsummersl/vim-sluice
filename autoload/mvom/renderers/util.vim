@@ -57,6 +57,8 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
     endif
   endfor
 	for line in keys(a:vals['lines'])
+    " TODO group the lines into ranges 1-10, etc...and then just paint ONE
+    " rectangle for the range.
 		let result['lines'][line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg': defaultbg }
     for key in ["iconcolor","iconwidth","iconalign"]
       if has_key(a:options,key)
@@ -93,4 +95,3 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
 	endfor
 	return result
 endfunction
-

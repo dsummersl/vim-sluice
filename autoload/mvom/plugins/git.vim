@@ -12,7 +12,7 @@ endfunction
 
 function! mvom#plugins#git#data(options)
   if !exists('b:mvom_gitfn')
-    let b:mvom_gitfn = mvom#util#location#memoize(
+    let b:mvom_gitfn = _#memoize(
           \function('mvom#plugins#git#search'),
           \function('mvom#plugins#git#memoizeByFileTick'))
   endif
@@ -143,7 +143,7 @@ function! mvom#plugins#git#memoizeByFileTick(args)
   " would allow us to reuse contents when the user 'undos' something.
   " probably hooking in a filechange hook and doing a write to a temp file and
   " then hashing that temp file would do the trick. Over doing it? Maybe...
-  return mvom#util#color#hash(string(b:changedtick))
+  return _#hash(string(b:changedtick))
 endfunction
 
 function! mvom#plugins#git#paint(options,vals)
@@ -188,5 +188,6 @@ endfunction
 
 function! mvom#plugins#git#reconcile(options,vals,plugin)
   " do the same slash paint, but once with additions, once with subtractions
+  " TODO still funky. need to fix fix fix.
   return mvom#renderers#slash#reconcile(a:options,a:vals,a:plugin)
 endfunction

@@ -56,8 +56,8 @@ function! TestSearch()
   " seven total lines, b/c some lines have two matches
   call VUAssertEquals(len(bottomresults['lines']),8)
   " but the total count should be at least 10
-  call VUAssertTrue(vimunit#util#sum(
-        \vimunit#util#map(bottomresults['lines'],
+  call VUAssertTrue(_#sum(
+        \_#map(bottomresults['lines'],
         \'let result = val["count"]'
         \)) >= 10)
   call VUAssertEquals(@/,'nothing')
@@ -72,8 +72,8 @@ function! TestSearch()
   " seven total lines, b/c some lines have two matches
   call VUAssertEquals(len(topresults['lines']),7)
   " but the total count should be at least 10
-  call VUAssertTrue(vimunit#util#sum(
-        \vimunit#util#map(topresults['lines'],
+  call VUAssertTrue(_#sum(
+        \_#map(topresults['lines'],
         \'let result = val["count"]'
         \)) >= 10)
   " the search didn't finish searching up:
@@ -87,8 +87,8 @@ function! TestSearch()
   " matches both up and down
   call VUAssertEquals(len(middleresults['lines']),14)
   " but the total count should be at least 10
-  call VUAssertTrue(vimunit#util#sum(
-        \vimunit#util#map(middleresults['lines'],
+  call VUAssertTrue(_#sum(
+        \_#map(middleresults['lines'],
         \'let result = val["count"]'
         \)) >= 10)
   " the search didn't finish searching up:
@@ -156,14 +156,6 @@ function! TestLighterAndDarker()
 
   call VUAssertEquals(mvom#util#color#lighter('fdf6e3'),'ffffff')
   call VUAssertEquals(mvom#util#color#darker('fdf6e3'),'e2e2e2')
-endfunction
-
-function! TestUniq()
-	call VUAssertEquals(mvom#util#color#Uniq([]),[])
-	call VUAssertEquals(mvom#util#color#Uniq([1,2,3]),[1,2,3])
-	call VUAssertEquals(mvom#util#color#Uniq([3,2,1]),[3,2,1])
-	call VUAssertEquals(mvom#util#color#Uniq([3,2,1,2,3]),[3,2,1])
-	call VUAssertEquals(mvom#util#color#Uniq(['onea','oneb','onea']),['onea','oneb'])
 endfunction
 
 function! TestHexToRGBAndBack()
@@ -354,30 +346,6 @@ function! TestGeneratePNGOffset()
   let threehalfhash = image.generateHash(0,25,10,10)
   call VUAssertEquals(onehalfhash,threehalfhash)
 endfunction
-
-function! Sum(a,b)
-  let b:calls += 1
-  return a:a+a:b
-endfunction
-
-function! TestMemoize()
-  let b:calls = 0
-  let sumfn = mvom#util#location#memoize(function('Sum'))
-  call VUAssertEquals(sumfn.call(1,3),4)
-  call VUAssertEquals(sumfn.data['hits'],0)
-  call VUAssertEquals(sumfn.data['misses'],1)
-
-  call VUAssertEquals(sumfn.call(1,3),4)
-  call VUAssertEquals(sumfn.call(2,3),5)
-  call VUAssertEquals(sumfn.data['hits'],1)
-  call VUAssertEquals(sumfn.data['misses'],2)
-
-  call sumfn.clear()
-  call VUAssertEquals(sumfn.call(2,3),5)
-  call VUAssertEquals(sumfn.data['hits'],0)
-  call VUAssertEquals(sumfn.data['misses'],1)
-endfunction
-
 ""}}}
 " renderer tests"{{{
 function! TestCombineData()
