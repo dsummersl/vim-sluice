@@ -31,10 +31,6 @@ function! mvom#renderers#icon#makeImage(...)
   return results
 endfunction
 
-" TODO provide a generateSVG that specifies a window to translate and clip to.
-" TODO provide a hash of that resulting SVG that reliably describes its
-" contents.
-
 " Generate a hash of this image. 
 "
 " You can optionally include 4 additional parameters that
@@ -53,25 +49,35 @@ function! mvom#renderers#icon#generateHash(...) dict
       " find all the elements that intersect this boundary area
       " http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
       let ax1 = d['x']
-      let ax2 = d['x'] + d['width']
+      let ax2 = d['x'] + d['width'] - 1
       let ay1 = d['y']
-      let ay2 = d['y'] + d['height']
+      let ay2 = d['y'] + d['height'] - 1
       let bx1 = a:1
-      let bx2 = a:1 + a:3
+      let bx2 = a:1 + a:3 - 1
       let by1 = a:2
-      let by2 = a:2 + a:4
-      if ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
+      let by2 = a:2 + a:4 - 1
+      if ax1 <= bx2 && ax2 >= bx1 && ay1 <= by2 && ay2 >= by1
         " only add the portion that is in the clip:
         let cp = copy(d)
-        if ax1 < bx1 | let cp['x'] = bx1 | endif
-        if ay1 < by1 | let cp['y'] = by1 | endif
-        if ay2 > by2 | let cp['height'] = by2-by1 | endif
-        if ax2 > bx2 | let cp['width'] = bx2-bx1 | endif
+        " if we are matching bottom or top ends we want to differentiate
+        " between normal old matches so that we don't miss any styling (rx...)
+        let topclip = ''
+        let botclip = ''
+        if ax1 <= bx1 | let cp['x'] = bx1 | endif
+        if ax2 >= bx2 | let cp['width'] = bx2-bx1 | endif
+
+        if ay1 <= by1 | let topclip = 'tc' | endif
+        if ay1 <= by1 | let cp['y'] = by1 | endif
+
+        if ay2 >= by2 | let botclip = 'bc' | endif
+        if ay2 >= by2 | let cp['height'] = by2-by1 | endif
+
         let cp['x'] = cp['x'] % a:3
         let cp['y'] = cp['y'] % a:4
-        let matches = matches .string(cp)
+        let matches = matches . topclip . string(cp) . botclip
       endif
     endfor
+    call VULog( "_#hash = ". matches ." = ". _#hash(matches))
     return _#hash(matches)
   else
     return _#hash(self.generateSVG())
@@ -88,7 +94,7 @@ endfunction
 " - height
 function! mvom#renderers#icon#generateSVG(...) dict
   if exists('a:1')
-    let svg = '<svg width="'. a:3 .'px" height="'. a:4 .'px">'
+    let svg = '<svg width="'. (a:3+1) .'px" height="'. a:4 .'px">'
     let svg = svg . printf('<g transform="translate(%d,%d)">',-a:1,-a:2)
   else
     let svg = '<svg width="'. self.width .'px" height="'. self.height .'px">'
@@ -195,6 +201,7 @@ function! mvom#renderers#icon#placeRectangle(color,y,width,height,align,...) dic
   else
     throw "Unknown alignment '". a:align ."'. Must be one of: left, right, center."
   endif
+  echom printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',startpoint, a:y, a:height, pixwidth, a:color, style,extra)
   call add(self.svg,printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',startpoint, a:y, a:height, pixwidth, a:color, style,extra))
   call add(self.data,{ 'x': startpoint, 'y': a:y, 'width': pixwidth, 'height': a:height, 'type': 'rect', 'color': a:color, 'style': style, 'extra': extra})
 endfunction

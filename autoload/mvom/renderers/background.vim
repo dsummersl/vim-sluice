@@ -36,40 +36,18 @@ function! mvom#renderers#background#paint(options,vals)
     let a:vals['lines'][line]['bg'] = newbg['bg']
 	endfor
 
-  " paint to the image generator:
-  let minLine = 0
-  let maxLine = 0
-  let currentLine = 0
-	for line in keys(a:vals['lines'])
-    let n = a:vals['lines'][line]['signLine']
-    if has_key(a:vals['lines'][line],'iscurrentline')
-      let currentLine = n
-      if line('.') == line
-        let currentModulo = a:vals['lines'][line]['modulo']
-      endif
-    endif
-    if minLine == 0 || n < minLine
-      let minLine = n
-      if line('.') == line
-        let minModulo = a:vals['lines'][line]['modulo']
-      endif
-    endif
-    if maxLine == 0 || n > maxLine
-      let maxLine = n
-      if line('.') == line
-        let maxModulo = a:vals['lines'][line]['modulo']
-      endif
-    endif
-  endfor
-  if !exists('currentModulo')
-    let currentModulo = 0
-  endif
-  if !exists('maxModulo')
-    let maxModulo = 0
-  endif
-  if !exists('minModulo')
-    let minModulo = 0
-  endif
+  try
+    " select the min/max/current values from all the lines and then use that
+    " to paint the gutter with just two elements:
+    let mn = _#min(a:vals['lines'],"str2float(val['signLine'] .'.'. val['modulo'])")
+    let mx = _#max(a:vals['lines'],"str2float(val['signLine'] .'.'. val['modulo'])")
+    let cl = _#min(a:vals['lines'],"val['line'] == ". line('.') ."? str2float(val['signLine'] .'.'. val['modulo']) : 100000")
+    let minLine = a:vals['lines'][mn]
+    let maxLine = a:vals['lines'][mx]
+    let currentLine = a:vals['lines'][cl]
+  catch /.*/
+    " probably no elements
+  endtry
 
   " paint two rectangles on the graphic. One is the main background, the other
   " is the 'highlighted' part.
@@ -77,9 +55,9 @@ function! mvom#renderers#background#paint(options,vals)
   call a:vals['gutterImage'].addRectangle(
         \bgcolor,
         \0,
-        \g:mvom_pixel_density*(minLine-1) + minModulo,
+        \g:mvom_pixel_density*(minLine['signLine']-1) + minLine['modulo'],
         \g:mvom_pixel_density,
-        \g:mvom_pixel_density*(maxLine-minLine+1) + maxModulo,
+        \g:mvom_pixel_density*(maxLine['signLine']-minLine['signLine']+1) + maxLine['modulo'],
         \"",
         \''
         \)
@@ -88,7 +66,7 @@ function! mvom#renderers#background#paint(options,vals)
     call a:vals['gutterImage'].addRectangle(
           \mvom#renderers#background#makeBGColor(bgcolor),
           \0,
-          \g:mvom_pixel_density*(currentLine-1) + currentModulo,
+          \g:mvom_pixel_density*(currentLine['signLine']-1) + currentLine['modulo'],
           \g:mvom_pixel_density,
           \a:vals['pixelsperline'],
           \'',

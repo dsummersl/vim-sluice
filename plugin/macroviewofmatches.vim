@@ -42,7 +42,7 @@ if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=1 | endif
 " ImageMagick 'convert' command location
 if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
 
-if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=8 | endif
+if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=10 | endif
 
 if !exists('g:mvom_loaded')
 	" Setup the type of plugins you want:

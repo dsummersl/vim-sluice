@@ -56,42 +56,80 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
       let min['line'] = line
     endif
   endfor
+
+  " place all the normal text chars an dcolors:
 	for line in keys(a:vals['lines'])
-    " TODO group the lines into ranges 1-10, etc...and then just paint ONE
-    " rectangle for the range.
 		let result['lines'][line] = { 'text': a:options['chars'], 'fg': a:options['color'], 'bg': defaultbg }
     for key in ["iconcolor","iconwidth","iconalign"]
       if has_key(a:options,key)
         let result['lines'][line][key] = a:options[key]
       endif
     endfor
+  endfor
+
+  " place the graphics for all the lines. group into ranges of areas so we can
+  " paint minimal rectangles.
+  let sorted = _#sort(keys(a:vals['lines']),2)
+  let groups = mvom#renderers#util#groupNumbers(sorted)
+  for group in groups
     " paint a graphic icon, if icon settings are present.
     if has_key(a:options,'iconcolor')
       " if this is a min/max line and there is an upmax/downmax condition...
-      if     (line == min['line'] && 
-            \  has_key(a:vals,'upmax') && a:vals['upmax'] &&
-            \  min['modulo'] == a:vals['lines'][line]['modulo']
-            \) ||
-            \(line == max['line'] &&
-            \  has_key(a:vals,'downmax') && a:vals['downmax'] &&
-            \  max['modulo'] == a:vals['lines'][line]['modulo']
-            \)
-        let dashdistance = float2nr(g:mvom_pixel_density / (1.0*a:options['iconwidth'])) / 2
+      "if     (line == min['line'] && 
+      "      \  has_key(a:vals,'upmax') && a:vals['upmax'] &&
+      "      \  min['modulo'] == a:vals['lines'][line]['modulo']
+      "      \) ||
+      "      \(line == max['line'] &&
+      "      \  has_key(a:vals,'downmax') && a:vals['downmax'] &&
+      "      \  max['modulo'] == a:vals['lines'][line]['modulo']
+      "      \)
+      "  let dashdistance = float2nr(g:mvom_pixel_density / (1.0*a:options['iconwidth'])) / 2
+      "  call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
+      "        \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['signLine']-1),
+      "        \a:options['iconwidth'],
+      "        \a:vals['pixelsperline'],a:options['iconalign'],
+      "        \"fill-opacity:0.3; stroke-dasharray=\"". dashdistance .",". dashdistance ."\"",'rx="1" ry="1"')
+      "  " TODO also make the text icon a couple of dots or something.
+      "else
+        "echom "---"
+        "echom "    pd    ppl = ". g:mvom_pixel_density ." ". a:vals['pixelsperline']
+        "echom "group1 group0 = ". group[1] ." ". group[0]
+        "echom "slin1  slin0  = ". a:vals['lines'][group[1]]['signLine'] ." ". a:vals['lines'][group[0]]['signLine']
+        "echom "mod1    mod0  = ". a:vals['lines'][group[1]]['modulo'] ." ". a:vals['lines'][group[0]]['modulo']
         call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
-              \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['signLine']-1),
+              \a:vals['lines'][group[0]]['modulo']+g:mvom_pixel_density*(a:vals['lines'][group[0]]['signLine']-1),
               \a:options['iconwidth'],
-              \a:vals['pixelsperline'],a:options['iconalign'],
-              \"fill-opacity:0.3; stroke-dasharray=\"". dashdistance .",". dashdistance ."\"",'rx="1" ry="1"')
-        " TODO also make the text icon a couple of dots or something.
-      else
-        call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
-              \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['signLine']-1),
-              \a:options['iconwidth'],
-              \a:vals['pixelsperline'],a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
-      endif
+              \(a:vals['lines'][group[1]]['modulo']-
+              \  a:vals['lines'][group[0]]['modulo']) +
+              \g:mvom_pixel_density*(
+              \    a:vals['lines'][group[1]]['signLine']-
+              \    a:vals['lines'][group[0]]['signLine']),
+              \a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
+      "endif
     else
       " TODO do some default painting. a brick for the whole thing maybe.
     endif
 	endfor
 	return result
+endfunction
+
+" given a sorted list, return the groups of ranges (see test case)
+function! mvom#renderers#util#groupNumbers(sorted)
+  let ranges = []
+  let curr = []
+  for n in a:sorted
+    let n = str2nr(n)
+    if len(curr) == 0
+      let curr = [n,n]
+    elseif curr[1]+1 == n
+      let curr[1] = n
+    else
+      let ranges = add(ranges,curr)
+      let curr = [n,n]
+    endif
+  endfor
+  if len(curr) != 0 && (len(ranges) == 0 || curr[1] != ranges[len(ranges)-1][1])
+    let ranges = add(ranges,curr)
+  endif
+  return ranges
 endfunction

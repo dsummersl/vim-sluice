@@ -137,6 +137,14 @@ function! TestSlashReconcile()
   "mvom#renderers#slash#reconcile(options,vals,plugin)
 endfunction
 
+function! TestGroupNumbers()
+  call VUAssertEquals(mvom#renderers#util#groupNumbers([]),[])
+  call VUAssertEquals(mvom#renderers#util#groupNumbers([1]),[[1,1]])
+  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,2,3,4]),[[1,4]])
+  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,2,3,4,6]),[[1,4],[6,6]])
+  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,3,4,5,7]),[[1,1],[3,5],[7,7]])
+endfunction
+
 ""}}}
 " util#color tests {{{
 
@@ -346,6 +354,29 @@ function! TestGeneratePNGOffset()
   let threehalfhash = image.generateHash(0,25,10,10)
   call VUAssertEquals(onehalfhash,threehalfhash)
 endfunction
+
+function! TestGenerateHash()
+  let image = mvom#renderers#icon#makeImage(10,50)
+  call image.addRectangle('000000',0,0,10,40)
+  " a small widget painted from 7-10 so it should appear in
+  " blocks 0-9 and 10-19
+  call image.addRectangle('123444',0,7,10,4)
+
+  call VUAssertNotSame(image.generateHash(0,0,10,10),image.generateHash(0,10,10,10))
+
+  " compare the 10-19 block witht the 20-29 should not be the same since a
+  " sliver of the 123444 is in there.
+  call VUAssertNotSame(image.generateHash(0,10,10,10),image.generateHash(0,20,10,10))
+
+
+  let image = mvom#renderers#icon#makeImage(10,100)
+  call image.addRectangle('000000',0,0,10,100)
+  call image.addRectangle('c6c6c6',0,9,10,2)
+
+  call VUAssertNotSame(image.generateHash(0,0,0,0),image.generateHash(0,50,10,10))
+  call VUAssertNotSame(image.generateHash(0,10,0,0),image.generateHash(0,50,10,10))
+endfunction
+
 ""}}}
 " renderer tests"{{{
 function! TestCombineData()

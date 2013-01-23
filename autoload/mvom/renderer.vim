@@ -105,8 +105,7 @@ function! mvom#renderer#setenabled(enable)
     for p in g:mv_plugins
       call {p['plugin']}#init(p['options'])
     endfor
-    if exists('b:cached_signs') | unlet b:cached_signs | endif
-    call mvom#renderer#RePaintMatches()
+    if exists('b:mvom_signs') | unlet b:mvom_signs | endif
   else
     " remove any signs
 		sign unplace *
@@ -138,9 +137,6 @@ endfunction
 " status.
 function! mvom#renderer#setmacromode(enable)
   let b:mvom_macromode = a:enable
-  if mvom#renderer#getenabled()
-    call mvom#renderer#RePaintMatches()
-  endif
 endfunction
 
 function! mvom#renderer#getmacromode()
@@ -319,8 +315,9 @@ endfunction
 " 'plugins'  - each plugin that paints on the line.
 " 
 function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
-	if !exists('b:cached_signs') | let b:cached_signs = {} | endif
+	if !exists('b:mvom_signs') | let b:mvom_signs = {} | endif
 	let results = {}
+  let new_signs = {}
 
 	" First collate all of the search results into one hash where the 'macro line'
   " number points to all matching search results.
@@ -405,8 +402,15 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " icon/signs, and then paint.
 	for [line,val] in items(results)
     " the problem is nothign is painted on teh gutter for the bg!
+    " TODO ah ha. So this is only the lines that have matches. But we really
+    " need to loop over the entire gutter and compute the hash for each gutter
+    " line. Rather than keep a whole dictionary of the 'last search' we just
+    " need a whole dictionary of the hashes of the last gutter (and we place
+    " something at each line every time).
     let fname = a:searchResults['gutterImage'].generateHash(0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
     let results[line]['hash'] = fname
+    let new_signs[line] = fname
+
     " if no icon has been made, and we can do it. then create the icon:
     if !exists('g:mvom_sign_'. fname)
       "call VULog( "let g:mvom_sign_". fname ."=1")
@@ -427,36 +431,44 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     endif
 	endfor
 
+  " Check/paint all the gutter lines
+  let t = ''
+  for line in range(a:firstVisible,a:lastVisible)
+    let t = t .'|'. line .':'
+    if line == '1'
+      if has_key(new_signs,line)
+        echom  'l1 = '. new_signs[line]
+      else
+        echom 'l1 = n'
+      endif
+    endif
+    if has_key(new_signs,line) && 
+          \has_key(b:mvom_signs,line) &&
+          \new_signs[line] != b:mvom_signs[line]
+      call {a:paintFunction}(line,results[line])
+      let t = t . new_signs[line]
+    elseif has_key(new_signs,line) && !has_key(b:mvom_signs,line)
+      let t = t .'+'. results[line]['hash']
+      call {a:paintFunction}(line,results[line])
+    elseif !has_key(new_signs,line) 
+      " no sign, take away anything on that line
+      "echom "WARNING: line ". line ." has no sign."
+      let t = t . '-'
+      call {a:unpaintFunction}(line,{})
+    else
+      let t = t . '.'
+      " new_signs has the key, but it must have matched somehow.
+    endif
+  endfor
+  "echom t
+
   " TODO there is a problem where if you are adding files in micro mode the
   " new rows don't get the background coloring added to them.
   "
   " TODO also the undurcursor doesn't un-highlight when you go to a
   " non-underword area.
 
-  " finally, only update the entries that must be modified
-	for [line,val] in items(results)
-    " did we paint this line previously?
-    if has_key(b:cached_signs,line)
-      " did we paint something different this time?
-      if b:cached_signs[line] != val
-        " if so, unpaint what we did before, and paint the new thing.
-        "call {a:unpaintFunction}(line,b:cached_signs[line])
-        call {a:paintFunction}(line,val)
-      endif
-    else
-      " something new, paint it.
-      call {a:paintFunction}(line,val)
-    endif
-	endfor
-
-  " Finally, is there anything old that doesn't exist anymore?
-	for [line,val] in items(b:cached_signs)
-    if !has_key(results,line)
-      call {a:unpaintFunction}(line,b:cached_signs[line])
-    endif
-  endfor
-
-  let b:cached_signs = results
+  let b:mvom_signs = new_signs
 	return results
 endfunction"}}}
 
