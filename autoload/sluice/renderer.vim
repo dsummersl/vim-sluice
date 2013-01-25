@@ -1,23 +1,23 @@
-function! mvom#renderer#RePaintMatches()"{{{
+function! sluice#renderer#RePaintMatches()"{{{
 	let painted = 0
-	if !mvom#renderer#getenabled()
+	if !sluice#renderer#getenabled()
 		return painted
 	endif
 	let w:save_cursor = winsaveview()
-	let w:save_registers = mvom#util#location#SaveRegisters()
+	let w:save_registers = sluice#util#location#SaveRegisters()
 	let totalLines = line('$')
 	let firstVisible = line('w0')
 	let lastVisible = line('w$')
-  let current_dims = mvom#util#location#getwindowdimensions(mvom#renderer#CombineData(g:mv_plugins,totalLines,firstVisible,lastVisible))
+  let current_dims = sluice#util#location#getwindowdimensions(sluice#renderer#CombineData(g:mv_plugins,totalLines,firstVisible,lastVisible))
 	" if there are no cached_dim then this is the first call to the
 	" repaintfunction. Make the cache and paint.
 	if !exists('w:cached_dim')
 		let w:cached_dim = current_dims
-		call mvom#renderer#PaintMV(w:cached_dim['data'])
+		call sluice#renderer#PaintMV(w:cached_dim['data'])
 		" TODO possible optimization: don't restore the view if it hasn't changed?
 		call winrestview(w:save_cursor)
 		" TODO ditto for load registers?
-		call mvom#util#location#LoadRegisters(w:save_registers)
+		call sluice#util#location#LoadRegisters(w:save_registers)
 		return 1
 	endif
   " TODO major bad thing here. If the file hasn't changed, and none of the
@@ -31,12 +31,12 @@ function! mvom#renderer#RePaintMatches()"{{{
         \current_dims['height'] != w:cached_dim['height'] ||
         \&hls != w:cached_dim['hls'] ||
         \current_dims['data'] != w:cached_dim['data']
-		call mvom#renderer#PaintMV(current_dims['data'])
+		call sluice#renderer#PaintMV(current_dims['data'])
 		let painted = 1
 	endif
 	let w:cached_dim = current_dims
 	call winrestview(w:save_cursor)
-	call mvom#util#location#LoadRegisters(w:save_registers)
+	call sluice#util#location#LoadRegisters(w:save_registers)
 	return painted
 endfunction"}}}
 
@@ -44,27 +44,27 @@ endfunction"}}}
 " Add a specific plugin and rendering.
 "
 " Parameters:
-"     pluginName the path to the plugin file (ie, mvom/plugins/underscore
-"                would be mvom#plugins#underscore).
+"     pluginName the path to the plugin file (ie, sluice/plugins/underscore
+"                would be sluice#plugins#underscore).
 "     options    Options for the plugin. Depends on the plugin, but all
 "                plugins have the following options:
 "
 "                    render Path to the renderer type.
 "
-function! mvom#renderer#add(pluginName,options)
+function! sluice#renderer#add(pluginName,options)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
-	let old_enabled=g:mvom_enabled
-	let g:mvom_enabled=0
+	let old_enabled=g:sluice_enabled
+	let g:sluice_enabled=0
 	call {a:pluginName}#init(a:options)
 	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'options': a:options })
-	let g:mvom_enabled=old_enabled
+	let g:sluice_enabled=old_enabled
 endfunction
 
 " Remove a plugin.
-function! mvom#renderer#remove(pluginName)
+function! sluice#renderer#remove(pluginName)
 	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
-	let old_enabled=g:mvom_enabled
-	let g:mvom_enabled=0
+	let old_enabled=g:sluice_enabled
+	let g:sluice_enabled=0
 	call {a:pluginName}#deinit()
   let cnt = -1
   for p in g:mv_plugins
@@ -76,36 +76,36 @@ function! mvom#renderer#remove(pluginName)
   if cnt >= 0
     call remove(g:mv_plugins,cnt)
   endif
-	let g:mvom_enabled=old_enabled
+	let g:sluice_enabled=old_enabled
 endfunction
 
 " Set a plugin option. See the related plugin documentation
 " for what options are available.
-function! mvom#renderer#setOption(pluginName,option,value)
-  let options = mvom#renderers#util#FindPlugin(a:pluginName)['options']
+function! sluice#renderer#setOption(pluginName,option,value)
+  let options = sluice#renderers#util#FindPlugin(a:pluginName)['options']
   let options[a:option] = a:value
 endfunction
 
 " Set the status of the MVOM plugin in the current buffer.
 " Sends a warning if the plugin is currently disabled.
-function! mvom#renderer#setenabled(enable)
-  let b:mvom_enabled = a:enable
-  if !exists('b:mvom_macromode')
-    let b:mvom_macromode = g:mvom_default_macromode
+function! sluice#renderer#setenabled(enable)
+  let b:sluice_enabled = a:enable
+  if !exists('b:sluice_macromode')
+    let b:sluice_macromode = g:sluice_default_macromode
   endif
-  if mvom#renderer#getenabled()
+  if sluice#renderer#getenabled()
     " re-init all the plugins
-    if g:mvom_default_bg == ''
-      let bg = mvom#plugins#undercursor#getbg()
+    if g:sluice_default_bg == ''
+      let bg = sluice#plugins#undercursor#getbg()
     else
-      let bg = g:mvom_default_bg
+      let bg = g:sluice_default_bg
     endif
     highlight clear SignColumn
     exe printf("highlight SignColumn guifg=#%s guibg=#%s",bg,bg)
     for p in g:mv_plugins
       call {p['plugin']}#init(p['options'])
     endfor
-    if exists('b:mvom_signs') | unlet b:mvom_signs | endif
+    if exists('b:sluice_signs') | unlet b:sluice_signs | endif
   else
     " remove any signs
 		sign unplace *
@@ -114,42 +114,42 @@ function! mvom#renderer#setenabled(enable)
       call {p['plugin']}#deinit()
     endfor
   endif
-  return b:mvom_enabled
+  return b:sluice_enabled
 endfunction
 
 " Get the status of the MVOM plugin in the current buffer.
-function! mvom#renderer#getenabled()
-  if !exists('g:mvom_enabled')
+function! sluice#renderer#getenabled()
+  if !exists('g:sluice_enabled')
     return 0
   endif
-  if !g:mvom_enabled
+  if !g:sluice_enabled
     return 0
   endif
-  if !exists('b:mvom_enabled')
-    return mvom#renderer#setenabled(g:mvom_default_enabled)
+  if !exists('b:sluice_enabled')
+    return sluice#renderer#setenabled(g:sluice_default_enabled)
   endif
-  return b:mvom_enabled
+  return b:sluice_enabled
 endfunction
 
 " Change whether this is in 'macro mode' or non macro mode.
 "
 " Toggles the setting, and returns true/false based on the new
 " status.
-function! mvom#renderer#setmacromode(enable)
-  let b:mvom_macromode = a:enable
+function! sluice#renderer#setmacromode(enable)
+  let b:sluice_macromode = a:enable
 endfunction
 
-function! mvom#renderer#getmacromode()
-  if !exists('b:mvom_macromode')
-    let b:mvom_macromode = g:mvom_default_macromode
+function! sluice#renderer#getmacromode()
+  if !exists('b:sluice_macromode')
+    let b:sluice_macromode = g:sluice_default_macromode
   endif
-  return b:mvom_macromode
+  return b:sluice_macromode
 endfunction
 
 " }}}
 
 " paint the matches for real, on the screen. With signs.
-function! mvom#renderer#PaintMV(data)"{{{
+function! sluice#renderer#PaintMV(data)"{{{
 	if !exists('g:mv_plugins') | return | endif
 	let totalLines = line('$')
 	let firstVisible = line('w0')
@@ -178,10 +178,10 @@ function! mvom#renderer#PaintMV(data)"{{{
 		call winrestview(w:save_cursor)
 	endif
 	if anyEnabled
-		call mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,a:data,"mvom#renderer#UnpaintSign","mvom#renderer#PaintSign")
-		let w:mvom_lastcalldisabled = 0
+		call sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,a:data,"sluice#renderer#UnpaintSign","sluice#renderer#PaintSign")
+		let w:sluice_lastcalldisabled = 0
 	else
-		let w:mvom_lastcalldisabled = 1
+		let w:sluice_lastcalldisabled = 1
     " TODO remove this - it unplaces everything in every window.
 		sign unplace *
 	endif
@@ -198,11 +198,11 @@ endfunction"}}}
 " 	  }
 " 	}
 " }
-function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)"{{{
+function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)"{{{
 	let allData = {}
 	let resultData = {}
   let resultData['lines'] = {}
-  let resultData['gutterImage'] = mvom#renderers#icon#makeImage(g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+  let resultData['gutterImage'] = sluice#renderers#icon#makeImage(g:sluice_pixel_density,g:sluice_pixel_density*a:totalLines)
 
   " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
@@ -231,19 +231,19 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 	endfor"}}}
 
   " setup the background color for the image:
-  let defaultbg = g:mvom_default_bg
+  let defaultbg = g:sluice_default_bg
   if len(defaultbg) == 0
-    let defaultbg = mvom#plugins#undercursor#getbg()
+    let defaultbg = sluice#plugins#undercursor#getbg()
   endif
-  call resultData['gutterImage'].addRectangle(defaultbg,0,0,g:mvom_pixel_density,g:mvom_pixel_density*a:totalLines)
+  call resultData['gutterImage'].addRectangle(defaultbg,0,0,g:sluice_pixel_density,g:sluice_pixel_density*a:totalLines)
 
   " compute the current 'height' of the window. that would be used by an
   " icon so that a line can be accurately rendered (TODO if the height is big it
   " should really 'fall' into the next line).
-  if mvom#renderer#getmacromode()
-    let pixelsperline = float2nr(g:mvom_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+  if sluice#renderer#getmacromode()
+    let pixelsperline = float2nr(g:sluice_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
   else
-    let pixelsperline = g:mvom_pixel_density-1
+    let pixelsperline = g:sluice_pixel_density-1
   endif
   let resultData['pixelsperline'] = pixelsperline
 
@@ -257,9 +257,9 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
     let pluginData['lines'] = {}
     " Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
-      if mvom#renderer#getmacromode()
-        let signLine = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-        let modulo = float2nr(mvom#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:mvom_pixel_density)
+      if sluice#renderer#getmacromode()
+        let signLine = sluice#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+        let modulo = float2nr(sluice#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:sluice_pixel_density)
       else
         let signLine = str2nr(line)
         let modulo = 0
@@ -287,7 +287,7 @@ function! mvom#renderer#CombineData(plugins,totalLines,firstVisible,lastVisible)
 	return resultData
 endfunction"}}}
 " paint functions {{{
-function! mvom#renderer#PaintSign(line,dict)
+function! sluice#renderer#PaintSign(line,dict)
 	if has_key(a:dict,'fg')
 		let thesign=a:dict['hash']
     exe printf("sign place %s name=%s line=%s buffer=%s",a:line,a:dict['hash'],a:line,winbufnr(0))
@@ -297,7 +297,7 @@ function! mvom#renderer#PaintSign(line,dict)
 	endif
 endfunction
 
-function! mvom#renderer#UnpaintSign(line,dict)
+function! sluice#renderer#UnpaintSign(line,dict)
 	exe "sign unplace ".a:line." buffer=".winbufnr(0)
 endfunction
 
@@ -314,8 +314,8 @@ endfunction
 "              be set to '1'.
 " 'plugins'  - each plugin that paints on the line.
 " 
-function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
-	if !exists('b:mvom_signs') | let b:mvom_signs = {} | endif
+function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searchResults,unpaintFunction,paintFunction)"{{{
+	if !exists('b:sluice_signs') | let b:sluice_signs = {} | endif
 	let results = {}
   let new_signs = {}
 
@@ -326,8 +326,8 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " - plugins: all matching search results
   " - visible: if 1, then the results are currently visible in the window.
 	for [line, data] in items(a:searchResults['lines'])
-    if mvom#renderer#getmacromode()
-      let signLine = mvom#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
+    if sluice#renderer#getmacromode()
+      let signLine = sluice#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
     else
       let signLine = line
     endif
@@ -361,8 +361,8 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       " for each plugin that overlaps, call reconcile. First come first serve
       " for overlapping key values.
 			for p in val['plugins']
-        let render = mvom#renderers#util#FindRenderForPlugin(p['plugin'])
-        let plugin = mvom#renderers#util#FindPlugin(p['plugin'])
+        let render = sluice#renderers#util#FindRenderForPlugin(p['plugin'])
+        let plugin = sluice#renderers#util#FindPlugin(p['plugin'])
         let reconciled = {render}#reconcile(plugin['options'],val['plugins'],p)
         for key in keys(reconciled)
           let results[line][key] = reconciled[key]
@@ -389,7 +389,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
 		if !has_key(val,'text') | let val['text'] = '..' | endif
 		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
 
-    exe printf("highlight! %s guifg=#%s guibg=#%s",mvom#util#color#GetHighlightName(val),val['fg'],val['bg'])
+    exe printf("highlight! %s guifg=#%s guibg=#%s",sluice#util#color#GetHighlightName(val),val['fg'],val['bg'])
   endfor
 
   " I'm lazy, and CSApprox works so well at turning GUI colors into cterm
@@ -407,26 +407,26 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
     " line. Rather than keep a whole dictionary of the 'last search' we just
     " need a whole dictionary of the hashes of the last gutter (and we place
     " something at each line every time).
-    let fname = a:searchResults['gutterImage'].generateHash(0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
+    let fname = a:searchResults['gutterImage'].generateHash(0,g:sluice_pixel_density*(line-1),g:sluice_pixel_density,g:sluice_pixel_density)
     let results[line]['hash'] = fname
     let new_signs[line] = fname
 
     " if no icon has been made, and we can do it. then create the icon:
-    if !exists('g:mvom_sign_'. fname)
-      "call VULog( "let g:mvom_sign_". fname ."=1")
-      exe "let g:mvom_sign_". fname ."=1"
-      if g:mvom_imagemagic_supported 
+    if !exists('g:sluice_sign_'. fname)
+      "call VULog( "let g:sluice_sign_". fname ."=1")
+      exe "let g:sluice_sign_". fname ."=1"
+      if g:sluice_imagemagic_supported 
         " if an icon doesn't exist yet, generate it.
-        if !filereadable(g:mvom_icon_cache . fname .'.png')
+        if !filereadable(g:sluice_icon_cache . fname .'.png')
           " place the background color
           " DEBUG print the whole gutter. One long strip: :)
-          "call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . 'gutter')
-          call a:searchResults['gutterImage'].generatePNGFile(g:mvom_icon_cache . fname,0,g:mvom_pixel_density*(line-1),g:mvom_pixel_density,g:mvom_pixel_density)
+          "call a:searchResults['gutterImage'].generatePNGFile(g:sluice_icon_cache . 'gutter')
+          call a:searchResults['gutterImage'].generatePNGFile(g:sluice_icon_cache . fname,0,g:sluice_pixel_density*(line-1),g:sluice_pixel_density,g:sluice_pixel_density)
         endif
-        let results[line]['icon'] = g:mvom_icon_cache . fname .'.png'
-        exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],mvom#util#color#GetHighlightName(val))
+        let results[line]['icon'] = g:sluice_icon_cache . fname .'.png'
+        exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],sluice#util#color#GetHighlightName(val))
       else
-        exe printf("sign define %s text=%s texthl=%s",fname,val['text'],mvom#util#color#GetHighlightName(val))
+        exe printf("sign define %s text=%s texthl=%s",fname,val['text'],sluice#util#color#GetHighlightName(val))
       endif
     endif
 	endfor
@@ -443,11 +443,11 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
       endif
     endif
     if has_key(new_signs,line) && 
-          \has_key(b:mvom_signs,line) &&
-          \new_signs[line] != b:mvom_signs[line]
+          \has_key(b:sluice_signs,line) &&
+          \new_signs[line] != b:sluice_signs[line]
       call {a:paintFunction}(line,results[line])
       let t = t . new_signs[line]
-    elseif has_key(new_signs,line) && !has_key(b:mvom_signs,line)
+    elseif has_key(new_signs,line) && !has_key(b:sluice_signs,line)
       let t = t .'+'. results[line]['hash']
       call {a:paintFunction}(line,results[line])
     elseif !has_key(new_signs,line) 
@@ -468,7 +468,7 @@ function! mvom#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,searc
   " TODO also the undurcursor doesn't un-highlight when you go to a
   " non-underword area.
 
-  let b:mvom_signs = new_signs
+  let b:sluice_signs = new_signs
 	return results
 endfunction"}}}
 

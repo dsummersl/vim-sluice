@@ -4,7 +4,7 @@
 " Parameters:
 " - width    : the width in pixels. defaults to 50.
 " - height   : the height in pixels. defaults to 50.
-function! mvom#renderers#icon#makeImage(...)
+function! sluice#renderers#icon#makeImage(...)
   if exists('a:1')
     let width = a:1
   else
@@ -20,12 +20,12 @@ function! mvom#renderers#icon#makeImage(...)
   let results = { 'svg': [], 'data': [],
         \'width': width,
         \'height': height,
-        \'addRectangle': function('mvom#renderers#icon#addRectangle'),
-        \'addText': function('mvom#renderers#icon#addText'),
-        \'placeRectangle': function('mvom#renderers#icon#placeRectangle'),
-        \'generateHash': function('mvom#renderers#icon#generateHash'),
-        \'generateSVG': function('mvom#renderers#icon#generateSVG'),
-        \'generatePNGFile': function('mvom#renderers#icon#generatePNGFile')
+        \'addRectangle': function('sluice#renderers#icon#addRectangle'),
+        \'addText': function('sluice#renderers#icon#addText'),
+        \'placeRectangle': function('sluice#renderers#icon#placeRectangle'),
+        \'generateHash': function('sluice#renderers#icon#generateHash'),
+        \'generateSVG': function('sluice#renderers#icon#generateSVG'),
+        \'generatePNGFile': function('sluice#renderers#icon#generatePNGFile')
         \}
   let results['svg'] = []
   return results
@@ -42,7 +42,7 @@ endfunction
 "
 " With the optional attributes only the specific characters within the
 " hash are considered when generating the hash.
-function! mvom#renderers#icon#generateHash(...) dict
+function! sluice#renderers#icon#generateHash(...) dict
   if exists('a:1')
     let matches = ''
     for d in self.data
@@ -84,7 +84,7 @@ function! mvom#renderers#icon#generateHash(...) dict
   endif
 endfunction
 
-" Given an image object (mvom#renderers#icon#makeImage), return a string of the XPM.
+" Given an image object (sluice#renderers#icon#makeImage), return a string of the XPM.
 "
 " You can optionally include 4 additional parameters that
 " correspond to a translations and clip:
@@ -92,7 +92,7 @@ endfunction
 " - y
 " - width
 " - height
-function! mvom#renderers#icon#generateSVG(...) dict
+function! sluice#renderers#icon#generateSVG(...) dict
   if exists('a:1')
     let svg = '<svg width="'. (a:3+1) .'px" height="'. a:4 .'px">'
     let svg = svg . printf('<g transform="translate(%d,%d)">',-a:1,-a:2)
@@ -122,8 +122,8 @@ endfunction
 " - y
 " - width
 " - height
-function! mvom#renderers#icon#generatePNGFile(name,...) dict
-  let convert = g:mvom_convert_command
+function! sluice#renderers#icon#generatePNGFile(name,...) dict
+  let convert = g:sluice_convert_command
   if exists('a:1')
     let x = a:1
     let y = a:2
@@ -141,7 +141,7 @@ endfunction
 " Optional Parameters:
 " - style: string to go into the svg style area
 " - params: extra <rect> keys (ie, rx,ry)
-function! mvom#renderers#icon#addRectangle(color,x,y,width,height,...) dict
+function! sluice#renderers#icon#addRectangle(color,x,y,width,height,...) dict
   let style=''
   if exists('a:1')
     let style = a:1
@@ -160,7 +160,7 @@ endfunction
 "
 " Optional Parameters:
 " - style: string to go into the svg style area
-function! mvom#renderers#icon#addText(text,color,x,y,...) dict
+function! sluice#renderers#icon#addText(text,color,x,y,...) dict
   " TODO use a monospace font.
   let style=''
   if exists('a:1')
@@ -181,7 +181,7 @@ endfunction
 " Optional Parameters:
 " - style: string to go into the svg style area
 " - params: extra <rect> keys (ie, rx,ry)
-function! mvom#renderers#icon#placeRectangle(color,y,width,height,align,...) dict
+function! sluice#renderers#icon#placeRectangle(color,y,width,height,align,...) dict
   let style=''
   if exists('a:1')
     let style = a:1

@@ -1,20 +1,20 @@
 
-function! mvom#util#color#GetHighlightName(dictionary)
+function! sluice#util#color#GetHighlightName(dictionary)
 	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
 " Convert a 6 character hex RGB to a 3 part (0-255) array.
-function! mvom#util#color#HexToRGB(hex)
+function! sluice#util#color#HexToRGB(hex)
 	return ["0x".a:hex[0:1]+0,"0x".a:hex[2:3]+0,"0x".a:hex[4:5]+0]
 endfunction
 
 " Convert a 3 part (0-255) array to a 6 char hex equivalent.
-function! mvom#util#color#RGBToHex(hex)
+function! sluice#util#color#RGBToHex(hex)
 	return printf("%02x%02x%02x",a:hex[0],a:hex[1],a:hex[2])
 endfunction
 
 " Make an array of HSV values from an array to RGB values.
-function! mvom#util#color#RGBToHSV(rgb)
+function! sluice#util#color#RGBToHSV(rgb)
 	let two55 = trunc(255)
 	let normd = copy(a:rgb)
 	let normd[0] = a:rgb[0]/two55
@@ -47,7 +47,7 @@ function! mvom#util#color#RGBToHSV(rgb)
 	return [float2nr(hue),float2nr(sat*100),float2nr(val*100)]
 endfunction
 
-function! mvom#util#color#HSVToRGB(hsv)
+function! sluice#util#color#HSVToRGB(hsv)
 	let one00 = trunc(100)
 	let normd = copy(a:hsv)
   if normd[1] > 100 | let normd[1] = 100 | endif
@@ -82,14 +82,14 @@ function! mvom#util#color#HSVToRGB(hsv)
 	return result
 endfunction
 
-function! mvom#util#color#darker(color)
-	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
+function! sluice#util#color#darker(color)
+	let modded = sluice#util#color#RGBToHSV(sluice#util#color#HexToRGB(a:color))
   let modded[2] = float2nr(modded[2] - 10)
-	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
+	return sluice#util#color#RGBToHex(sluice#util#color#HSVToRGB(modded))
 endfunction
 
-function! mvom#util#color#lighter(color)
-	let modded = mvom#util#color#RGBToHSV(mvom#util#color#HexToRGB(a:color))
+function! sluice#util#color#lighter(color)
+	let modded = sluice#util#color#RGBToHSV(sluice#util#color#HexToRGB(a:color))
   let modded[2] = float2nr(modded[2] + 10)
-	return mvom#util#color#RGBToHex(mvom#util#color#HSVToRGB(modded))
+	return sluice#util#color#RGBToHex(sluice#util#color#HSVToRGB(modded))
 endfunction

@@ -1,7 +1,7 @@
 " functions that help with location activities
 
 " Return a list of the state of all the registers.
-function! mvom#util#location#SaveRegisters()
+function! sluice#util#location#SaveRegisters()
 	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
 	let result = {}
 	for r in keys(registers)
@@ -11,7 +11,7 @@ function! mvom#util#location#SaveRegisters()
 	return result
 endfunction
 
-function! mvom#util#location#LoadRegisters(datum)
+function! sluice#util#location#LoadRegisters(datum)
 	let registers={ 0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,"slash": '/',"quote":'"' }
 	for r in keys(registers)
 		call setreg(registers[r], a:datum["reg-".r], a:datum["mode-".r])
@@ -21,7 +21,7 @@ endfunction
 " This function takes in some line number that is <= the total
 " possible lines, and places it somewhere on the range between
 " [start,end] depending on what percent of the match it is.
-function! mvom#util#location#ConvertToPercentOffset(line,start,end,total)
+function! sluice#util#location#ConvertToPercentOffset(line,start,end,total)
 	let percent = (a:line-1) / str2float(a:total)
 	let lines = a:end - a:start + 1
 	return float2nr(percent * lines + a:start)
@@ -33,13 +33,13 @@ endfunction
 " It just says what hte partial percent would have been
 " from 0..99 (.00 to .99).
 "
-function! mvom#util#location#ConvertToModuloOffset(line,start,end,total)
+function! sluice#util#location#ConvertToModuloOffset(line,start,end,total)
 	let percent = (a:line-1) / str2float(a:total)
 	let lines = a:end - a:start + 1
 	return float2nr(percent * lines * 100) % 100
 endfunction
 
-function! mvom#util#location#GetHumanReadables(chars)
+function! sluice#util#location#GetHumanReadables(chars)
 	let result = ""
 	let n = 0
 	while n < len(a:chars)
@@ -62,7 +62,7 @@ function! mvom#util#location#GetHumanReadables(chars)
 endfunction
 
 " Get specific details of window dimensions as a dictionary:
-function! mvom#util#location#getwindowdimensions(data)
+function! sluice#util#location#getwindowdimensions(data)
   let cached_dim = {}
 	let cached_dim['top'] = line('w0')
 	let cached_dim['bottom'] = line('w$')

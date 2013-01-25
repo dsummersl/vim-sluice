@@ -1,4 +1,4 @@
-function! mvom#test#test3paint#paint(options,plugin)
+function! sluice#test#test3paint#paint(options,plugin)
 	let results = {'lines': {}}
 	for line in keys(a:plugin['lines'])
 		let results['lines'][line] = copy(a:plugin['lines'][line])

@@ -1,7 +1,7 @@
 " plugins#git tests {{{
 
 function! TestParseDiff()
-  let diff = mvom#plugins#git#ParsePatchFile('autoload/mvom/test/gitdiff.diff')
+  let diff = sluice#plugins#git#ParsePatchFile('autoload/sluice/test/gitdiff.diff')
   call VUAssertEquals(sort(keys(diff)), sort(
         \['1',
         \'57','58','59','60','61','62','63','64','65','66','67','68','69',
@@ -16,7 +16,7 @@ function! TestParseDiff()
 endfunction
 
 function! TestGitFunctions()
-  call VUAssertEquals(mvom#plugins#git#getgitbranch('README'),'master')
+  call VUAssertEquals(sluice#plugins#git#getgitbranch('README'),'master')
 endfunction
 
 " }}}
@@ -42,11 +42,11 @@ function! TestSearch()
     normal Oline
     normal 2yy29P
     $
-    let bottomresults = mvom#plugins#search#data(options)
+    let bottomresults = sluice#plugins#search#data(options)
     1 
-    let topresults = mvom#plugins#search#data(options)
+    let topresults = sluice#plugins#search#data(options)
     30 
-    let middleresults = mvom#plugins#search#data(options)
+    let middleresults = sluice#plugins#search#data(options)
   finally
     " ensure that if there are any function errors, we still close the temp
     " buffer
@@ -106,12 +106,12 @@ endfunction
 
 function! TestGetBG()
   highlight! Normal guibg=#000000
-  call VUAssertEquals(mvom#plugins#undercursor#getbg(),'000000')
+  call VUAssertEquals(sluice#plugins#undercursor#getbg(),'000000')
 
   " doesn't pay attention to cterm...so the bg becomes 'white'
   highlight clear Normal
   highlight! Normal ctermbg=17
-  call VUAssertEquals(mvom#plugins#undercursor#getbg(),'ffffff')
+  call VUAssertEquals(sluice#plugins#undercursor#getbg(),'ffffff')
 endfunction
 " }}}
 " plugins#util tests {{{
@@ -121,7 +121,7 @@ function! TestTypicalPaint()
         \'color': '123456',
         \'chars': 'X '
         \}
-  let results = mvom#renderers#util#TypicalPaint({
+  let results = sluice#renderers#util#TypicalPaint({
         \'lines': { '1': {}, '2': {} }
         \},
         \options)
@@ -134,140 +134,140 @@ endfunction
 " renderers#slash tests"{{{
 
 function! TestSlashReconcile()
-  "mvom#renderers#slash#reconcile(options,vals,plugin)
+  "sluice#renderers#slash#reconcile(options,vals,plugin)
 endfunction
 
 function! TestGroupNumbers()
-  call VUAssertEquals(mvom#renderers#util#groupNumbers([]),[])
-  call VUAssertEquals(mvom#renderers#util#groupNumbers([1]),[[1,1]])
-  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,2,3,4]),[[1,4]])
-  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,2,3,4,6]),[[1,4],[6,6]])
-  call VUAssertEquals(mvom#renderers#util#groupNumbers([1,3,4,5,7]),[[1,1],[3,5],[7,7]])
+  call VUAssertEquals(sluice#renderers#util#groupNumbers([]),[])
+  call VUAssertEquals(sluice#renderers#util#groupNumbers([1]),[[1,1]])
+  call VUAssertEquals(sluice#renderers#util#groupNumbers([1,2,3,4]),[[1,4]])
+  call VUAssertEquals(sluice#renderers#util#groupNumbers([1,2,3,4,6]),[[1,4],[6,6]])
+  call VUAssertEquals(sluice#renderers#util#groupNumbers([1,3,4,5,7]),[[1,1],[3,5],[7,7]])
 endfunction
 
 ""}}}
 " util#color tests {{{
 
 function! TestHSVToRGB()
-  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,0]),[0,0,0])
-  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,100]),[255,255,255])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,0]),[0,0,0])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,100]),[255,255,255])
   " make sure that an over-run computes something reasonable
-  call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,118]),[255,255,255])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,118]),[255,255,255])
 endfunction
 
 function! TestLighterAndDarker()
-  call VUAssertEquals(mvom#util#color#darker('ffffff'),'e5e5e5')
-  call VUAssertEquals(mvom#util#color#darker('000000'),'000000')
+  call VUAssertEquals(sluice#util#color#darker('ffffff'),'e5e5e5')
+  call VUAssertEquals(sluice#util#color#darker('000000'),'000000')
 
-  call VUAssertEquals(mvom#util#color#lighter('ffffff'),'ffffff')
-  call VUAssertEquals(mvom#util#color#lighter('000000'),'191919')
+  call VUAssertEquals(sluice#util#color#lighter('ffffff'),'ffffff')
+  call VUAssertEquals(sluice#util#color#lighter('000000'),'191919')
 
-  call VUAssertEquals(mvom#util#color#lighter('fdf6e3'),'ffffff')
-  call VUAssertEquals(mvom#util#color#darker('fdf6e3'),'e2e2e2')
+  call VUAssertEquals(sluice#util#color#lighter('fdf6e3'),'ffffff')
+  call VUAssertEquals(sluice#util#color#darker('fdf6e3'),'e2e2e2')
 endfunction
 
 function! TestHexToRGBAndBack()
-	call VUAssertEquals(mvom#util#color#HexToRGB("000000"),[0,0,0])
-	call VUAssertEquals(mvom#util#color#HexToRGB("ffffff"),[255,255,255])
-	call VUAssertEquals(mvom#util#color#HexToRGB("AAAAAA"),[170,170,170])
-	call VUAssertEquals(mvom#util#color#HexToRGB("fdf6e3"),[253,246,227])
-	call VUAssertEquals(mvom#util#color#RGBToHex([0,0,0]),"000000")
-	call VUAssertEquals(mvom#util#color#RGBToHex([255,255,255]),"ffffff")
-	call VUAssertEquals(mvom#util#color#RGBToHex([32,15,180]),"200fb4")
-	call VUAssertEquals(mvom#util#color#RGBToHex([253,246,227]),"fdf6e3")
+	call VUAssertEquals(sluice#util#color#HexToRGB("000000"),[0,0,0])
+	call VUAssertEquals(sluice#util#color#HexToRGB("ffffff"),[255,255,255])
+	call VUAssertEquals(sluice#util#color#HexToRGB("AAAAAA"),[170,170,170])
+	call VUAssertEquals(sluice#util#color#HexToRGB("fdf6e3"),[253,246,227])
+	call VUAssertEquals(sluice#util#color#RGBToHex([0,0,0]),"000000")
+	call VUAssertEquals(sluice#util#color#RGBToHex([255,255,255]),"ffffff")
+	call VUAssertEquals(sluice#util#color#RGBToHex([32,15,180]),"200fb4")
+	call VUAssertEquals(sluice#util#color#RGBToHex([253,246,227]),"fdf6e3")
 endfunction
 
 function! TestRGBToHSVAndBack()
-	call VUAssertEquals(mvom#util#color#RGBToHSV([0,0,0]),[0,0,0])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([255,255,255]),[0,0,100])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([255,0,0]),[0,100,100])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([0,255,0]),[120,100,100])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([0,0,255]),[240,100,100])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([50,50,50]),[0,0,19])
-	call VUAssertEquals(mvom#util#color#RGBToHSV([100,100,100]),[0,0,39])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,0]),[0,0,0])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([255,255,255]),[0,0,100])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([255,0,0]),[0,100,100])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([0,255,0]),[120,100,100])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,255]),[240,100,100])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([50,50,50]),[0,0,19])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([100,100,100]),[0,0,39])
 	" call VUAssertEquals(RGBToHSV([187,219,255]),[212,27,100])
 
-	call VUAssertEquals(mvom#util#color#HSVToRGB([0,0,0]),[0,0,0])
-	call VUAssertEquals(mvom#util#color#HSVToRGB([100,100,100]),[84,255,0])
-	call VUAssertEquals(mvom#util#color#HSVToRGB([0,100,100]),[255,0,0])
-	call VUAssertEquals(mvom#util#color#HSVToRGB([120,100,100]),[0,255,0])
-	call VUAssertEquals(mvom#util#color#HSVToRGB([240,100,100]),[0,0,255])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,0]),[0,0,0])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([100,100,100]),[84,255,0])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([0,100,100]),[255,0,0])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([120,100,100]),[0,255,0])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([240,100,100]),[0,0,255])
 
   " TODO converting between the RGB and back again really wasn't lossless,
   " try to figure out why?
-	call VUAssertEquals(mvom#util#color#RGBToHSV([253,246,227]),[127,0,99])
-	call VUAssertEquals(mvom#util#color#HSVToRGB([127,0,99]),[252,252,252])
+	call VUAssertEquals(sluice#util#color#RGBToHSV([253,246,227]),[127,0,99])
+	call VUAssertEquals(sluice#util#color#HSVToRGB([127,0,99]),[252,252,252])
 endfunction
 " }}}
 " util#location "{{{
 function! TestLoadRegisters()
 	let from = "something"
 	let @8 = from
-	let registers = mvom#util#location#SaveRegisters()
+	let registers = sluice#util#location#SaveRegisters()
 	call VUAssertEquals(from,registers["reg-8"])
 	let registers["reg-8"] = from ."2"
-	call mvom#util#location#LoadRegisters(registers)
+	call sluice#util#location#LoadRegisters(registers)
 	call VUAssertEquals(from ."2",@8)
 endfunction
 
 function! TestConvertToModuloOffset()
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,2,2),0)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(2,1,2,2),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(1,1,2,2),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(2,1,2,2),0)
 
   " if you are on the first line it should be 0
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,31,31),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(1,1,31,31),0)
   " if you are on the last line of the file, it'll be something >= 0
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(31,1,31,31),0)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,70,100,100),0)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(100,70,100,100),69)
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(50,70,100,100),19)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(31,1,31,31),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(1,70,100,100),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(100,70,100,100),69)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(50,70,100,100),19)
 
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,45,170),0)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(1,1,45,170),0)
 endf
 
 function! TestConvertToPercentOffset()
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,2,2),1)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(2,1,2,2),2)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(1,1,2,2),1)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(2,1,2,2),2)
 
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,31,31),1)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(31,1,31,31),31)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,70,100,100),70)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(100,70,100,100),100)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(50,70,100,100),85)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(10,6,10,10),10)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(1,1,31,31),1)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(31,1,31,31),31)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(1,70,100,100),70)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(100,70,100,100),100)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(50,70,100,100),85)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(10,6,10,10),10)
 endfunction
 
 function! TestPercentAndModule()
   " test several lines one after another. The value should be logical..
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(1,1,45,170),0)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(1,1,45,170),1)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(1,1,45,170),0)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(1,1,45,170),1)
 
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(2,1,45,170),26)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(2,1,45,170),1)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(2,1,45,170),26)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(2,1,45,170),1)
 
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(3,1,45,170),52)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(3,1,45,170),1)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(3,1,45,170),52)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(3,1,45,170),1)
 
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(4,1,45,170),79)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(4,1,45,170),1)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(4,1,45,170),79)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(4,1,45,170),1)
 
-  call VUAssertEquals(mvom#util#location#ConvertToModuloOffset(5,1,45,170),5)
-  call VUAssertEquals(mvom#util#location#ConvertToPercentOffset(5,1,45,170),2)
+  call VUAssertEquals(sluice#util#location#ConvertToModuloOffset(5,1,45,170),5)
+  call VUAssertEquals(sluice#util#location#ConvertToPercentOffset(5,1,45,170),2)
 endfunction
 
 function! TestGetHumanReadables()
-	call VUAssertEquals(mvom#util#location#GetHumanReadables(""),"")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("aa"),"aa")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables(".."),"dtdt")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("\\\\"),"bsbs")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("//"),"fsfs")
-	call VUAssertEquals(mvom#util#location#GetHumanReadables("--"),"dada")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables(""),"")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables("aa"),"aa")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables(".."),"dtdt")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables("\\\\"),"bsbs")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables("//"),"fsfs")
+	call VUAssertEquals(sluice#util#location#GetHumanReadables("--"),"dada")
 endfunction
 "}}}
 " util#icon"{{{
 
 function! TestMakeImage()
-  let image = mvom#renderers#icon#makeImage()
+  let image = sluice#renderers#icon#makeImage()
   " base case:
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px"></svg>')
   " one line on the top row:
@@ -278,7 +278,7 @@ function! TestMakeImage()
 endfunction
 
 function! TestGeneratePNGFile()
-  let image = mvom#renderers#icon#makeImage()
+  let image = sluice#renderers#icon#makeImage()
   call image.addRectangle('000000',0,0,50,2)
   call image.generatePNGFile('test')
 endfunction
@@ -287,18 +287,18 @@ function! TestAddRectangleWithAlign()
   " Base case
   let aligns = [ 'left', 'right', 'center' ]
   for a in aligns
-    let image = mvom#renderers#icon#makeImage()
+    let image = sluice#renderers#icon#makeImage()
     call image.placeRectangle('000000',10,100,2,a)
     call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
           \'<rect x="0" y="10" height="2" width="50" style="fill: #000000;" />'.
           \'</svg>')
   endfor
-  let image = mvom#renderers#icon#makeImage()
+  let image = sluice#renderers#icon#makeImage()
   call image.placeRectangle('000000',10,50,2,'right')
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
         \'<rect x="25" y="10" height="2" width="25" style="fill: #000000;" />'.
         \'</svg>')
-  let image = mvom#renderers#icon#makeImage()
+  let image = sluice#renderers#icon#makeImage()
   call image.placeRectangle('000000',10,50,2,'center')
   call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
         \'<rect x="12" y="10" height="2" width="25" style="fill: #000000;" />'.
@@ -313,7 +313,7 @@ function! TestGeneratePNGOffset()
   "
   " then translate
   let lines = 10
-  let image = mvom#renderers#icon#makeImage(10,10*lines)
+  let image = sluice#renderers#icon#makeImage(10,10*lines)
   for i in range(lines)
     if i % 2 == 0
       call image.addRectangle('000000',0,i*10,50,10)
@@ -356,7 +356,7 @@ function! TestGeneratePNGOffset()
 endfunction
 
 function! TestGenerateHash()
-  let image = mvom#renderers#icon#makeImage(10,50)
+  let image = sluice#renderers#icon#makeImage(10,50)
   call image.addRectangle('000000',0,0,10,40)
   " a small widget painted from 7-10 so it should appear in
   " blocks 0-9 and 10-19
@@ -369,7 +369,7 @@ function! TestGenerateHash()
   call VUAssertNotSame(image.generateHash(0,10,10,10),image.generateHash(0,20,10,10))
 
 
-  let image = mvom#renderers#icon#makeImage(10,100)
+  let image = sluice#renderers#icon#makeImage(10,100)
   call image.addRectangle('000000',0,0,10,100)
   call image.addRectangle('c6c6c6',0,9,10,2)
 
@@ -383,16 +383,16 @@ function! TestCombineData()
   " put your curser in this block somewhere and then type ":call VUAutoRun()"
 	" TODO these are still NOT passing.
 	let w:save_cursor = winsaveview()
-	call VUAssertEquals(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint' }}
+	call VUAssertEquals(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#test1paint' }}
         \ ],10,1,10)['lines'],
         \
         \ {})
-  let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test2paint'}}
+  let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test2plugin', 'options': { 'render': 'sluice#test#test2paint'}}
         \ ],10,1,10)['lines'],
         \
-        \ {'1':{'mvom#test#test2plugin': {
+        \ {'1':{'sluice#test#test2plugin': {
         \   'count': 1,
         \   'bg': 'testbg',
         \   'fg': 'testhi',
@@ -404,12 +404,12 @@ function! TestCombineData()
         \)
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
-	let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#test1paint'}},
-        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
+	let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#test1paint'}},
+        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint'}}
         \ ],10,1,10)['lines'],
         \ 
-        \ {'1': {'mvom#test#test2plugin': {
+        \ {'1': {'sluice#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -420,12 +420,12 @@ function! TestCombineData()
         \ } }})
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
-	let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test2plugin', 'options': { 'render': 'mvom#test#test1paint'}},
-        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint'}}
+	let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test2plugin', 'options': { 'render': 'sluice#test#test1paint'}},
+        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint'}}
         \ ],10,1,10)['lines'],
         \
-        \ {'1': {'mvom#test#test2plugin': {
+        \ {'1': {'sluice#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -437,12 +437,12 @@ function! TestCombineData()
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
 	" Two plugins that have data, but only one of them renders anything.
-	let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test3plugin', 'options': { 'render': 'mvom#test#test1paint'}},
-        \ {'plugin':'mvom#test#test2plugin','options': { 'render': 'mvom#test#test2paint' }}
+	let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test3plugin', 'options': { 'render': 'sluice#test#test1paint'}},
+        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint' }}
         \ ],10,1,10)['lines'],
         \
-        \ {'1': {'mvom#test#test2plugin': {
+        \ {'1': {'sluice#test#test2plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -455,12 +455,12 @@ function! TestCombineData()
 
 	" if one data source has an extra key it should always be in the results
 	" regardless of order:
-	let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test2paint'}},
-        \ {'plugin':'mvom#test#test3plugin','options': { 'render': 'mvom#test#test2paint' }}
+	let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test4plugin','options': { 'render': 'sluice#test#test2paint'}},
+        \ {'plugin':'sluice#test#test3plugin','options': { 'render': 'sluice#test#test2paint' }}
         \ ],10,1,10)['lines'],
         \
-        \ {'1': {'mvom#test#test3plugin': {
+        \ {'1': {'sluice#test#test3plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -468,7 +468,7 @@ function! TestCombineData()
         \  'line': 1,
         \  'signLine': 1,
         \  'modulo': 0
-        \ }, 'mvom#test#test4plugin': {
+        \ }, 'sluice#test#test4plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -481,12 +481,12 @@ function! TestCombineData()
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
 	" non intersecting data sets, both should be there.
-	let diff = vimunit#util#diff(mvom#renderer#CombineData([
-        \ {'plugin':'mvom#test#test4plugin','options': { 'render': 'mvom#test#test3paint'}},
-        \ {'plugin':'mvom#test#test5plugin','options': { 'render': 'mvom#test#test3paint'}}
+	let diff = vimunit#util#diff(sluice#renderer#CombineData([
+        \ {'plugin':'sluice#test#test4plugin','options': { 'render': 'sluice#test#test3paint'}},
+        \ {'plugin':'sluice#test#test5plugin','options': { 'render': 'sluice#test#test3paint'}}
         \ ],10,1,10)['lines'],
         \
-        \ { '1': {'mvom#test#test4plugin': {
+        \ { '1': {'sluice#test#test4plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -496,7 +496,7 @@ function! TestCombineData()
         \  'signLine': 1,
         \  'modulo': 0
         \ }},
-        \ '2': {'mvom#test#test4plugin': {
+        \ '2': {'sluice#test#test4plugin': {
         \  'count':2,
         \  'text':'..',
         \  'fg':'testhi',
@@ -505,7 +505,7 @@ function! TestCombineData()
         \  'signLine': 2,
         \  'modulo': 0
         \ }},
-        \ '5': {'mvom#test#test5plugin': {
+        \ '5': {'sluice#test#test5plugin': {
         \  'count':1,
         \  'text':'..',
         \  'fg':'testhi',
@@ -514,7 +514,7 @@ function! TestCombineData()
         \  'signLine': 5,
         \  'modulo': 0
         \ }},
-        \ '6': {'mvom#test#test5plugin': {
+        \ '6': {'sluice#test#test5plugin': {
         \  'count':2,
         \  'text':'..',
         \  'fg':'testhi',
@@ -534,20 +534,20 @@ endfunction
 function! TestDoPaintMatches()
   " TODO make mocks of paint and unpaint. verify that unpaint and paint were never
   " called.
-  let g:mvom_alpha = 1
+  let g:sluice_alpha = 1
 
-	call VUAssertEquals(mvom#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
+	call VUAssertEquals(sluice#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,
-	" and that the highlight group is created (and 'mvom#test#test1plugin' is called).
+	" and that the highlight group is created (and 'sluice#test#test1plugin' is called).
 	unlet! b:cached_signs
-  let result = mvom#renderer#DoPaintMatches(6,1,5,
-        \{'lines':{1:{'mvom#test#test1plugin': {
+  let result = sluice#renderer#DoPaintMatches(6,1,5,
+        \{'lines':{1:{'sluice#test#test1plugin': {
         \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \ }}, 'gutterImage': mvom#renderers#icon#makeImage()},
+        \ }}, 'gutterImage': sluice#renderers#icon#makeImage()},
         \"UnpaintTestStub","PaintTestStub")
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
-        \    { 'plugin': 'mvom#test#test1plugin', 'line': 1, 'text':'XX',
+        \    { 'plugin': 'sluice#test#test1plugin', 'line': 1, 'text':'XX',
         \      'fg':'000000','bg':'000000','iconwidth':50,
         \      'iconalign':'left','iconcolor':'000000'}
         \  ])
@@ -556,112 +556,112 @@ function! TestDoPaintMatches()
 
 	" two lines, implies some reconciliation should be happening here:
 	let g:mv_plugins = []
-	call mvom#renderer#add('mvom#test#test1plugin',{ 'render': 'mvom#test#nopaint' })
-	call mvom#renderer#add('mvom#test#test2plugin',{ 'render': 'mvom#test#rrpaint' })
-  let result = mvom#renderer#DoPaintMatches(10,1,5,
-        \{'lines':{1:{ 'mvom#test#test1plugin': 
+	call sluice#renderer#add('sluice#test#test1plugin',{ 'render': 'sluice#test#nopaint' })
+	call sluice#renderer#add('sluice#test#test2plugin',{ 'render': 'sluice#test#rrpaint' })
+  let result = sluice#renderer#DoPaintMatches(10,1,5,
+        \{'lines':{1:{ 'sluice#test#test1plugin': 
         \  { 'line':1,'text':'//','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
-        \  'mvom#test#test2plugin':
+        \  'sluice#test#test2plugin':
         \  { 'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'}
         \},
-        \2:{'mvom#test#test1plugin':
+        \2:{'sluice#test#test1plugin':
         \  { 'line':2,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \}}, 'gutterImage': mvom#renderers#icon#makeImage() },
+        \}}, 'gutterImage': sluice#renderers#icon#makeImage() },
         \"UnpaintTestStub","PaintTestStub")
 
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
-        \    {'plugin': 'mvom#test#test1plugin','line': 1, 'text': '//', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
-        \    {'plugin': 'mvom#test#test2plugin', 'line':1,'text':'RR','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
-        \    {'plugin': 'mvom#test#test1plugin','line': 2, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
+        \    {'plugin': 'sluice#test#test1plugin','line': 1, 'text': '//', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
+        \    {'plugin': 'sluice#test#test2plugin', 'line':1,'text':'RR','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
+        \    {'plugin': 'sluice#test#test1plugin','line': 2, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
         \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
-  let result = mvom#renderer#DoPaintMatches(10,6,10,
-        \{'lines':{1:{'mvom#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
-        \10:{'mvom#test#test1plugin': { 'line':10,'text':'XX','fg':'000000','bg':'000000'}} },
-        \  'gutterImage': mvom#renderers#icon#makeImage()},
+  let result = sluice#renderer#DoPaintMatches(10,6,10,
+        \{'lines':{1:{'sluice#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
+        \10:{'sluice#test#test1plugin': { 'line':10,'text':'XX','fg':'000000','bg':'000000'}} },
+        \  'gutterImage': sluice#renderers#icon#makeImage()},
         \"UnpaintTestStub","PaintTestStub")
   call VUAssertEquals(sort(keys(result)),sort(['6','10']))
 
   " When a plugin is removed, it should not longer be in the list of plugins
-	call mvom#renderer#remove('mvom#test#test2plugin')
-  call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'mvom#test#test1plugin', 'options': { 'render': 'mvom#test#nopaint' }}])
+	call sluice#renderer#remove('sluice#test#test2plugin')
+  call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#nopaint' }}])
 endfunction
 
 "}}}
 " renderer admin function tests {{{
 function! TestEnableDisable()
   " base case - no globals == disabled.
-  unlet g:mvom_enabled
-  unlet g:mvom_default_enabled
-  call VUAssertFalse(mvom#renderer#getenabled())
+  unlet g:sluice_enabled
+  unlet g:sluice_default_enabled
+  call VUAssertFalse(sluice#renderer#getenabled())
 
   " global MVOM setting disabled both functions should be useless.
-  let g:mvom_enabled = 0
-  let g:mvom_default_enabled = 0
+  let g:sluice_enabled = 0
+  let g:sluice_default_enabled = 0
 
-  call VUAssertFalse(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(1)
-  call VUAssertFalse(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(0)
+  call VUAssertFalse(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(1)
+  call VUAssertFalse(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(0)
 
   " new files aren't enabled either
   split 0file.txt
-  call VUAssertFalse(mvom#renderer#getenabled())
+  call VUAssertFalse(sluice#renderer#getenabled())
   bd
 
-  " When enabled (but not mvom_default_enabled) the enable/disable should
+  " When enabled (but not sluice_default_enabled) the enable/disable should
   " enable and disable: 
-  let g:mvom_enabled = 1
-  call VUAssertFalse(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(1)
-  call VUAssertTrue(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(0)
-  call VUAssertFalse(mvom#renderer#getenabled())
+  let g:sluice_enabled = 1
+  call VUAssertFalse(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(1)
+  call VUAssertTrue(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(0)
+  call VUAssertFalse(sluice#renderer#getenabled())
 
   " TODO make a split and verify that when going into a new window, that MVOM
   " isn't enabled by default.
   split 1file.txt
-  call VUAssertFalse(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(1)
-  call VUAssertTrue(mvom#renderer#getenabled())
+  call VUAssertFalse(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(1)
+  call VUAssertTrue(sluice#renderer#getenabled())
   bd
 
-  " When mvom_default_enabled is setup, then opening a new file would have
+  " When sluice_default_enabled is setup, then opening a new file would have
   " MVOM turned on.
-  let g:mvom_default_enabled = 1
+  let g:sluice_default_enabled = 1
   split 2file.txt
-  call VUAssertTrue(mvom#renderer#getenabled())
-  call mvom#renderer#setenabled(0)
-  call VUAssertFalse(mvom#renderer#getenabled())
+  call VUAssertTrue(sluice#renderer#getenabled())
+  call sluice#renderer#setenabled(0)
+  call VUAssertFalse(sluice#renderer#getenabled())
   quit
 endfunction
 
 function! TestToggleMacroMode()
   " base case - no globals == disabled.
-  let g:mvom_enabled = 1
-  let g:mvom_default_enabled = 1
-  let g:mvom_default_macromode = 1
-  if exists('b:mvom_enabled') | unlet b:mvom_enabled | endif
-  if exists('b:mvom_macromode') | unlet b:mvom_macromode | endif
+  let g:sluice_enabled = 1
+  let g:sluice_default_enabled = 1
+  let g:sluice_default_macromode = 1
+  if exists('b:sluice_enabled') | unlet b:sluice_enabled | endif
+  if exists('b:sluice_macromode') | unlet b:sluice_macromode | endif
  
-  call VUAssertTrue(mvom#renderer#getenabled())
-  call VUAssertEquals(b:mvom_macromode,1)
+  call VUAssertTrue(sluice#renderer#getenabled())
+  call VUAssertEquals(b:sluice_macromode,1)
 
-  call mvom#renderer#setmacromode(0)
-  call VUAssertEquals(mvom#renderer#getmacromode(),0)
-  call mvom#renderer#setmacromode(1)
-  call VUAssertEquals(mvom#renderer#getmacromode(),1)
+  call sluice#renderer#setmacromode(0)
+  call VUAssertEquals(sluice#renderer#getmacromode(),0)
+  call sluice#renderer#setmacromode(1)
+  call VUAssertEquals(sluice#renderer#getmacromode(),1)
 
   split 0file.txt
-  call VUAssertTrue(mvom#renderer#getenabled())
-  call VUAssertEquals(mvom#renderer#getmacromode(),1)
+  call VUAssertTrue(sluice#renderer#getenabled())
+  call VUAssertEquals(sluice#renderer#getmacromode(),1)
   bd
 
-  let g:mvom_default_macromode = 0
+  let g:sluice_default_macromode = 0
   split 1file.txt
-  call VUAssertTrue(mvom#renderer#getenabled())
-  call VUAssertEquals(mvom#renderer#getmacromode(),0)
+  call VUAssertTrue(sluice#renderer#getenabled())
+  call VUAssertEquals(sluice#renderer#getmacromode(),0)
   bd
 endfunction
 

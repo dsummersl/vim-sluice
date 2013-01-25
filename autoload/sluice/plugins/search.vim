@@ -8,26 +8,26 @@
 "
 "
 
-function! mvom#plugins#search#init(options)
+function! sluice#plugins#search#init(options)
   if !has_key(a:options,'max_searches')
     let a:options['max_searches'] = 25
   endif
 endfunction
 
-function! mvom#plugins#search#deinit()
+function! sluice#plugins#search#deinit()
 endfunction
 
-function! mvom#plugins#search#data(options)
-  if !exists('b:mvom_searchfn')
-    let b:mvom_searchfn = _#memoize(
-          \function('mvom#plugins#search#search'),
-          \function('mvom#plugins#search#memoizeByLocAndFileVer'))
+function! sluice#plugins#search#data(options)
+  if !exists('b:sluice_searchfn')
+    let b:sluice_searchfn = _#memoize(
+          \function('sluice#plugins#search#search'),
+          \function('sluice#plugins#search#memoizeByLocAndFileVer'))
   endif
   " if the # of memoized values gets big maybe purge...
-  "if b:mvom_searchfn.data['misses'] > 50
-  "  b:mvom_searchfn.clear()
+  "if b:sluice_searchfn.data['misses'] > 50
+  "  b:sluice_searchfn.clear()
   "endif
-  return b:mvom_searchfn.call(a:options)
+  return b:sluice_searchfn.call(a:options)
 endfunction
 
 " TODO add a max timeout function to this method...this would then require
@@ -54,7 +54,7 @@ endfunction
 "   'downmax' - True if the 'max_searches' is reached downward.
 "
 " SideAffects: The 'options' parameter  ... should not be modified...
-function! mvom#plugins#search#search(options)
+function! sluice#plugins#search#search(options)
   " max number of milliseconds
   "let maxtime = 500
   "let starttime = reltime()
@@ -119,7 +119,7 @@ function! mvom#plugins#search#search(options)
 	return results
 endfunction
 
-function! mvom#plugins#search#enabled(options)
+function! sluice#plugins#search#enabled(options)
   return 1
 endfunction
 
@@ -127,7 +127,7 @@ endfunction
 " function.
 " Memoizes by the current window dimensions, and the changedtick (version of
 " file)
-function! mvom#plugins#search#memoizeByLocAndFileVer(args)
+function! sluice#plugins#search#memoizeByLocAndFileVer(args)
   let options = a:args[0]
 
   if has_key(options,'needle')

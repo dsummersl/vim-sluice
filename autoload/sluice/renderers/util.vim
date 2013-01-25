@@ -1,4 +1,4 @@
-function! mvom#renderers#util#FindPlugin(dataPlugin)
+function! sluice#renderers#util#FindPlugin(dataPlugin)
 	for plugin in g:mv_plugins
 		if plugin['plugin'] == a:dataPlugin
 			return plugin
@@ -6,8 +6,8 @@ function! mvom#renderers#util#FindPlugin(dataPlugin)
 	endfor
 endfunction
 
-function! mvom#renderers#util#FindRenderForPlugin(dataPlugin)
-  return mvom#renderers#util#FindPlugin(a:dataPlugin)['options']['render']
+function! sluice#renderers#util#FindRenderForPlugin(dataPlugin)
+  return sluice#renderers#util#FindPlugin(a:dataPlugin)['options']['render']
 endfunction
 
 " Perform text placement and image placement. This covers most cases of what
@@ -31,12 +31,12 @@ endfunction
 "
 " Returns: A dictionary compatible with a renderer function ('lines' key
 " properly populated).
-function! mvom#renderers#util#TypicalPaint(vals,options)
+function! sluice#renderers#util#TypicalPaint(vals,options)
 	let result = {}
   let result['lines'] = {}
-  let defaultbg = g:mvom_default_bg
+  let defaultbg = g:sluice_default_bg
   if len(defaultbg) == 0
-    let defaultbg = mvom#plugins#undercursor#getbg()
+    let defaultbg = sluice#plugins#undercursor#getbg()
   endif
   let min = {}
   let max = {}
@@ -70,7 +70,7 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
   " place the graphics for all the lines. group into ranges of areas so we can
   " paint minimal rectangles.
   let sorted = _#sort(keys(a:vals['lines']),2)
-  let groups = mvom#renderers#util#groupNumbers(sorted)
+  let groups = sluice#renderers#util#groupNumbers(sorted)
   for group in groups
     " paint a graphic icon, if icon settings are present.
     if has_key(a:options,'iconcolor')
@@ -83,25 +83,25 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
       "      \  has_key(a:vals,'downmax') && a:vals['downmax'] &&
       "      \  max['modulo'] == a:vals['lines'][line]['modulo']
       "      \)
-      "  let dashdistance = float2nr(g:mvom_pixel_density / (1.0*a:options['iconwidth'])) / 2
+      "  let dashdistance = float2nr(g:sluice_pixel_density / (1.0*a:options['iconwidth'])) / 2
       "  call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
-      "        \a:vals['lines'][line]['modulo']+g:mvom_pixel_density*(a:vals['lines'][line]['signLine']-1),
+      "        \a:vals['lines'][line]['modulo']+g:sluice_pixel_density*(a:vals['lines'][line]['signLine']-1),
       "        \a:options['iconwidth'],
       "        \a:vals['pixelsperline'],a:options['iconalign'],
       "        \"fill-opacity:0.3; stroke-dasharray=\"". dashdistance .",". dashdistance ."\"",'rx="1" ry="1"')
       "  " TODO also make the text icon a couple of dots or something.
       "else
         "echom "---"
-        "echom "    pd    ppl = ". g:mvom_pixel_density ." ". a:vals['pixelsperline']
+        "echom "    pd    ppl = ". g:sluice_pixel_density ." ". a:vals['pixelsperline']
         "echom "group1 group0 = ". group[1] ." ". group[0]
         "echom "slin1  slin0  = ". a:vals['lines'][group[1]]['signLine'] ." ". a:vals['lines'][group[0]]['signLine']
         "echom "mod1    mod0  = ". a:vals['lines'][group[1]]['modulo'] ." ". a:vals['lines'][group[0]]['modulo']
         call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
-              \a:vals['lines'][group[0]]['modulo']+g:mvom_pixel_density*(a:vals['lines'][group[0]]['signLine']-1),
+              \a:vals['lines'][group[0]]['modulo']+g:sluice_pixel_density*(a:vals['lines'][group[0]]['signLine']-1),
               \a:options['iconwidth'],
               \(a:vals['lines'][group[1]]['modulo']-
               \  a:vals['lines'][group[0]]['modulo']) +
-              \g:mvom_pixel_density*(
+              \g:sluice_pixel_density*(
               \    a:vals['lines'][group[1]]['signLine']-
               \    a:vals['lines'][group[0]]['signLine']),
               \a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
@@ -114,7 +114,7 @@ function! mvom#renderers#util#TypicalPaint(vals,options)
 endfunction
 
 " given a sorted list, return the groups of ranges (see test case)
-function! mvom#renderers#util#groupNumbers(sorted)
+function! sluice#renderers#util#groupNumbers(sorted)
   let ranges = []
   let curr = []
   for n in a:sorted

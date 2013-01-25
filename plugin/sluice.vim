@@ -12,7 +12,7 @@
 
 " Dependency check:"{{{
 if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
-	let g:mvom_enabled = 0
+	let g:sluice_enabled = 0
 	echohl ErrorMsg
 	echo "MVOM requires Vim 7+ to have +signs, +float, and +python."
 	echohl None
@@ -26,30 +26,30 @@ set updatetime=200
 
 " default background color of the gutter (ie, 'eeeeee'):
 " if unset, then use the background of the existing window
-if !exists('g:mvom_default_bg') | let g:mvom_default_bg = '' | endif
+if !exists('g:sluice_default_bg') | let g:sluice_default_bg = '' | endif
 
 " Global variable to enable/disable MVOM
-if !exists('g:mvom_enabled') | let g:mvom_enabled=1 | endif
+if !exists('g:sluice_enabled') | let g:sluice_enabled=1 | endif
 
 " Global variable to enable/disable MVOM by default when opening files.
-if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
+if !exists('g:sluice_default_enabled') | let g:sluice_default_enabled=0 | endif
 
 " Global variable for default macro/non-macro mode.
-if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=0 | endif
+if !exists('g:sluice_default_macromode') | let g:sluice_default_macromode=0 | endif
 
 " Global to enable graphical icons
-if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=0 | endif
+if !exists('g:sluice_graphics_enabled') | let g:sluice_graphics_enabled=0 | endif
 
 " ImageMagick 'convert' command location
-if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif
+if !exists('g:sluice_convert_command') | let g:sluice_convert_command='convert' | endif
 
-if !exists('g:mvom_pixel_density') | let g:mvom_pixel_density=10 | endif
+if !exists('g:sluice_pixel_density') | let g:sluice_pixel_density=10 | endif
 
-if !exists('g:mvom_loaded')
+if !exists('g:sluice_loaded')
 	" Setup the type of plugins you want:
 	" Show the visible portion with a darker background
-	call mvom#renderer#add('mvom#plugins#window', {
-	      \ 'render': 'mvom#renderers#background',
+	call sluice#renderer#add('sluice#plugins#window', {
+	      \ 'render': 'sluice#renderers#background',
 	      \ 'iconcolor': 'dddddd',
 	      \ 'iconalign': 'left',
 	      \ 'iconwidth': 10,
@@ -63,8 +63,8 @@ if !exists('g:mvom_loaded')
 	" undefined. Same for undercursor, but make it transparent?
 	"
 	" Show the last search with //
-	call mvom#renderer#add('mvom#plugins#search', {
-				\ 'render': 'mvom#renderers#slash',
+	call sluice#renderer#add('sluice#plugins#search', {
+				\ 'render': 'sluice#renderers#slash',
 				\ 'chars': '/ ',
 				\ 'color': '0055ff',
 				\ 'xchars': 'X ',
@@ -75,8 +75,8 @@ if !exists('g:mvom_loaded')
 				\ 'max_searches': 25
 				\ })
 	" Show all keywords in the file that match whats under your cursor with \\
-	call mvom#renderer#add('mvom#plugins#undercursor', {
-				\ 'render': 'mvom#renderers#slash',
+	call sluice#renderer#add('sluice#plugins#undercursor', {
+				\ 'render': 'sluice#renderers#slash',
 				\ 'chars': '\ ',
 				\ 'color': '586ca3',
 				\ 'xchars': 'X ',
@@ -87,9 +87,9 @@ if !exists('g:mvom_loaded')
 				\ 'max_searches': 10
 				\ })
 	" Show all git changes with +/- icons.
-	call mvom#renderer#add('mvom#plugins#git', {
+	call sluice#renderer#add('sluice#plugins#git', {
 	      \ 'gitcommand': 'git',
-	      \ 'render': 'mvom#plugins#git',
+	      \ 'render': 'sluice#plugins#git',
 				\ 'addedcolor': '00bb00',
 				\ 'addedchar': '+',
 				\ 'removedcolor': 'bb0000',
@@ -97,46 +97,46 @@ if !exists('g:mvom_loaded')
 	      \ 'iconalign': 'right',
 	      \ 'iconwidth': 20
 	      \ })
-	let g:mvom_loaded = 1
+	let g:sluice_loaded = 1
 endif
 "}}}
 " mappings"{{{
 
-au! CursorHold * nested call mvom#renderer#RePaintMatches()
+au! CursorHold * nested call sluice#renderer#RePaintMatches()
 
 " Toggle the status of MVOM in the current buffer:
-command! -bar MVOMtoggle call mvom#renderer#setenabled(!mvom#renderer#getenabled())
+command! -bar MVOMtoggle call sluice#renderer#setenabled(!sluice#renderer#getenabled())
 
 " Enable the status of MVOM in the current buffer:
-command! -bar MVOMenable call mvom#renderer#setenabled(1)
+command! -bar MVOMenable call sluice#renderer#setenabled(1)
 
 " Disable the status of MVOM in the current buffer:
-command! -bar MVOMdisable call mvom#renderer#setenabled(0)
+command! -bar MVOMdisable call sluice#renderer#setenabled(0)
 
 " Toggle the macro/micro mode gutter
-command! -bar MVOMmacroToggle call mvom#renderer#setmacromode(!mvom#renderer#getmacromode())
+command! -bar MVOMmacroToggle call sluice#renderer#setmacromode(!sluice#renderer#getmacromode())
 
 " Turn on micro mode gutter
-command! -bar MVOMmacroOff call mvom#renderer#setmacromode(0)
+command! -bar MVOMmacroOff call sluice#renderer#setmacromode(0)
 
 " Turn on macro mode gutter
-command! -bar MVOMmacroOn call mvom#renderer#setmacromode(1)
+command! -bar MVOMmacroOn call sluice#renderer#setmacromode(1)
 
 "}}}
 " Private Variables "{{{
 
-if !exists('w:mvom_lastcalldisabled') | let w:mvom_lastcalldisabled=1 | endif
+if !exists('w:sluice_lastcalldisabled') | let w:sluice_lastcalldisabled=1 | endif
 
-if !exists('g:mvom_cache') | let g:mvom_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/mvom-cache/' | endif
+if !exists('g:sluice_cache') | let g:sluice_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/sluice-cache/' | endif
 
 " Check to see if GUI mode is on, and we can find the 'convert' function. If
 " not, turn it off.
-let g:mvom_imagemagic_supported = 0
-if has("gui_running") && g:mvom_graphics_enabled
-	exe "silent !". g:mvom_convert_command ." -version"
+let g:sluice_imagemagic_supported = 0
+if has("gui_running") && g:sluice_graphics_enabled
+	exe "silent !". g:sluice_convert_command ." -version"
 	if !v:shell_error
-		let g:mvom_imagemagic_supported = 1
-		exec "silent ! mkdir -p ". g:mvom_icon_cache
+		let g:sluice_imagemagic_supported = 1
+		exec "silent ! mkdir -p ". g:sluice_icon_cache
 		echohl ErrorMsg
 		echo "MVOM imagemagick 'convert' command not found. Graphic icons disabled."
 		echohl None
