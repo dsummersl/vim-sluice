@@ -2,6 +2,7 @@
 " of matches to your current search. It gives you a general idea of all the
 " areas in the file that match the search you performed.
 
+" TODO a quicklist plugin.
 " TODO git plugin for additions and subtractions
 " TODO a gundo compatible plugin - it shows you where you've been making
 " changes (colors boldly the recent changes).
@@ -37,7 +38,7 @@ if !exists('g:mvom_default_enabled') | let g:mvom_default_enabled=0 | endif
 if !exists('g:mvom_default_macromode') | let g:mvom_default_macromode=0 | endif
 
 " Global to enable graphical icons
-if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=1 | endif
+if !exists('g:mvom_graphics_enabled') | let g:mvom_graphics_enabled=0 | endif
 
 " ImageMagick 'convert' command location
 if !exists('g:mvom_convert_command') | let g:mvom_convert_command='convert' | endif

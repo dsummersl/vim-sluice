@@ -1,6 +1,3 @@
-" Options:
-" TODO hls: if true, then highlight
-"
 " Window (show current visible window in macro area)
 " TODO make the cursor location highlighting optional.
 
@@ -36,5 +33,5 @@ function! mvom#plugins#window#data(options)
 endfunction
 
 function! mvom#plugins#window#enabled(options)
-	return &hls == 1
+	return 1
 endfunction

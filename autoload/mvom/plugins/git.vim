@@ -42,7 +42,6 @@ function! mvom#plugins#git#search(options)
   " Do a unified diff of the two temp files to get our diff.
   exec "silent! !diff -u /tmp/aa.txt /tmp/bb.txt > /tmp/t.diff"
   if v:shell_error != 0
-    " TODO memoize by the filetick.
     let diffs = mvom#plugins#git#ParsePatchFile('/tmp/t.diff')
     return { 'lines': diffs }
   else

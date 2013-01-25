@@ -74,9 +74,6 @@ function! mvom#plugins#search#search(options)
   let results['lines'] = {}
 
 	let n = 0
-	" TODO cache results so as to avoid researching on duplicates (save last
-	" search and save state of file (if file changed or if search changed then
-	" redo)
 	let startLine = line('.')
 	exe "keepjumps ". startLine
 	let searchResults = {}
