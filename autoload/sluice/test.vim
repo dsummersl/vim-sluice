@@ -596,7 +596,7 @@ function! TestEnableDisable()
   unlet g:sluice_default_enabled
   call VUAssertFalse(sluice#renderer#getenabled())
 
-  " global MVOM setting disabled both functions should be useless.
+  " global Sluice setting disabled both functions should be useless.
   let g:sluice_enabled = 0
   let g:sluice_default_enabled = 0
 
@@ -619,7 +619,7 @@ function! TestEnableDisable()
   call sluice#renderer#setenabled(0)
   call VUAssertFalse(sluice#renderer#getenabled())
 
-  " TODO make a split and verify that when going into a new window, that MVOM
+  " TODO make a split and verify that when going into a new window, that Sluice
   " isn't enabled by default.
   split 1file.txt
   call VUAssertFalse(sluice#renderer#getenabled())
@@ -628,7 +628,7 @@ function! TestEnableDisable()
   bd
 
   " When sluice_default_enabled is setup, then opening a new file would have
-  " MVOM turned on.
+  " Sluice turned on.
   let g:sluice_default_enabled = 1
   split 2file.txt
   call VUAssertTrue(sluice#renderer#getenabled())

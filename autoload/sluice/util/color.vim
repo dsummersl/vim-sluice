@@ -1,6 +1,6 @@
 
 function! sluice#util#color#GetHighlightName(dictionary)
-	return "MVOM_".a:dictionary['fg'].a:dictionary['bg']
+	return "Sluice_".a:dictionary['fg'].a:dictionary['bg']
 endfunction
 
 " Convert a 6 character hex RGB to a 3 part (0-255) array.

@@ -14,7 +14,7 @@
 if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
 	let g:sluice_enabled = 0
 	echohl ErrorMsg
-	echo "MVOM requires Vim 7+ to have +signs, +float, and +python."
+	echo "Sluice requires Vim 7+ to have +signs, +float, and +python."
 	echohl None
 	finish
 endif
@@ -28,10 +28,10 @@ set updatetime=200
 " if unset, then use the background of the existing window
 if !exists('g:sluice_default_bg') | let g:sluice_default_bg = '' | endif
 
-" Global variable to enable/disable MVOM
+" Global variable to enable/disable Sluice
 if !exists('g:sluice_enabled') | let g:sluice_enabled=1 | endif
 
-" Global variable to enable/disable MVOM by default when opening files.
+" Global variable to enable/disable Sluice by default when opening files.
 if !exists('g:sluice_default_enabled') | let g:sluice_default_enabled=0 | endif
 
 " Global variable for default macro/non-macro mode.
@@ -104,23 +104,23 @@ endif
 
 au! CursorHold * nested call sluice#renderer#RePaintMatches()
 
-" Toggle the status of MVOM in the current buffer:
-command! -bar MVOMtoggle call sluice#renderer#setenabled(!sluice#renderer#getenabled())
+" Toggle the status of Sluice in the current buffer:
+command! -bar SluiceToggle call sluice#renderer#setenabled(!sluice#renderer#getenabled())
 
-" Enable the status of MVOM in the current buffer:
-command! -bar MVOMenable call sluice#renderer#setenabled(1)
+" Enable the status of Sluice in the current buffer:
+command! -bar SluiceEnable call sluice#renderer#setenabled(1)
 
-" Disable the status of MVOM in the current buffer:
-command! -bar MVOMdisable call sluice#renderer#setenabled(0)
+" Disable the status of Sluice in the current buffer:
+command! -bar SluiceDisable call sluice#renderer#setenabled(0)
 
 " Toggle the macro/micro mode gutter
-command! -bar MVOMmacroToggle call sluice#renderer#setmacromode(!sluice#renderer#getmacromode())
+command! -bar SluiceMacroToggle call sluice#renderer#setmacromode(!sluice#renderer#getmacromode())
 
 " Turn on micro mode gutter
-command! -bar MVOMmacroOff call sluice#renderer#setmacromode(0)
+command! -bar SluiceMacroOff call sluice#renderer#setmacromode(0)
 
 " Turn on macro mode gutter
-command! -bar MVOMmacroOn call sluice#renderer#setmacromode(1)
+command! -bar SluiceMacroOn call sluice#renderer#setmacromode(1)
 
 "}}}
 " Private Variables "{{{
@@ -138,7 +138,7 @@ if has("gui_running") && g:sluice_graphics_enabled
 		let g:sluice_imagemagic_supported = 1
 		exec "silent ! mkdir -p ". g:sluice_icon_cache
 		echohl ErrorMsg
-		echo "MVOM imagemagick 'convert' command not found. Graphic icons disabled."
+		echo "Imagemagick 'convert' command not found. Graphic icons disabled."
 		echohl None
 	else
 	endif

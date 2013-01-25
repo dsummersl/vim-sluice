@@ -86,7 +86,7 @@ function! sluice#renderer#setOption(pluginName,option,value)
   let options[a:option] = a:value
 endfunction
 
-" Set the status of the MVOM plugin in the current buffer.
+" Set the status of the Sluice plugin in the current buffer.
 " Sends a warning if the plugin is currently disabled.
 function! sluice#renderer#setenabled(enable)
   let b:sluice_enabled = a:enable
@@ -117,7 +117,7 @@ function! sluice#renderer#setenabled(enable)
   return b:sluice_enabled
 endfunction
 
-" Get the status of the MVOM plugin in the current buffer.
+" Get the status of the Sluice plugin in the current buffer.
 function! sluice#renderer#getenabled()
   if !exists('g:sluice_enabled')
     return 0

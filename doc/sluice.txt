@@ -1,57 +1,57 @@
-*mvom.txt* MVOM: plugins for the gutter. *mvom*
+*sluice.txt* Sluice: plugins for the gutter. *sluice*
 
 CONTENTS ~
 
-                                                   *mvom-contents*
+                                                   *sluice-contents*
 ===========================================================================
 
-1. About                                           |mvom-about|
+1. About                                           |sluice-about|
 
-2. Quick Start                                     |mvom-install|
-  2.1 Console Install                              |mvom-console-install|
-  2.2 GUI Install                                  |mvom-gui-install|
+2. Quick Start                                     |sluice-install|
+  2.1 Console Install                              |sluice-console-install|
+  2.2 GUI Install                                  |sluice-gui-install|
 
-3. Options                                         |mvom-options|
-  3.1 updatetime                                   |mvom-updatetime|
-  3.2 background                                   |mvom_default_bg|
-  3.3 enabled                                      |mvom_enabled|
-  3.4 enabled on open                              |mvom_default_enabled|
-  3.5 default mode                                 |mvom_default_macromode|
-  3.6 graphics enabled                             |mvom_graphics_enabled|
-  3.7 convert program location                     |mvom_convert_command|
-  3.8 pixel density                                |mvom_pixel_density|
+3. Options                                         |sluice-options|
+  3.1 updatetime                                   |sluice-updatetime|
+  3.2 background                                   |sluice_default_bg|
+  3.3 enabled                                      |sluice_enabled|
+  3.4 enabled on open                              |sluice_default_enabled|
+  3.5 default mode                                 |sluice_default_macromode|
+  3.6 graphics enabled                             |sluice_graphics_enabled|
+  3.7 convert program location                     |sluice_convert_command|
+  3.8 pixel density                                |sluice_pixel_density|
 
-4. Commands                                        |mvom-commands|
+4. Commands                                        |sluice-commands|
 
-5. Plugins                                         |mvom-plugins|
+5. Plugins                                         |sluice-plugins|
   5.1 Builtin Data Sources
-    5.1.1 Window                                   |mvom-window-plugin|
-    5.1.2 Search                                   |mvom-search-plugin|
-    5.1.3 Under Cursor                             |mvom-undercursor-plugin|
+    5.1.1 Window                                   |sluice-window-plugin|
+    5.1.2 Search                                   |sluice-search-plugin|
+    5.1.3 Under Cursor                             |sluice-undercursor-plugin|
   5.2 Builtin Renderers
-    5.2.1 Slash                                    |mvom-slash-plugin|
-    5.2.1 Background                               |mvom-background-plugin|
+    5.2.1 Slash                                    |sluice-slash-plugin|
+    5.2.1 Background                               |sluice-background-plugin|
   5.3 New Plugins
-    5.3.1 Data Sources                             |mvom-data-sources|
-    5.3.2 Renderers                                |mvom-renderers|
+    5.3.1 Data Sources                             |sluice-data-sources|
+    5.3.2 Renderers                                |sluice-renderers|
 
 ===========================================================================
 
-ABOUT                                              *mvom-about*
+ABOUT                                              *sluice-about*
 
-The MVOM plugin uses the '+signs' gutter to show what lines match your current
+The sluice plugin uses the '+signs' gutter to show what lines match your current
 searches at a high level. It uses the gutter as an enhanced scrollbar, showing
 you where you are, and what matches are around you.
 
 ===========================================================================
 
-QUICKSTART                                         *mvom-install*
+QUICKSTART                                         *sluice-install*
 
-CONSOLEINSTALL                                     *mvom-console-install*
+CONSOLEINSTALL                                     *sluice-console-install*
 
 Install CSApprox to fully support colors in the gutter.
 
-GUIINSTALL                                         *mvom-gui-install*
+GUIINSTALL                                         *sluice-gui-install*
 
 To support graphical icons in the gutter you must have ImageMagick installed on
 your system. On OSX you can do this easily with homebrew:
@@ -64,131 +64,135 @@ ghostscript is installed (at least on OSX):
 brew install ghostscript
 
 ===========================================================================
-OPTIONS                                             *mvom-options*
+OPTIONS                                             *sluice-options*
 
 There are several global options that can be used to change the functionality
 of this plugin.
 
-                                                    *mvom-updatetime*
+                                                    *sluice-updatetime*
 
 The updatetime setting handles all of the slow/fastness of responsiveness of
 the entire plugin. By default the value is set to 200 (1/5 of a second):
 
     set updatetime=200
 
-                                                    *mvom_default_bg*
+                                                    *sluice_default_bg*
 
 The background color of the gutter.
 
-    let g:mvom_default_bg = 'eeeeee'
+    let g:sluice_default_bg = 'eeeeee'
 
-                                                    *mvom_enabled*
+                                                    *sluice_enabled*
 
 The global variable that enables or disables this plugin. By default it is on,
 but you can turn it off by setting it to 0.
 
-    let g:mvom_enabled=1
+    let g:sluice_enabled=1
 
-                                                    *mvom_default_enabled*
+                                                    *sluice_default_enabled*
 
-Global variable to enable/disable MVOM by default when opening files. The
+Global variable to enable/disable sluice by default when opening files. The
 default option is for this plugin to be disabled when you first open a file.
 If you would like the gutter to be on when a file is opened, then change this
 setting.
 
-    let g:mvom_default_enabled=0
+    let g:sluice_default_enabled=0
 
-                                                    *mvom_default_macromode*
+                                                    *sluice_default_macromode*
 
 Global variable for default macro/non-macro mode.
 
-    let g:mvom_default_macromode=0
+    let g:sluice_default_macromode=0
 
-                                                    *mvom_graphics_enabled*
+                                                    *sluice_graphics_enabled*
 
 Global to enable graphical icons:
 
-    let g:mvom_graphics_enabled=1
+    let g:sluice_graphics_enabled=1
 
-                                                    *mvom_convert_command*
+                                                    *sluice_convert_command*
 
 ImageMagick 'convert' command location.
 
-    let g:mvom_convert_command='convert'
+    let g:sluice_convert_command='convert'
 
-                                                    *mvom_pixel_density*
+                                                    *sluice_pixel_density*
 
 The number of pixels that are put into each icon. When the number is low the
 icon looks very pixel-ie, but the overall number of icons generated is
 smaller. When the number is high (ie, 20), many more icons are typically
 generated (slower overall performance, for prettier icons).
 
-    let g:mvom_pixel_density=12
+    let g:sluice_pixel_density=12
 
 ===========================================================================
-COMMANDS                                            *mvom-commands*
+COMMANDS                                            *sluice-commands*
 
-                                                    *MVOMtoggle*
+                                                    *SluiceToggle*
 
-Toggles the MVOM gutter on or off in the current buffer depending on its
+Toggles the Sluice gutter on or off in the current buffer depending on its
 current setting. This is a great function for mapping to a hotkey:
 
-    nnoremap <F4> :MVOMtoggle<CR>
+    nnoremap <F4> :SluiceToggle<CR>
 
-                                                    *MVOMenable*
+                                                    *SluiceEnable*
 
-Enable the status of MVOM in the current buffer.
+Enable the status of Sluice in the current buffer.
 
-                                                    *MVOMdisable*
+                                                    *SluiceDisable*
 
-Disable the status of MVOM in the current buffer.
+Disable the status of Sluice in the current buffer.
 
-                                                    *MVOMmacroToggle*
+                                                    *SluiceMacroToggle*
 
 Toggle the macro/micro mode gutter.
 
-                                                    *MVOMmacroOff*
+                                                    *SluiceMacroOff*
 
 Turn on the MACRO mode gutter.
 
-                                                    *MVOMmacroOn*
+                                                    *SluiceMacroOn*
 
 Turn on the MICRO mode gutter.
 
 ===========================================================================
 
-Plugins                                            *mvom-plugins*
+Plugins                                            *sluice-plugins*
 
 Builtin Data Sources
 
-Window                                   *mvom-window-plugin*
+Window                                   *sluice-window-plugin*
 
 The window plugin simply returns a list of all row numbers that are currently
 visible on screen. The row that the cursor is also noted. Intended for use
-with the |mvom-background-plugin|.
+with the |sluice-background-plugin|.
 
-Search                                   *mvom-search-plugin*
+Search                                   *sluice-search-plugin*
 
 The search plugin returns all lines that contain a match for the last search
-(in the @/ register). By default it is used with the |mvom-search-plugin|.
+(in the @/ register). By default it is used with the |sluice-search-plugin|.
 
-Under Cursor                             *mvom-undercursor-plugin*
+Under Cursor                             *sluice-undercursor-plugin*
 
 The undercursor plugin returns all lines that contain a match for the word
 under the location of the cursor (taking into account the |isk| setting). By
-default it is used with the |mvom-search-plugin|.
+default it is used with the |sluice-search-plugin|.
+
+Git                                      *sluice-git-plugin*
+
+The git plugin returns all lines that contain additions or subtractions.
 
 ===========================================================================
 
 Builtin Renderers
 
-Slash                                    *mvom-slash-plugin*
+Slash                                    *sluice-slash-plugin*
 
 Renders a character and an icon that is a row.
 
 TODO define the options that the slash renderer understands.
 
-Background                               *mvom-background-plugin*
+Background                               *sluice-background-plugin*
 
 The background plugin just changes the background color (making it slightly
 darker) of the gutter w/o changing the content of the gutter. 
@@ -197,7 +201,7 @@ darker) of the gutter w/o changing the content of the gutter.
 
 *New* *Plugins*
 
-MVOM is built to support expansion. There are two routes to plugin expansion:
+Sluice is built to support expansion. There are two routes to plugin expansion:
     * data sources : A data source creates a list of lines (say all lines that
       match a specific pattern).
     * renderers    : A renderer is given a set of matches generated by a data
@@ -206,7 +210,7 @@ MVOM is built to support expansion. There are two routes to plugin expansion:
 
 Either form of plugin must use the |autoload| file layout.
 
-Data Sources                                       *mvom-data-sources*
+Data Sources                                       *sluice-data-sources*
 
 Data sources must provide three functions.
 
@@ -214,7 +218,7 @@ function path#to#plugin#init(options)
 
 The init function allows the plugin to configure itself. The options parameter
 is the dictionary of values passed into the datasource when the
-mvom#renderer#add() function is called (configuration options).
+sluice#renderer#add() function is called (configuration options).
 
 function path#to#plugin#deinit()
 
@@ -228,7 +232,7 @@ dictionary should contain the following keys:
     'lines': A dictionary of all lines that this plugin considers to be a
              'match'. Each line should contain a dictionary.
 
-Example: The mvom#plugins#search plugin's 'data' function returns all lines
+Example: The sluice#plugins#search plugin's 'data' function returns all lines
 that have a match for the last search by the user (the @/ register). Suppose
 that a file contained two matches: one on line 3 and one on line 6. Excluding
 the search plugin's internal data it returned a dictionary that looked like:
@@ -241,7 +245,7 @@ the search plugin's internal data it returned a dictionary that looked like:
       " additional keys used by the 'slash' renderer plugin.
     }
 
-Renderers                                          *mvom-renderers*
+Renderers                                          *sluice-renderers*
 
 A renderer must provide two functions:
 
