@@ -1,21 +1,19 @@
-A plugin for vim that shows you where other matches to your current regular
-expression are.
+Sluice
+====
 
-To use:
+The sluice plugin uses vim's '+signs' gutter to show what lines match your current
+searches at a high level. 
 
-put the vim file in your ~/.vim/plugins folder.
+Plugins exist for:
 
-:set hls
+    * search (/)
+    * matches for the current word under the cursor.
+    * git changes
 
-/searchforsomething/
-
-
-================================================================================
 Testing
+====
 
 To run the unit tests you must install the vimunit plugin
 (https://github.com/dsummersl/vimunit).
 
 ~/.vim/bundle/vimunit/vutest.sh autoload/mvom/test.vim 
-
-================================================================================
