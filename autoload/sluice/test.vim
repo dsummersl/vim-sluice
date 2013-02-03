@@ -133,10 +133,6 @@ endfunction
 " }}}
 " renderers#slash tests"{{{
 
-function! TestSlashReconcile()
-  "sluice#renderers#slash#reconcile(options,vals,plugin)
-endfunction
-
 function! TestGroupNumbers()
   call VUAssertEquals(sluice#renderers#util#groupNumbers([]),[])
   call VUAssertEquals(sluice#renderers#util#groupNumbers([1]),[[1,1]])
@@ -532,10 +528,6 @@ function! UnpaintTestStub(line,dict)
 endfunction
 
 function! TestDoPaintMatches()
-  " TODO make mocks of paint and unpaint. verify that unpaint and paint were never
-  " called.
-  let g:sluice_alpha = 1
-
 	call VUAssertEquals(sluice#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
 	" if all lines are currently visible, don't do anything:
 	" first just paint one line. We expect that the line '1' would be painted,

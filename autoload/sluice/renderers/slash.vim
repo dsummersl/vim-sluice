@@ -8,21 +8,10 @@
 "   xcolor : optional - Color of xchars. If not set, hl-Search is used.
 
 function! sluice#renderers#slash#paint(options,vals)
-  if !has_key(a:options,'color')
-    let a:options['color'] = sluice#plugins#undercursor#getcolor('guifg','Search')
-  endif
-  if !has_key(a:options,'xcolor')
-    let a:options['xcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
-  endif
-  if !has_key(a:options,'iconcolor')
-    let a:options['iconcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
-  endif
 	return sluice#renderers#util#TypicalPaint(a:vals,a:options)
 endfunction
 
 function! sluice#renderers#slash#reconcile(options,vals,plugin)
-  " TODO Modify the original slash reconcile so that it combines the 'chars'
-  " together...so in the case of git it'd create '\+' or '\-'
   let result = {}
 	let slashconflict = 0
 	for p in a:vals

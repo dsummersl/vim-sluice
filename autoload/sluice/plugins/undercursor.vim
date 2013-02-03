@@ -1,34 +1,58 @@
 " UnderCursor: show matches for the 'word' the cursor is currently on
+"
+" Colors:
+"    Colors for the render will automatically be selected for
+"    color/xcolor/iconcolor if none are provided in the options. The colors
+"    will be selected to relate to the 'Search' highlight group.
+
 function! sluice#plugins#undercursor#init(options)
-  call sluice#plugins#search#init(a:options)
   " get the background color, and make it darker or lighter depending on
   " the 'background' setting.
-  let bg = sluice#plugins#undercursor#getbg()
-  if &background == 'dark'
-    let cmd = "highlight! UnderCursor guibg=#". sluice#util#color#lighter(bg)
-  else
-    let cmd = "highlight! UnderCursor guibg=#". sluice#util#color#darker(bg)
-  endif
+  "
+  " Choose the Search highlight group for the default colors but make it
+  " slightly darker or lighter than that group so its different than the
+  " search plugin.
+  let bg = sluice#plugins#undercursor#getcolor('guifg','Search')
+  let color = sluice#util#color#lighter(bg)
+  let cmd = "highlight! UnderCursor guibg=#". color
   exe cmd
 	exe "autocmd BufNewFile,BufRead * ". cmd
-  let a:options['bg'] = bg
+  let a:options['bg'] = color
+  if !has_key(a:options,'color')
+    let a:options['color'] = color
+  endif
+  if !has_key(a:options,'xcolor')
+    let a:options['xcolor'] = color
+  endif
+  if !has_key(a:options,'iconcolor')
+    let a:options['iconcolor'] = color
+  endif
+  call sluice#plugins#search#init(a:options)
 endfunction
 
+" Get the normal background color
+"
+" Returns: color of highlight.
 function! sluice#plugins#undercursor#getbg()
+  return sluice#plugins#undercursor#getcolor('guibg','Normal')
+endfunction
+
+function! sluice#plugins#undercursor#getcolor(part,hi)
   let currenthi=''
   redir => currenthi
-  silent! highlight Normal
+  exe "silent! highlight ". a:hi
   redir END
 
   for line in split(currenthi,'\n')
     for part in split(line,' ')
       let ab = split(part,'=')
-      if len(ab) == 2 && ab[0] == 'guibg'
+      if len(ab) == 2 && ab[0] == a:part
         return substitute(ab[1],'#','','')
       endif
     endfor
   endfor
   " TODO if CSApprox exists, then compute the bg from the ctermbg
+  " throw an exception here and let the caller decide what to do.
   return 'ffffff'
 endfunction
 

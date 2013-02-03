@@ -2,7 +2,7 @@ Sluice
 ====
 
 The sluice plugin uses vim's '+signs' gutter to show what lines match your current
-searches at a high level. 
+searches at a high level.
 
 Plugins exist for:
 

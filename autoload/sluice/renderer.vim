@@ -94,12 +94,7 @@ function! sluice#renderer#setenabled(enable)
     let b:sluice_macromode = g:sluice_default_macromode
   endif
   if sluice#renderer#getenabled()
-    " re-init all the plugins
-    if g:sluice_default_bg == ''
-      let bg = sluice#plugins#undercursor#getbg()
-    else
-      let bg = g:sluice_default_bg
-    endif
+    let bg = sluice#util#color#get_default_bg()
     highlight clear SignColumn
     exe printf("highlight SignColumn guifg=#%s guibg=#%s",bg,bg)
     for p in g:mv_plugins
@@ -231,7 +226,7 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
 	endfor"}}}
 
   " setup the background color for the image:
-  let defaultbg = g:sluice_default_bg
+  let defaultbg = sluice#util#color#get_default_bg()
   if len(defaultbg) == 0
     let defaultbg = sluice#plugins#undercursor#getbg()
   endif
@@ -241,7 +236,7 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
   " icon so that a line can be accurately rendered (TODO if the height is big it
   " should really 'fall' into the next line).
   if sluice#renderer#getmacromode()
-    let pixelsperline = float2nr(g:sluice_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1))))
+    let pixelsperline = g:sluice_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1)))
   else
     let pixelsperline = g:sluice_pixel_density-1
   endif
@@ -431,17 +426,11 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
     endif
 	endfor
 
+  " TODO when the buffer is re-entered it should be completely repainted.
   " Check/paint all the gutter lines
   let t = ''
   for line in range(a:firstVisible,a:lastVisible)
     let t = t .'|'. line .':'
-    if line == '1'
-      if has_key(new_signs,line)
-        echom  'l1 = '. new_signs[line]
-      else
-        echom 'l1 = n'
-      endif
-    endif
     if has_key(new_signs,line) && 
           \has_key(b:sluice_signs,line) &&
           \new_signs[line] != b:sluice_signs[line]
@@ -469,7 +458,7 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
   " non-underword area.
 
   let b:sluice_signs = new_signs
-	return results
+	return new_signs
 endfunction"}}}
 
 " vim: set fdm=marker:

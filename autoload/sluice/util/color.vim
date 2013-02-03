@@ -93,3 +93,22 @@ function! sluice#util#color#lighter(color)
   let modded[2] = float2nr(modded[2] + 10)
 	return sluice#util#color#RGBToHex(sluice#util#color#HSVToRGB(modded))
 endfunction
+
+" Get the non-current window background color
+function! sluice#util#color#get_default_bg()
+  " If there is no default bg, get the current background and then either make
+  " it darker or lighter depending on the current color scheme.
+  if g:sluice_default_bg == ''
+    let bg = sluice#plugins#undercursor#getbg()
+    if &background == 'dark'
+      let bg = sluice#util#color#lighter(bg)
+      let bg = sluice#util#color#lighter(bg)
+    else
+      let bg = sluice#util#color#darker(bg)
+      let bg = sluice#util#color#darker(bg)
+    endif
+  else
+    let bg = g:sluice_default_bg
+  endif
+  return bg
+endfunction

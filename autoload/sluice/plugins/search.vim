@@ -6,11 +6,23 @@
 "                Smaller numbers will make this a more efficient plugin (but 
 "                won't show all matches in the gutter). (default: 25)
 "
-"
+" Colors:
+"    Colors for the render will automatically be selected for
+"    color/xcolor/iconcolor if none are provided in the options. The colors
+"    will be selected to relate to the 'Search' highlight group.
 
 function! sluice#plugins#search#init(options)
   if !has_key(a:options,'max_searches')
     let a:options['max_searches'] = 25
+  endif
+  if !has_key(a:options,'color')
+    let a:options['color'] = sluice#plugins#undercursor#getcolor('guifg','Search')
+  endif
+  if !has_key(a:options,'xcolor')
+    let a:options['xcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
+  endif
+  if !has_key(a:options,'iconcolor')
+    let a:options['iconcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
   endif
 endfunction
 

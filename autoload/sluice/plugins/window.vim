@@ -1,7 +1,25 @@
 " Window (show current visible window in macro area)
-" TODO make the cursor location highlighting optional.
+"
+" Options:
+"   showinline: If set, then make the location where the cursor is slightly
+"               darker within the scrollbar area. Default: 1
+"           bg: Background. If not set, then the current screen background
+"               color is used.
+"     inlinebg: Background of hte 'current line'. If not set, then the current
+"               'CursorLine' highlight group is used.
+"
 
 function! sluice#plugins#window#init(options)
+  if !has_key(a:options,'showinline')
+    let a:options['showinline'] = 1
+  endif
+  if !has_key(a:options,'bg')
+    let a:options['bg'] = sluice#plugins#undercursor#getbg()
+  endif
+  if !has_key(a:options,'inlinebg')
+    let inlinebg = sluice#plugins#undercursor#getcolor('guibg','CursorLine')
+    let a:options['inlinebg'] = inlinebg
+  endif
 endfunction
 
 function! sluice#plugins#window#deinit()

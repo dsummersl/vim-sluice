@@ -25,7 +25,7 @@ endif
 set updatetime=200
 
 " default background color of the gutter (ie, 'eeeeee'):
-" if unset, then use the background of the existing window
+" if unset, then use something slightly darker/lighter than the background.
 if !exists('g:sluice_default_bg') | let g:sluice_default_bg = '' | endif
 
 " Global variable to enable/disable Sluice
@@ -50,7 +50,6 @@ if !exists('g:sluice_loaded')
 	" Show the visible portion with a darker background
 	call sluice#renderer#add('sluice#plugins#window', {
 	      \ 'render': 'sluice#renderers#background',
-	      \ 'iconcolor': 'dddddd',
 	      \ 'iconalign': 'left',
 	      \ 'iconwidth': 10,
 	      \ 'showinline': 1
@@ -66,10 +65,8 @@ if !exists('g:sluice_loaded')
 	call sluice#renderer#add('sluice#plugins#search', {
 				\ 'render': 'sluice#renderers#slash',
 				\ 'chars': '/ ',
-				\ 'color': '0055ff',
 				\ 'xchars': 'X ',
 				\ 'xcolor': '0055ff',
-				\ 'iconcolor': '0055ff',
 				\ 'iconalign': 'center',
 				\ 'iconwidth': 100,
 				\ 'max_searches': 25
@@ -78,10 +75,8 @@ if !exists('g:sluice_loaded')
 	call sluice#renderer#add('sluice#plugins#undercursor', {
 				\ 'render': 'sluice#renderers#slash',
 				\ 'chars': '\ ',
-				\ 'color': '586ca3',
 				\ 'xchars': 'X ',
-				\ 'xcolor': '586ca3',
-				\ 'iconcolor': '586ca3',
+				\ 'xcolor': '0055ff',
 				\ 'iconalign': 'right',
 				\ 'iconwidth': 60,
 				\ 'max_searches': 10
@@ -102,7 +97,14 @@ endif
 "}}}
 " mappings"{{{
 
-au! CursorHold * nested call sluice#renderer#RePaintMatches()
+" Try to repaint on a regular basis:
+autocmd! CursorHold * nested call sluice#renderer#RePaintMatches()
+
+" When re-entering a buffer, tell the paint methods to repain the entire
+" gutter.
+autocmd! BufEnter * let b:sluice_signs = {}
+
+if !exists('b:sluice_signs') | let b:sluice_signs = {} | endif
 
 " Toggle the status of Sluice in the current buffer:
 command! -bar SluiceToggle call sluice#renderer#setenabled(!sluice#renderer#getenabled())
