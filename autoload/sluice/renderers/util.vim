@@ -102,9 +102,9 @@ function! sluice#renderers#util#TypicalPaint(vals,options)
         call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
               \a:vals['lines'][group[0]]['modulo']+g:sluice_pixel_density*(a:vals['lines'][group[0]]['signLine']-1),
               \a:options['iconwidth'],
-              \float2nr(a:vals['pixelsperline']*(group[1]-group[0]+1)) - 
-              \a:vals['lines'][group[0]]['modulo']-
-              \(g:sluice_pixel_density - a:vals['lines'][group[1]]['modulo']),
+              \float2nr(a:vals['pixelsperline']*(group[1]-group[0]+1)) +
+              \(a:vals['lines'][group[1]]['modulo']-
+              \a:vals['lines'][group[0]]['modulo']),
               \a:options['iconalign'],"fill-opacity:0.7;",'rx="1" ry="1"')
       "endif
     else

@@ -30,6 +30,17 @@ function! sluice#plugins#search#deinit()
 endfunction
 
 function! sluice#plugins#search#data(options)
+  let opts = copy(a:options)
+  " when in not in macro mode, we want to search everything only within our
+  " current page range.
+  if !sluice#renderer#getmacromode()
+    if has_key(opts,'max_searches')
+      unlet opts.max_searches
+    endif
+    let dims = sluice#util#location#getwindowdimensions({})
+    let opts.upmax = dims.pos - dims.top + 1
+    let opts.downmax = dims.bottom - dims.pos + 1
+  endif
   if !exists('b:sluice_searchfn')
     let b:sluice_searchfn = _#memoize(
           \function('sluice#plugins#search#search'),
@@ -39,7 +50,7 @@ function! sluice#plugins#search#data(options)
   "if b:sluice_searchfn.data['misses'] > 50
   "  b:sluice_searchfn.clear()
   "endif
-  return b:sluice_searchfn.call(a:options)
+  return b:sluice_searchfn.call(opts)
 endfunction
 
 " TODO add a max timeout function to this method...this would then require
@@ -53,14 +64,17 @@ endfunction
 "
 " Parameters:
 "   options: Several keys can be included to change this search method...
-"     'max_searches' - must be present. Limits total number of results. Can be
-"                      up to double this value ('max up' and 'max down').
-"     'needle'       - search pattern. If not specified, @/ is used.
+"     max_searches - Limits total number of results upward or
+"                    downward. Defaults to 50.
+"     needle       - search pattern. If not specified, @/ is used.
+"     upmax        - max lines upward.
+"     downmax      - max lines upward.
 " TODO min line, max line for 'micro' mode searches
 " 
 " Returns: A hash is returned with the following keys:
 "   'lines' - A hash of lines
-"     'count' - number of matches on the line.
+"     'count' - number of matches on the line. TODO remove the count, and
+"     optimize to move on from the line after matching it.
 "   'upmax'   - True if the 'max_searches' is reached (potentially more
 "               matches) in the upward direction.
 "   'downmax' - True if the 'max_searches' is reached downward.
@@ -82,6 +96,18 @@ function! sluice#plugins#search#search(options)
     let pattern = @/
   endif
 
+  if !has_key(a:options,'max_searches')
+    let a:options['max_searches'] = 50
+  endif
+
+  if !has_key(a:options,'upmax') && has_key(a:options,'downmax')
+    throw "'upmax' must be provided when 'downmax' is provided."
+  endif
+
+  if has_key(a:options,'upmax') && !has_key(a:options,'downmax')
+    throw "'downmax' must be provided when 'upmax' is provided."
+  endif
+
   let results = {}
   let results['lines'] = {}
 
@@ -89,11 +115,21 @@ function! sluice#plugins#search#search(options)
 	let startLine = line('.')
 	exe "keepjumps ". startLine
 	let searchResults = {}
+
 	" TODO I should do 'c' option as well, but it requires some cursor moving
 	" to ensure no infinite loops
   try
     let here = search(pattern,"We")
-    while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search forwards
+    " search downward direction
+    while len(pattern) > 0 && here > 0
+      " max searches break out
+      if n >= a:options['max_searches']
+        break
+      endif
+      if has_key(a:options,'downmax') && here >= startLine + a:options['downmax']
+        break
+      endif
+      " downmax breakout
       " 99% of the time the key isn't there yet, so minimize time there.
       if has_key(results['lines'],here)
         let results['lines'][here]['count'] += 1
@@ -112,7 +148,14 @@ function! sluice#plugins#search#search(options)
 	let n = 0
   try
     let here = search(pattern,"Wb")
-    while len(pattern) > 0 && here > 0 && n < a:options['max_searches'] " search backwards
+    " search upwards
+    while len(pattern) > 0 && here > 0
+      if n >= a:options['max_searches']
+        break
+      endif
+      if has_key(a:options,'upmax') && here <= startLine - a:options['upmax']
+        break
+      endif
       " 99% of the time the key isn't there yet, so minimize time there.
       if has_key(results['lines'],here)
         let results['lines'][here]['count'] += 1

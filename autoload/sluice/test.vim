@@ -101,6 +101,66 @@ function! TestSearch()
   endfor
 endfunction
 
+function! TestSearchInWindow()
+  " Given a file full of the same deal, perform searches from various points
+  " in the file. It should return the same results every time (well, taking
+  " into consideration the 'max' searches.
+  let @/='nothing'
+
+  " Test the base cases - ensure that the right combinations of fields are
+  " present
+  try
+    call sluice#plugins#search#data({'upmax': 5, 'needle':'one'})
+    call VUAssertFail('downmax should be included')
+  catch
+  endtry
+
+  try
+    call sluice#plugins#search#data({'downmax': 5, 'needle':'one'})
+    call VUAssertFail('upmax should be included')
+  catch
+  endtry
+
+  try
+    " create a file with 60 total lines. The liens are of the pattern:
+    " line
+    " line line
+    " line
+    " line line
+    " ...
+    " ...
+    sp abid2
+    normal iline line
+    normal Oline
+    normal 2yy29P
+    $
+    let bottomresults = sluice#plugins#search#data({'upmax': 5, 'downmax': 5, 'needle': 'line'})
+    1 
+    let topresults = sluice#plugins#search#data({'upmax': 5, 'downmax': 5, 'needle': 'line'})
+    30 
+    let middleresults = sluice#plugins#search#data({'upmax': 5, 'downmax': 5, 'needle': 'line'})
+  finally
+    " ensure that if there are any function errors, we still close the temp
+    " buffer
+    bd!
+  endtry
+
+  " matches both up and down
+  call VUAssertEquals(len(bottomresults['lines']),5)
+  call VUAssertEquals(len(topresults['lines']),5)
+  " 26-30 going up, and 30-34 going down
+  call VUAssertEquals(len(middleresults['lines']),9)
+
+  " upmax/downmax don't mean anything with these settings, so they shouldn't
+  " be set.
+  call VUAssertFalse(middleresults['upmax'])
+  call VUAssertFalse(middleresults['downmax'])
+
+  for i in range(9)
+    call VUAssertTrue(has_key(middleresults['lines'],30+i-4),"Not found line:". (30+i-4))
+  endfor
+endfunction
+
 ""}}}
 " plugins#undercursor tests {{{
 

@@ -9,6 +9,9 @@
 " TODO a plugin that shows you where the other match for the keyword that
 " you'veplaced your keyboard on is located (and use the matchit plugin if it
 " esists for for/endfor/etc).
+" TODO show the region that is the current function that you are in (or maybe
+" all functions). Consider this a bounty:
+" http://stackoverflow.com/questions/14770596/display-line-number-per-function-in-vim
 
 " Dependency check:"{{{
 if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
@@ -38,7 +41,7 @@ if !exists('g:sluice_default_enabled') | let g:sluice_default_enabled=0 | endif
 if !exists('g:sluice_default_macromode') | let g:sluice_default_macromode=0 | endif
 
 " Global to enable graphical icons
-if !exists('g:sluice_graphics_enabled') | let g:sluice_graphics_enabled=0 | endif
+if !exists('g:sluice_graphics_enabled') | let g:sluice_graphics_enabled=1 | endif
 
 " ImageMagick 'convert' command location
 if !exists('g:sluice_convert_command') | let g:sluice_convert_command='convert' | endif
@@ -127,6 +130,7 @@ command! -bar SluiceMacroOn call sluice#renderer#setmacromode(1)
 "}}}
 " Private Variables "{{{
 
+" TODO what is this for, I don't remember?
 if !exists('w:sluice_lastcalldisabled') | let w:sluice_lastcalldisabled=1 | endif
 
 if !exists('g:sluice_cache') | let g:sluice_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/sluice-cache/' | endif

@@ -79,6 +79,12 @@ function! sluice#plugins#undercursor#data(options)
     endif
     let opts = copy(a:options)
     let opts['needle'] = '\<'. wordundercursor .'\>'
+    if !sluice#renderer#getmacromode()
+      unlet opts.max_searches
+      let dims = sluice#util#location#getwindowdimensions({})
+      let opts.upmax = dims.pos - dims.top + 1
+      let opts.downmax = dims.bottom - dims.pos + 1
+    endif
     let results=sluice#plugins#search#data(opts)
     execute 'silent syntax clear UnderCursor'
     execute 'syntax match UnderCursor "'. opts['needle'] .'" containedin=ALL'
@@ -89,8 +95,8 @@ function! sluice#plugins#undercursor#data(options)
 endfunction
 
 function! sluice#plugins#undercursor#enabled(options)
-	if &hls == 0 || (exists('w:sluice_lastcalldisabled') && w:sluice_lastcalldisabled)
+	if (exists('w:sluice_lastcalldisabled') && w:sluice_lastcalldisabled)
 		execute 'silent syntax clear UnderCursor'
 	endif
-	return &hls == 1
+	return 1
 endfunction

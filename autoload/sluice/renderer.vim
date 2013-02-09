@@ -29,7 +29,6 @@ function! sluice#renderer#RePaintMatches()"{{{
 	if current_dims['top'] != w:cached_dim['top'] ||
         \current_dims['bottom'] != w:cached_dim['bottom'] ||
         \current_dims['height'] != w:cached_dim['height'] ||
-        \&hls != w:cached_dim['hls'] ||
         \current_dims['data'] != w:cached_dim['data']
 		call sluice#renderer#PaintMV(current_dims['data'])
 		let painted = 1
@@ -238,7 +237,7 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
   if sluice#renderer#getmacromode()
     let pixelsperline = g:sluice_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1)))
   else
-    let pixelsperline = g:sluice_pixel_density-1
+    let pixelsperline = g:sluice_pixel_density
   endif
   let resultData['pixelsperline'] = pixelsperline
 
@@ -327,12 +326,13 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
       let signLine = line
     endif
 
+    " setup the results if they aren't already setup:
 		if !has_key(results,signLine)
 			let results[signLine] = {}
 			let results[signLine]['plugins'] = []
 		endif
 
-    " if the line is within the visible range, set it so:
+    " if the line is within the visible range, mark it 'visible':
     let results[signLine]['visible'] = (line >= a:firstVisible && line <= a:lastVisible) ? 1:0
 
     " setup the top level data values that are ultimately used for the signs
@@ -396,12 +396,6 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
   " after the gutterimage is completely painted, define any missing
   " icon/signs, and then paint.
 	for [line,val] in items(results)
-    " the problem is nothign is painted on teh gutter for the bg!
-    " TODO ah ha. So this is only the lines that have matches. But we really
-    " need to loop over the entire gutter and compute the hash for each gutter
-    " line. Rather than keep a whole dictionary of the 'last search' we just
-    " need a whole dictionary of the hashes of the last gutter (and we place
-    " something at each line every time).
     let fname = a:searchResults['gutterImage'].generateHash(0,g:sluice_pixel_density*(line-1),g:sluice_pixel_density,g:sluice_pixel_density)
     let results[line]['hash'] = fname
     let new_signs[line] = fname
