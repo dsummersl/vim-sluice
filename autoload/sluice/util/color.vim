@@ -84,13 +84,13 @@ endfunction
 
 function! sluice#util#color#darker(color)
 	let modded = sluice#util#color#RGBToHSV(sluice#util#color#HexToRGB(a:color))
-  let modded[2] = float2nr(modded[2] - 10)
+  let modded[2] = float2nr(modded[2] - 5)
 	return sluice#util#color#RGBToHex(sluice#util#color#HSVToRGB(modded))
 endfunction
 
 function! sluice#util#color#lighter(color)
 	let modded = sluice#util#color#RGBToHSV(sluice#util#color#HexToRGB(a:color))
-  let modded[2] = float2nr(modded[2] + 10)
+  let modded[2] = float2nr(modded[2] + 5)
 	return sluice#util#color#RGBToHex(sluice#util#color#HSVToRGB(modded))
 endfunction
 

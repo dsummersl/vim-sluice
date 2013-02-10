@@ -57,13 +57,6 @@ if !exists('g:sluice_loaded')
 	      \ 'iconwidth': 10,
 	      \ 'showinline': 1
 	      \ })
-	"
-	" TODO when not in 'macro' mode we only need to search the contents of the
-	" on screen lines.
-	"
-	" TODO for the search plugin define the colors by the HighLight group if its
-	" undefined. Same for undercursor, but make it transparent?
-	"
 	" Show the last search with //
 	call sluice#renderer#add('sluice#plugins#search', {
 				\ 'render': 'sluice#renderers#slash',
