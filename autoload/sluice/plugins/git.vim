@@ -167,7 +167,10 @@ function! sluice#plugins#git#paint(options,vals)
   " paint the removed lines
   let filtered['lines'] = {}
   for line in keys(a:vals['lines'])
-    if has_key(a:vals['lines'][line],'removed')
+    " only paint removed lines that aren't part of an addition (otherwise you
+    " see add next to remove sometimes when really there was just an addition
+    " going on there.
+    if has_key(a:vals['lines'][line],'removed') && !has_key(a:vals['lines'][line],'added') 
       let filtered['lines'][line] = a:vals['lines'][line]
     endif
   endfor
@@ -186,7 +189,25 @@ function! sluice#plugins#git#paint(options,vals)
 endfunction
 
 function! sluice#plugins#git#reconcile(options,vals,plugin)
-  " do the same slash paint, but once with additions, once with subtractions
-  " TODO still funky. need to fix fix fix.
+  " We need to look thru the plugins, and re-set the colors/chars depending on
+  " the type of git match we had (add or delete)
+  for p in a:vals
+    if p.plugin == 'sluice#plugins#git'
+      if has_key(p,'added')
+        let a:options['chars'] = a:options['addedchar'] . a:options['addedchar'] 
+        let a:options['color'] = a:options['addedcolor']
+        let a:options['xchars'] = '/' . a:options['addedchar'] 
+        let a:options['xcolor'] = a:options['addedcolor']
+        let a:options['iconcolor'] = a:options['addedcolor']
+      else
+        let a:options['chars'] = a:options['removedchar'] . a:options['removedchar'] 
+        let a:options['color'] = a:options['removedcolor']
+        let a:options['xchars'] = '/' . a:options['removedchar'] 
+        let a:options['xcolor'] = a:options['removedcolor']
+        let a:options['iconcolor'] = a:options['removedcolor']
+      endif
+      break
+    endif
+  endfor
   return sluice#renderers#slash#reconcile(a:options,a:vals,a:plugin)
 endfunction
