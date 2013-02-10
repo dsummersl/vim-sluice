@@ -49,9 +49,9 @@ function! sluice#renderers#icon#generateHash(...) dict
       " find all the elements that intersect this boundary area
       " http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
       let ax1 = d['x']
-      let ax2 = d['x'] + d['width'] - 1
+      let ax2 = d['x'] + d['width']
       let ay1 = d['y']
-      let ay2 = d['y'] + d['height'] - 1
+      let ay2 = d['y'] + d['height']
       let bx1 = a:1
       let bx2 = a:1 + a:3 - 1
       let by1 = a:2

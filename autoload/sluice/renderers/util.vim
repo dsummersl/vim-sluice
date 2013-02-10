@@ -91,14 +91,14 @@ function! sluice#renderers#util#TypicalPaint(vals,options)
       "        \"fill-opacity:0.3; stroke-dasharray=\"". dashdistance .",". dashdistance ."\"",'rx="1" ry="1"')
       "  " TODO also make the text icon a couple of dots or something.
       "else
-        echom "---"
-        echom "    pd    ppl = ". g:sluice_pixel_density ." ". string(a:vals['pixelsperline'])
-        echom printf("group1 %d group0 %d + 1= %d", group[1],  group[0],(group[1]-group[0]+1))
-        echom "slin1  slin0  = ". a:vals['lines'][group[1]]['signLine'] ." ". a:vals['lines'][group[0]]['signLine']
-        echom printf("mod1 %d   mod0 %d = %d", a:vals['lines'][group[1]]['modulo'], a:vals['lines'][group[0]]['modulo'],
-              \(a:vals['lines'][group[1]]['modulo']-
-              \  a:vals['lines'][group[0]]['modulo'])
-              \)
+        "echom "---"
+        "echom "    pd    ppl = ". g:sluice_pixel_density ." ". string(a:vals['pixelsperline'])
+        "echom printf("group1 %d group0 %d + 1= %d", group[1],  group[0],(group[1]-group[0]+1))
+        "echom "slin1  slin0  = ". a:vals['lines'][group[1]]['signLine'] ." ". a:vals['lines'][group[0]]['signLine']
+        "echom printf("mod1 %d   mod0 %d = %d", a:vals['lines'][group[1]]['modulo'], a:vals['lines'][group[0]]['modulo'],
+        "      \(a:vals['lines'][group[1]]['modulo']-
+        "      \  a:vals['lines'][group[0]]['modulo'])
+        "      \)
         call a:vals['gutterImage'].placeRectangle(a:options['iconcolor'],
               \a:vals['lines'][group[0]]['modulo']+g:sluice_pixel_density*(a:vals['lines'][group[0]]['signLine']-1),
               \a:options['iconwidth'],
