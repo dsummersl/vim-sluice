@@ -31,12 +31,12 @@ gutter immediately to the left of a line corresponds to the line next to it.
 
 The screenshot below shows how sluice looks in plain old text mode:
 
-![text micro mode screenshot](docs/microtext.png)
+![text micro mode screenshot](doc/microtext.png)
 
 When '+icon' support is setup and imagemagick is installed, the same screen
 looks like:
 
-![icon micro mode screenshot](docs/micrographic.png)
+![icon micro mode screenshot](doc/micrographic.png)
 
 Macro mode
 ----
@@ -53,11 +53,11 @@ characters denote areas where both a normal search (in this screenshot for
 'slash') is also the same general region where the word under the cursor also
 matches:
 
-![text macro mode screenshot](docs/macrotext.png)
+![text macro mode screenshot](doc/macrotext.png)
 
 When graphics are enabled, the same information is rendered thusly:
 
-![icon macro mode screenshot](docs/macrographic.png)
+![icon macro mode screenshot](doc/macrographic.png)
 
 Requirements
 ====
