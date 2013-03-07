@@ -62,7 +62,7 @@ When graphics are enabled, the same information is rendered thusly:
 Requirements
 ====
 
-Vim 7.3+, with '+signs' support.
+Vim 7.3+, with '+signs' support, and the [vus](https://github.com/dsummersl/vus) library.
 
 For console support you need a console that supports 256+ colors and
 [CSApprox](https://github.com/godlygeek/csapprox).
@@ -80,4 +80,4 @@ To run the unit tests you must install the [vimunit
 plugin](https://github.com/dsummersl/vimunit). They can be run by typing the
 following on the console:
 
-~/.vim/bundle/vimunit/vutest.sh autoload/mvom/test.vim 
+    ~/.vim/bundle/vimunit/vutest.sh autoload/mvom/test.vim 

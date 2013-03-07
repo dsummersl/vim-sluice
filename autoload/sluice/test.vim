@@ -165,14 +165,35 @@ endfunction
 " plugins#undercursor tests {{{
 
 function! TestGetBG()
+  highlight clear Normal
+
   highlight! Normal guibg=#000000
-  call VUAssertEquals(sluice#plugins#undercursor#getbg(),'000000')
+  call VUAssertEquals(sluice#util#color#getbg(),'000000')
+
+  highlight! Normal ctermfg=240 ctermbg=230 guibg=Grey90
+  call VUAssertEquals(sluice#util#color#getbg(),'e5e5e5')
 
   " doesn't pay attention to cterm...so the bg becomes 'white'
   highlight clear Normal
   highlight! Normal ctermbg=17
-  call VUAssertEquals(sluice#plugins#undercursor#getbg(),'ffffff')
+  call VUAssertEquals(sluice#util#color#getbg(),0)
 endfunction
+
+function! TestGetColor()
+  highlight clear Normal
+
+  highlight! Normal guibg=#000000
+  call VUAssertEquals(sluice#util#color#getcolor('guibg','Normal'),'000000')
+  call VUAssertEquals(sluice#util#color#getcolor('guifg','Normal'),0)
+
+  highlight! Normal ctermbg=17
+  call VUAssertEquals(sluice#util#color#getcolor('ctermfg','Normal'),0)
+  call VUAssertEquals(sluice#util#color#getcolor('ctermbg','Normal'),'17')
+
+  highlight! Normal ctermbg=17 guibg=Grey90
+  call VUAssertEquals(sluice#util#color#getcolor('guibg','Normal'),'e5e5e5')
+endfunction
+
 " }}}
 " plugins#util tests {{{
 

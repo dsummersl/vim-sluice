@@ -39,9 +39,24 @@ CONTENTS ~
 
 ABOUT                                              *sluice-about*
 
-The sluice plugin uses the '+signs' gutter to show what lines match your current
-searches at a high level. It uses the gutter as an enhanced scrollbar, showing
-you where you are, and what matches are around you.
+The sluice plugin uses vim's '+signs' gutter to provide additional context
+while editing in Vim. It provides two modes of operation:
+
+ * __micro__: The signs gutter will show information relevant to the current
+  line directly to the right.
+
+ * __macro__: The gutter is condensed to act like a scroll bar, where the
+   overall context of the files are 'shrunk' to fit within the current visible
+   signs.
+
+This plugin is extensible (see sluice-plugins). Currently sluice is bundled
+with three plugins: search (show all matches to the @/ register), undercursor
+(show all matches in the file for the word currently under the cursor), git
+(show all additions and subtractions in the file if the file is in a git
+repository).
+
+NOTE: This plugin does not currently work while '+folding' is turned on in a
+file.
 
 ===========================================================================
 

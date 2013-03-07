@@ -99,7 +99,7 @@ function! sluice#util#color#get_default_bg()
   " If there is no default bg, get the current background and then either make
   " it darker or lighter depending on the current color scheme.
   if g:sluice_default_bg == ''
-    let bg = sluice#plugins#undercursor#getbg()
+    let bg = sluice#util#color#getbg()
     if &background == 'dark'
       let bg = sluice#util#color#lighter(bg)
       let bg = sluice#util#color#lighter(bg)
@@ -111,4 +111,50 @@ function! sluice#util#color#get_default_bg()
     let bg = g:sluice_default_bg
   endif
   return bg
+endfunction
+
+" Get the normal background color
+"
+" Returns: color of highlight.
+function! sluice#util#color#getbg()
+  return sluice#util#color#getcolor('guibg','Normal')
+endfunction
+
+" Get a color from a highlight group.
+"
+" If the part doesn't exist return's 0 (false).
+function! sluice#util#color#getcolor(part,hi)
+  let currenthi=''
+  redir => currenthi
+  exe "silent! highlight ". a:hi
+  redir END
+
+  " try to pull out a hex color code:
+  for line in split(currenthi,'\n')
+    for part in split(line,' ')
+      let ab = split(part,'=')
+      if len(ab) == 2 && ab[0] == a:part
+        if ab[1] =~ '^#\v\x{6}$'
+          return substitute(ab[1],'^#','','')
+        else
+          try
+            let rgbmap = csapprox#rgb()
+            if has_key(rgbmap,tolower(ab[1]))
+              " remove any hex/# from the front of the string.
+              return substitute(
+                    \substitute(rgbmap[tolower(ab[1])],'^0x','','')
+                    \,'^#','','')
+            else
+              " no key, just return the value
+              return ab[1]
+            endif
+          catch
+            " do nothing, we probably don't have csapprox#rgb
+          endtry
+        endif
+      endif
+    endfor
+  endfor
+
+  return 0
 endfunction

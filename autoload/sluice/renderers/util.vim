@@ -36,7 +36,7 @@ function! sluice#renderers#util#TypicalPaint(vals,options)
   let result['lines'] = {}
   let defaultbg = sluice#util#color#get_default_bg()
   if len(defaultbg) == 0
-    let defaultbg = sluice#plugins#undercursor#getbg()
+    let defaultbg = sluice#util#color#getbg()
   endif
   let min = {}
   let max = {}

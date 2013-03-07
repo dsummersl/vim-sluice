@@ -201,7 +201,6 @@ function! sluice#renderers#icon#placeRectangle(color,y,width,height,align,...) d
   else
     throw "Unknown alignment '". a:align ."'. Must be one of: left, right, center."
   endif
-  echom printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',startpoint, a:y, a:height, pixwidth, a:color, style,extra)
   call add(self.svg,printf('<rect x="%d" y="%d" height="%d" width="%d" style="fill: #%s;%s" %s/>',startpoint, a:y, a:height, pixwidth, a:color, style,extra))
   call add(self.data,{ 'x': startpoint, 'y': a:y, 'width': pixwidth, 'height': a:height, 'type': 'rect', 'color': a:color, 'style': style, 'extra': extra})
 endfunction

@@ -12,7 +12,7 @@ function! sluice#plugins#undercursor#init(options)
   " Choose the Search highlight group for the default colors but make it
   " slightly darker or lighter than that group so its different than the
   " search plugin.
-  let bg = sluice#plugins#undercursor#getcolor('guifg','Search')
+  let bg = sluice#util#color#getcolor('guifg','Search')
   let color = sluice#util#color#lighter(bg)
   let cmd = "highlight! UnderCursor guibg=#". color
   exe cmd
@@ -28,32 +28,6 @@ function! sluice#plugins#undercursor#init(options)
     let a:options['iconcolor'] = color
   endif
   call sluice#plugins#search#init(a:options)
-endfunction
-
-" Get the normal background color
-"
-" Returns: color of highlight.
-function! sluice#plugins#undercursor#getbg()
-  return sluice#plugins#undercursor#getcolor('guibg','Normal')
-endfunction
-
-function! sluice#plugins#undercursor#getcolor(part,hi)
-  let currenthi=''
-  redir => currenthi
-  exe "silent! highlight ". a:hi
-  redir END
-
-  for line in split(currenthi,'\n')
-    for part in split(line,' ')
-      let ab = split(part,'=')
-      if len(ab) == 2 && ab[0] == a:part
-        return substitute(ab[1],'#','','')
-      endif
-    endfor
-  endfor
-  " TODO if CSApprox exists, then compute the bg from the ctermbg
-  " throw an exception here and let the caller decide what to do.
-  return 'ffffff'
 endfunction
 
 function! sluice#plugins#undercursor#deinit()

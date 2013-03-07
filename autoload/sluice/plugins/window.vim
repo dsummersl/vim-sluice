@@ -14,10 +14,10 @@ function! sluice#plugins#window#init(options)
     let a:options['showinline'] = 1
   endif
   if !has_key(a:options,'bg')
-    let a:options['bg'] = sluice#plugins#undercursor#getbg()
+    let a:options['bg'] = sluice#util#color#getbg()
   endif
   if !has_key(a:options,'inlinebg')
-    let inlinebg = sluice#plugins#undercursor#getcolor('guibg','CursorLine')
+    let inlinebg = sluice#util#color#getcolor('guibg','CursorLine')
     let a:options['inlinebg'] = inlinebg
   endif
 endfunction

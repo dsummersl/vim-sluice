@@ -3,6 +3,8 @@
 " Options:
 "   - gitcommand: the full path to the git command. If not present it is
 "     assumed to be in the path (and 'git' is used).
+"
+" TODO respect ignore whitespace
 
 function! sluice#plugins#git#init(options)
 endfunction

@@ -16,13 +16,13 @@ function! sluice#plugins#search#init(options)
     let a:options['max_searches'] = 25
   endif
   if !has_key(a:options,'color')
-    let a:options['color'] = sluice#plugins#undercursor#getcolor('guifg','Search')
+    let a:options['color'] = sluice#util#color#getcolor('guifg','Search')
   endif
   if !has_key(a:options,'xcolor')
-    let a:options['xcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
+    let a:options['xcolor'] = sluice#util#color#getcolor('guifg','Search')
   endif
   if !has_key(a:options,'iconcolor')
-    let a:options['iconcolor'] = sluice#plugins#undercursor#getcolor('guifg','Search')
+    let a:options['iconcolor'] = sluice#util#color#getcolor('guifg','Search')
   endif
 endfunction
 

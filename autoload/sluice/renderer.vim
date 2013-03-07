@@ -227,7 +227,7 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
   " setup the background color for the image:
   let defaultbg = sluice#util#color#get_default_bg()
   if len(defaultbg) == 0
-    let defaultbg = sluice#plugins#undercursor#getbg()
+    let defaultbg = sluice#util#color#getbg()
   endif
   call resultData['gutterImage'].addRectangle(defaultbg,0,0,g:sluice_pixel_density,g:sluice_pixel_density*a:totalLines)
 
@@ -363,7 +363,7 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
           let results[line][key] = reconciled[key]
         endfor
       endfor
-      " TODO its important that the window be place LAST otherwise the fg/bg
+      " its important that the window be place LAST otherwise the fg/bg
       " gets clobbered.
       "
       " make sure that any other options are also included, if they weren't
@@ -384,13 +384,33 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
 		if !has_key(val,'text') | let val['text'] = '..' | endif
 		if !has_key(val,'fg') | let val['fg'] = val['bg'] | endif
 
-    exe printf("highlight! %s guifg=#%s guibg=#%s",sluice#util#color#GetHighlightName(val),val['fg'],val['bg'])
+    " TODO this is allslightly better than nothing...but totally broke. We
+    " need to pull cterms when there is no gui-ness and somehow make cterms
+    " darker/lighter depending on the. I think?
+ 
+    " when there is no fg, assume this is a console vim and should be
+    " 'invisible' and use the Normal cterm:
+    let fg = ''
+    if val['fg']
+      let fg = 'guifg=#'. val['fg']
+    else
+      let fg = 'ctermfg='. sluice#util#color#getcolor('ctermbg','Normal')
+    endif
+
+    " when there is no bg, assume this is a console vim and use ctermbg
+    let bg = ''
+    if val['bg']
+      let bg = 'guibg=#'. val['bg']
+    else
+      let bg = 'ctermbg='. sluice#util#color#getcolor('ctermbg','Normal')
+    endif
+    exe printf("highlight! %s %s %s",sluice#util#color#GetHighlightName(val),fg,bg)
   endfor
 
   " I'm lazy, and CSApprox works so well at turning GUI colors into cterm
   " colors. I leave it to it to fix my highlights!
-  if !has("gui_running")
-    silent exec ":CSApprox!"
+  if !has('gui_running') && exists(':CSApprox')
+    silent exec ":CSApprox"
   endif
 
   " after the gutterimage is completely painted, define any missing
