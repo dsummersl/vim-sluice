@@ -161,16 +161,6 @@ function! sluice#renderer#PaintMV(data)"{{{
 		" situations in which we don't want this: help files, nofiles, diff mode
 		let anyEnabled = 0
 	endif
-	if anyEnabled == 1
-		" finally, if we are enabled by any means...check to make sure that there
-		" aren't any folds. We don't work with folds.
-		exe "keepjumps 1"
-		exe "silent normal! zj"
-		if line('.') != 1
-			let anyEnabled = 0
-		endif
-		call winrestview(w:save_cursor)
-	endif
 	if anyEnabled
 		call sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,a:data,"sluice#renderer#UnpaintSign","sluice#renderer#PaintSign")
 		let w:sluice_lastcalldisabled = 0

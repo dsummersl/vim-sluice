@@ -62,6 +62,9 @@ function! sluice#util#location#GetHumanReadables(chars)
 endfunction
 
 " Get specific details of window dimensions as a dictionary:
+"
+" Note: height > bottom - top when folds exist, or you're at the bottom of the
+" screen or...
 function! sluice#util#location#getwindowdimensions(data)
   let cached_dim = {}
 	let cached_dim['top'] = line('w0')

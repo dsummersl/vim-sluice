@@ -17,9 +17,6 @@ with three plugins: search (show all matches to the @/ register), undercursor
 (show all additions and subtractions in the file if the file is in a git
 repository).
 
-NOTE: This plugin does not currently work while '+folding' is turned on in a
-file.
-
 Screenshots
 ====
 
