@@ -196,6 +196,6 @@ function! sluice#plugins#search#memoizeByLocAndFileVer(args)
   return _#hash(printf("%s-%s-%s",
         \b:changedtick,
         \line('.'),
-        \pattern
+        \strtrans(pattern)
         \))
 endfunction

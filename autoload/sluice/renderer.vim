@@ -376,23 +376,31 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
 
     " TODO this is allslightly better than nothing...but totally broke. We
     " need to pull cterms when there is no gui-ness and somehow make cterms
-    " darker/lighter depending on the. I think?
+    " darker/lighter depending on the situation. I think?
  
     " when there is no fg, assume this is a console vim and should be
-    " 'invisible' and use the Normal cterm:
+    " 'invisible' and use the Normal highlight background.
     let fg = ''
-    if val['fg']
+    if has_key(val,'fg')
       let fg = 'guifg=#'. val['fg']
     else
-      let fg = 'ctermfg='. sluice#util#color#getcolor('ctermbg','Normal')
+      if sluice#util#color#getcolor('guibg','Normal') != 0
+        let fg = 'guifg='. sluice#util#color#getcolor('guibg','Normal')
+      else
+        let fg = 'ctermfg='. sluice#util#color#getcolor('ctermbg','Normal')
+      endif
     endif
 
     " when there is no bg, assume this is a console vim and use ctermbg
     let bg = ''
-    if val['bg']
+    if has_key(val,'bg')
       let bg = 'guibg=#'. val['bg']
     else
-      let bg = 'ctermbg='. sluice#util#color#getcolor('ctermbg','Normal')
+      if sluice#util#color#getcolor('guibg','Normal') != 0
+        let bg = 'guifg='. sluice#util#color#getcolor('guibg','Normal')
+      else
+        let bg = 'ctermfg='. sluice#util#color#getcolor('ctermbg','Normal')
+      endif
     endif
     exe printf("highlight! %s %s %s",sluice#util#color#GetHighlightName(val),fg,bg)
   endfor

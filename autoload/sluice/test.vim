@@ -192,6 +192,9 @@ function! TestGetColor()
 
   highlight! Normal ctermbg=17 guibg=Grey90
   call VUAssertEquals(sluice#util#color#getcolor('guibg','Normal'),'e5e5e5')
+
+  highlight! Normal ctermbg=11 ctermbg=15 guifg=#586e75 guibg=#fdf6e3
+  call VUAssertEquals(sluice#util#color#getcolor('guibg','Normal'),'fdf6e3')
 endfunction
 
 " }}}

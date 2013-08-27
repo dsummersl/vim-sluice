@@ -77,4 +77,4 @@ To run the unit tests you must install the [vimunit
 plugin](https://github.com/dsummersl/vimunit). They can be run by typing the
 following on the console:
 
-    ~/.vim/bundle/vimunit/vutest.sh autoload/mvom/test.vim 
+    ~/.vim/bundle/vimunit/vutest.sh autoload/sluice/test.vim 
