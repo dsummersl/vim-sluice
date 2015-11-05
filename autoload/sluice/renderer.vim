@@ -55,6 +55,7 @@ function! sluice#renderer#setenabled(enable)
       call {options['data']}#init(options)
     endfor
     if exists('b:sluice_signs') | unlet b:sluice_signs | endif
+    call sluice#renderer#RePaintMatches()
   else
     " remove any signs
 		sign unplace *
