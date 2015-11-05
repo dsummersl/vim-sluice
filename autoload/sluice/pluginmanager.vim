@@ -65,6 +65,7 @@ endfunction
 
 function! sluice#pluginmanager#setenabled(pluginName,enabled)
   call sluice#pluginmanager#setoption(a:pluginName,'enabled',a:enabled)
+  call sluice#renderer#RePaintMatches()
 endfunction
 
 function! sluice#pluginmanager#getenabled(pluginName)
