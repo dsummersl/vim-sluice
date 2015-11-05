@@ -66,6 +66,12 @@ endfunction
 function! sluice#pluginmanager#setenabled(pluginName,enabled)
   call sluice#pluginmanager#setoption(a:pluginName,'enabled',a:enabled)
   call sluice#renderer#RePaintMatches()
+  let options = sluice#renderers#util#FindPlugin(a:pluginName)['options']
+  if a:enabled
+    call {options['data']}#init(options)
+  else
+    call {options['data']}#deinit()
+  endif
 endfunction
 
 function! sluice#pluginmanager#getenabled(pluginName)

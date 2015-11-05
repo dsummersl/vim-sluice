@@ -77,7 +77,7 @@ if !exists('g:sluice_loaded')
 			\ 'xcolor': '0055ff',
 			\ 'iconalign': 'center',
 			\ 'iconwidth': 100,
-			\ 'max_searches': 25
+			\ 'max_searches': 50
 			\ })
 	" Show all keywords in the file that match whats under your cursor with \\
 	call sluice#pluginmanager#add('undercursor', {
