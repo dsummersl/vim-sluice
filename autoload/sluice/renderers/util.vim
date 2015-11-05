@@ -1,6 +1,6 @@
 function! sluice#renderers#util#FindPlugin(dataPlugin)
 	for plugin in g:mv_plugins
-		if plugin['plugin'] == a:dataPlugin
+		if plugin['name'] == a:dataPlugin
 			return plugin
 		endif
 	endfor

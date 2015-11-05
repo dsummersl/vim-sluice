@@ -39,52 +39,6 @@ function! sluice#renderer#RePaintMatches()"{{{
 	return painted
 endfunction"}}}
 
-" Configuration and enable/disable functions {{{
-" Add a specific plugin and rendering.
-"
-" Parameters:
-"     pluginName the path to the plugin file (ie, sluice/plugins/underscore
-"                would be sluice#plugins#underscore).
-"     options    Options for the plugin. Depends on the plugin, but all
-"                plugins have the following options:
-"
-"                    render Path to the renderer type.
-"
-function! sluice#renderer#add(pluginName,options)
-	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
-	let old_enabled=g:sluice_enabled
-	let g:sluice_enabled=0
-	call {a:pluginName}#init(a:options)
-	call add(g:mv_plugins,{ 'plugin': a:pluginName, 'options': a:options })
-	let g:sluice_enabled=old_enabled
-endfunction
-
-" Remove a plugin.
-function! sluice#renderer#remove(pluginName)
-	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
-	let old_enabled=g:sluice_enabled
-	let g:sluice_enabled=0
-	call {a:pluginName}#deinit()
-  let cnt = -1
-  for p in g:mv_plugins
-    let cnt = cnt + 1
-    if p['plugin'] == a:pluginName
-      break
-    endif
-  endfor
-  if cnt >= 0
-    call remove(g:mv_plugins,cnt)
-  endif
-	let g:sluice_enabled=old_enabled
-endfunction
-
-" Set a plugin option. See the related plugin documentation
-" for what options are available.
-function! sluice#renderer#setOption(pluginName,option,value)
-  let options = sluice#renderers#util#FindPlugin(a:pluginName)['options']
-  let options[a:option] = a:value
-endfunction
-
 " Set the status of the Sluice plugin in the current buffer.
 " Sends a warning if the plugin is currently disabled.
 function! sluice#renderer#setenabled(enable)
@@ -97,7 +51,8 @@ function! sluice#renderer#setenabled(enable)
     highlight clear SignColumn
     exe printf("highlight SignColumn guifg=#%s guibg=#%s",bg,bg)
     for p in g:mv_plugins
-      call {p['plugin']}#init(p['options'])
+      let options = p['options']
+      call {options['data']}#init(options)
     endfor
     if exists('b:sluice_signs') | unlet b:sluice_signs | endif
   else
@@ -105,14 +60,16 @@ function! sluice#renderer#setenabled(enable)
 		sign unplace *
     " let the plugins clean up
     for p in g:mv_plugins
-      call {p['plugin']}#deinit()
+      let options = p['options']
+      call {options['data']}#deinit()
     endfor
   endif
   return b:sluice_enabled
 endfunction
 
-" Get the status of the Sluice plugin in the current buffer.
+"score Get the status of the Sluice plugin in the current buffer.
 function! sluice#renderer#getenabled()
+	if !exists('g:mv_plugins') | let g:mv_plugins = [] | endif
   if !exists('g:sluice_enabled')
     return 0
   endif
@@ -150,9 +107,9 @@ function! sluice#renderer#PaintMV(data)"{{{
 	let lastVisible = line('w$')
 	let anyEnabled = 0
 	for pluginInstance in g:mv_plugins
-		let plugin = pluginInstance['plugin']
-		let options = pluginInstance['plugin']['options']
-		if {plugin}#enabled(options)
+		let options = pluginInstance['options']
+		let plugin = options['data']
+		if options['enabled'] && {plugin}#enabled(options)
 			let anyEnabled = 1
 			break
 		endif
@@ -190,9 +147,10 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
 
   " Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
-		let plugin = pluginInstance['plugin']
 		let options = pluginInstance['options']
-		if !{plugin}#enabled(options)
+		let name = pluginInstance['name']
+		let plugin = options['data']
+		if !options['enabled'] || !{plugin}#enabled(options)
 			continue
 		endif
 		call winrestview(w:save_cursor) " so the plugins all get to start from the same 'window'
@@ -203,13 +161,13 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
     " resultData...the TypicalPaint method is waiting for this...
 		for line in keys(data['lines']) " loop through all the data and add it to my own master list.
 			if has_key(allData,line)
-        let allData[line][plugin] = data['lines'][line]
+        let allData[line][name] = data['lines'][line]
 				let allData[line]['count'] = allData[line]['count'] + 1
 			else
         " do we have the current plugin already? If not:
 				let allData[line] = {}
 				let allData[line]['count'] = 1
-				let allData[line][plugin] = data['lines'][line]
+				let allData[line][name] = data['lines'][line]
 			endif
 		endfor
 	endfor"}}}
@@ -234,7 +192,8 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
   " Generate the paint data"{{{
 	for pluginInstance in a:plugins " now render everything
 		let render = pluginInstance['options']['render']
-		let plugin = pluginInstance['plugin']
+		let plugin = pluginInstance['options']['data']
+		let name = pluginInstance['name']
 		let pluginData = {}
     let pluginData['gutterImage'] = resultData['gutterImage']
     let pluginData['pixelsperline'] = resultData['pixelsperline']
@@ -248,8 +207,8 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
         let signLine = str2nr(line)
         let modulo = 0
       endif
-			if has_key(allData[line],plugin) > 0
-				let pluginData['lines'][line] = allData[line][plugin]
+			if has_key(allData[line],name) > 0
+				let pluginData['lines'][line] = allData[line][name]
         let pluginData['lines'][line]['modulo'] = modulo
         let pluginData['lines'][line]['line'] = str2nr(line)
         let pluginData['lines'][line]['signLine'] = signLine
@@ -262,9 +221,9 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
 			if !has_key(resultData['lines'],line)
 				let resultData['lines'][line] = {}
 			endif
-      let resultData['lines'][line][plugin] = copy(allData[line][plugin])
+      let resultData['lines'][line][name] = copy(allData[line][name])
       for value in keys(paintData['lines'][line])
-        let resultData['lines'][line][plugin][value] = paintData['lines'][line][value]
+        let resultData['lines'][line][name][value] = paintData['lines'][line][value]
       endfor
 		endfor
 	endfor"}}}

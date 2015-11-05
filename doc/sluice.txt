@@ -22,6 +22,15 @@ CONTENTS ~
   3.8 pixel density                                |sluice_pixel_density|
 
 4. Commands                                        |sluice-commands|
+  4.1 SluiceToggle                                 |SluiceToggle|
+  4.2 SluiceEnable                                 |SluiceEnable|
+  4.3 SluiceDisable                                |SluiceDisable|
+  4.4 SluiceMacroToggle                            |SluiceMacroToggle|
+  4.5 SluiceMacroOff                               |SluiceMacroOff|
+  4.6 SluiceMacroOn                                |SluiceMacroOn|
+  4.7 SluiceTogglePlugin                           |SluiceTogglePlugin|
+  4.8 SluiceEnablePlugin                           |SluiceEnablePlugin|
+  4.9 SluiceDisablePlugin                          |SluiceDisablePlugin|
 
 5. Plugins                                         |sluice-plugins|
   5.1 Builtin Data Sources
@@ -172,6 +181,23 @@ Turn on the MACRO mode gutter.
 
 Turn on the MICRO mode gutter.
 
+                                                    *SluiceTogglePlugin*
+
+Toggle a specific plugin. For instance to toggle 'undercursor':
+
+    SluiceTogglePlugin undercursor
+
+                                                    *SluiceEnablePlugin*
+
+Enable a specific plugin. For instance to enable 'undercursor':
+
+    SluiceEnablePlugin undercursor
+
+                                                    *SluiceDisablePlugin*
+
+Disable a specific plugin. For instance to disable 'undercursor':
+
+    SluiceDisablePlugin undercursor
 ===========================================================================
 
 Plugins                                            *sluice-plugins*
@@ -230,7 +256,11 @@ Either form of plugin must use the |autoload| file layout.
 
 Data Sources                                       *sluice-data-sources*
 
-Data sources must provide three functions.
+Data sources must provide four functions.
+
+function path#to#plugin#enabled(options)
+
+Allow the plugin to control when it is enabled. Should return 0/1.
 
 function path#to#plugin#init(options)
 
