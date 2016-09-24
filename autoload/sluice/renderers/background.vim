@@ -28,6 +28,7 @@ function! sluice#renderers#background#paint(options,vals)
     let currentLine = a:vals['lines'][cl]
   catch /.*/
     " probably no elements
+    return a:vals
   endtry
 
   " paint two rectangles on the graphic. One is the main background, the other
