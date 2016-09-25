@@ -5,7 +5,7 @@
 "               darker within the scrollbar area. Default: 1
 "           bg: Background. If not set, then the current screen background
 "               color is used.
-"     inlinebg: Background of hte 'current line'. If not set, then the current
+"     inlinebg: Background of the 'current line'. If not set, then the current
 "               'CursorLine' highlight group is used.
 "
 

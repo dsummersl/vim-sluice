@@ -12,8 +12,13 @@ function! sluice#plugins#undercursor#init(options)
   " Choose the Search highlight group for the default colors but make it
   " slightly darker or lighter than that group so its different than the
   " search plugin.
-  let bg = sluice#util#color#getcolor('guifg','Search')
-  let color = sluice#util#color#lighter(bg)
+  let color = sluice#util#color#getcolor('guibg','Normal')
+  " TODO watch the background setting - if it changes, re-init
+  if &background == 'dark'
+    let color = sluice#util#color#lighter(color)
+  else
+    let color = sluice#util#color#darker(color)
+  endif
   let cmd = "highlight! UnderCursor guibg=#". color
   exe cmd
 	exe "autocmd BufNewFile,BufRead * ". cmd

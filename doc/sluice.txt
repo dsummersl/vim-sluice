@@ -254,7 +254,7 @@ Sluice is built to support expansion. There are two routes to plugin expansion:
 
 Either form of plugin must use the |autoload| file layout.
 
-Data Sources                                       *sluice-data-sources*
+Data Sources                                       *sluice-data-functions*
 
 Data sources must provide four functions.
 
@@ -293,7 +293,7 @@ the search plugin's internal data it returned a dictionary that looked like:
       " additional keys used by the 'slash' renderer plugin.
     }
 
-Renderers                                          *sluice-renderers*
+Renderers                                          *sluice-renderer-functions*
 
 A renderer must provide two functions:
 
