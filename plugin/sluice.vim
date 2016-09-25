@@ -31,8 +31,6 @@ endif
 " Default Configuration"{{{
 
 " This handles all the slow/fastness of responsiveness of the entire plugin:
-" Best practices:
-" set updatetime=200
 
 " default background color of the gutter (ie, 'eeeeee'):
 " if unset, then use something slightly darker/lighter than the background.
@@ -109,6 +107,10 @@ endif
 
 " Try to repaint on a regular basis:
 autocmd! CursorHold * nested call sluice#renderer#RePaintMatches()
+autocmd! TextChanged * nested call sluice#renderer#RePaintMatches()
+autocmd! TextChangedI * nested call sluice#renderer#RePaintMatches()
+autocmd! VimResized * nested call sluice#renderer#RePaintMatches()
+" TODO this slows shit down A LOT:
 autocmd! CursorMoved * nested call sluice#renderer#RePaintMatches()
 
 " When re-entering a buffer, tell the paint methods to repain the entire
