@@ -193,7 +193,7 @@ function! sluice#plugins#search#memoizeByLocAndFileVer(args)
 
   " TODO check that the previous line is within some wiggle of the current
   " line...and that changedtick hasn't changed.
-  return _#hash(printf("%s-%s-%s",
+  return sha256(printf("%s-%s-%s",
         \b:changedtick,
         \line('.'),
         \strtrans(pattern)

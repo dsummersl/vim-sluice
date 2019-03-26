@@ -144,7 +144,7 @@ function! sluice#plugins#git#memoizeByFileTick(args)
   " would allow us to reuse contents when the user 'undos' something.
   " probably hooking in a filechange hook and doing a write to a temp file and
   " then hashing that temp file would do the trick. Over doing it? Maybe...
-  return _#hash(string(b:changedtick))
+  return sha256(string(b:changedtick))
 endfunction
 
 function! sluice#plugins#git#paint(options,vals)

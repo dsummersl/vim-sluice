@@ -77,10 +77,10 @@ function! sluice#renderers#icon#generateHash(...) dict
         let matches = matches . topclip . string(cp) . botclip
       endif
     endfor
-    " call VULog( "_#hash = ". matches ." = ". _#hash(matches))
-    return _#hash(matches)
+    " call VULog( "sha256 = ". matches ." = ". _#hash(matches))
+    return sha256(matches)
   else
-    return _#hash(self.generateSVG())
+    return sha256(self.generateSVG())
   endif
 endfunction
 
