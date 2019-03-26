@@ -8,8 +8,6 @@ CONTENTS ~
 1. About                                           |sluice-about|
 
 2. Quick Start                                     |sluice-install|
-  2.1 Console Install                              |sluice-console-install|
-  2.2 GUI Install                                  |sluice-gui-install|
 
 3. Options                                         |sluice-options|
   3.1 updatetime                                   |sluice-updatetime|
@@ -73,14 +71,8 @@ with three plugins:
 
 QUICKSTART                                         *sluice-install*
 
-CONSOLEINSTALL                                     *sluice-console-install*
-
-Install CSApprox to fully support colors in the gutter.
-
-GUIINSTALL                                         *sluice-gui-install*
-
-To support graphical icons in the gutter you must have ImageMagick installed on
-your system. On OSX you can do this easily with homebrew:
+To support graphical icons in the GUI in the gutter you must have ImageMagick
+installed on your system. On OSX you can do this easily with homebrew:
 
 brew install imagemagick
 

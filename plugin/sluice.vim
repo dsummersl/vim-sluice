@@ -18,6 +18,12 @@
 " TODO Maybe use CursorMoved rather than the timer. This would include movements
 " while text is selected - so you could see selected text in the gutter (and
 " there would be no delay).
+"
+" TODO track where the cursor has been - and then paint a trail in the gutter.
+" If you tracked this historically you could get a sense of where the most
+" activity happens in the file, where you've been 'reading' a section of the
+" code the most, etc...not unlike some git plugins that show the most recent
+" changes.
 
 " Dependency check:"{{{
 if !has("python") || !has("signs") || !has("float") || v:version/100 < 7
@@ -80,38 +86,47 @@ if !exists('g:sluice_loaded')
 	" Show all keywords in the file that match whats under your cursor with \\
 	call sluice#pluginmanager#add('undercursor', {
 			\ 'data': 'sluice#plugins#undercursor',
-	    \ 'render': 'sluice#renderers#slash',
-	    \ 'chars': '\ ',
-	    \ 'xchars': 'X ',
-	    \ 'xcolor': '0055ff',
-	    \ 'iconalign': 'right',
-	    \ 'iconwidth': 60,
-	    \ 'max_searches': 10
-	    \ })
+			\ 'render': 'sluice#renderers#slash',
+			\ 'chars': '\ ',
+			\ 'xchars': 'X ',
+			\ 'iconalign': 'right',
+			\ 'iconwidth': 60,
+			\ 'max_searches': 20
+			\ })
+	" Show location list elements with >>
+	call sluice#pluginmanager#add('locationlist', {
+			\ 'data': 'sluice#plugins#locationlist',
+			\ 'render': 'sluice#renderers#slash',
+			\ 'chars': '>>',
+			\ 'xchars': 'XX',
+			\ 'xcolor': 'b20000',
+			\ 'iconalign': 'center',
+			\ 'iconwidth': 100
+			\ })
 	" Show all git changes with +/- icons.
 	call sluice#pluginmanager#add('git', {
 			\ 'data': 'sluice#plugins#git',
-	    \ 'render': 'sluice#plugins#git',
-	    \ 'gitcommand': 'git',
-	    \ 'addedcolor': '00bb00',
-	    \ 'addedchar': '+',
-	    \ 'removedcolor': 'bb0000',
-	    \ 'removedchar': '-',
-	    \ 'iconalign': 'right',
-	    \ 'iconwidth': 20
-	    \ })
+			\ 'render': 'sluice#plugins#git',
+			\ 'gitcommand': 'git',
+			\ 'addedcolor': '00bb00',
+			\ 'addedchar': '+',
+			\ 'removedcolor': 'bb0000',
+			\ 'removedchar': '-',
+			\ 'iconalign': 'right',
+			\ 'iconwidth': 20
+			\ })
 	let g:sluice_loaded = 1
 endif
 "}}}
 " mappings"{{{
 
 " Try to repaint on a regular basis:
-autocmd! CursorHold * nested call sluice#renderer#RePaintMatches()
-autocmd! TextChanged * nested call sluice#renderer#RePaintMatches()
-autocmd! TextChangedI * nested call sluice#renderer#RePaintMatches()
-autocmd! VimResized * nested call sluice#renderer#RePaintMatches()
-" TODO this slows shit down A LOT:
-autocmd! CursorMoved * nested call sluice#renderer#RePaintMatches()
+let s:RepaintFn = _#throttle(function('sluice#renderer#RePaintMatches'), 100)
+autocmd! CursorHold * nested call s:RepaintFn.call()
+autocmd! TextChanged * nested call s:RepaintFn.call()
+autocmd! TextChangedI * nested call s:RepaintFn.call()
+autocmd! VimResized * nested call s:RepaintFn.call()
+autocmd! CursorMoved * nested call s:RepaintFn.call()
 
 " When re-entering a buffer, tell the paint methods to repain the entire
 " gutter.
@@ -145,6 +160,7 @@ command! -nargs=1 -complete=customlist,sluice#pluginmanager#getnames -bar Sluice
 " Defaults
 SluiceDisablePlugin git
 SluiceDisablePlugin undercursor
+SluiceDisablePlugin locationlist
 
 "}}}
 " Private Variables "{{{
