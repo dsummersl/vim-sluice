@@ -61,9 +61,6 @@ Requirements
 
 Vim 7.3+, with '+signs' support, and the [vus](https://github.com/dsummersl/vus) library.
 
-For console support you need a console that supports 256+ colors and
-[CSApprox](https://github.com/godlygeek/csapprox).
-
 For icon based gutter, vim must have '+icon' support and you need imagemagick
 installed. On OSX:
 
@@ -74,6 +71,7 @@ Testing
 ====
 
 To run the unit tests you must install the [vimunit
+
 plugin](https://github.com/dsummersl/vimunit). They can be run by typing the
 following on the console:
 

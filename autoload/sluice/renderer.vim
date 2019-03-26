@@ -145,7 +145,6 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
 	let allData = {}
 	let resultData = {}
 	let resultData['lines'] = {}
-	let resultData['gutterImage'] = sluice#renderers#icon#makeImage(g:sluice_pixel_density,g:sluice_pixel_density*a:totalLines)
 
 	" Generate data for each plugin (if its enabled), and combine it into one master list:
 	for pluginInstance in a:plugins"{{{
@@ -174,44 +173,22 @@ function! sluice#renderer#CombineData(plugins,totalLines,firstVisible,lastVisibl
 		endfor
 	endfor"}}}
 
-	" setup the background color for the image:
-	let defaultbg = sluice#util#color#get_default_bg()
-	if len(defaultbg) == 0
-		let defaultbg = sluice#util#color#getbg()
-	endif
-	call resultData['gutterImage'].addRectangle(defaultbg,0,0,g:sluice_pixel_density,g:sluice_pixel_density*a:totalLines)
-
-	" compute the current 'height' of the window. that would be used by an
-	" icon so that a line can be accurately rendered (TODO if the height is big it
-	" should really 'fall' into the next line).
-	if sluice#renderer#getmacromode()
-		let pixelsperline = g:sluice_pixel_density / (a:totalLines / (1.0*(a:lastVisible - a:firstVisible + 1)))
-	else
-		let pixelsperline = g:sluice_pixel_density
-	endif
-	let resultData['pixelsperline'] = pixelsperline
-
 	" Generate the paint data"{{{
 	for pluginInstance in a:plugins " now render everything
 		let render = pluginInstance['options']['render']
 		let plugin = pluginInstance['options']['data']
 		let name = pluginInstance['name']
 		let pluginData = {}
-		let pluginData['gutterImage'] = resultData['gutterImage']
-		let pluginData['pixelsperline'] = resultData['pixelsperline']
 		let pluginData['lines'] = {}
 		" Make a list of the lines that actually have plugin data present:
 		for line in keys(allData)
 			if sluice#renderer#getmacromode()
 				let signLine = sluice#util#location#ConvertToPercentOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines)
-				let modulo = float2nr(sluice#util#location#ConvertToModuloOffset(str2nr(line),a:firstVisible,a:lastVisible,a:totalLines) / 100.0 * g:sluice_pixel_density)
 			else
 				let signLine = str2nr(line)
-				let modulo = 0
 			endif
 			if has_key(allData[line],name) > 0
 				let pluginData['lines'][line] = allData[line][name]
-				let pluginData['lines'][line]['modulo'] = modulo
 				let pluginData['lines'][line]['line'] = str2nr(line)
 				let pluginData['lines'][line]['signLine'] = signLine
 			endif
@@ -367,30 +344,19 @@ function! sluice#renderer#DoPaintMatches(totalLines,firstVisible,lastVisible,sea
 		exe printf("highlight! %s %s %s",sluice#util#color#GetHighlightName(val),fg,bg)
 	endfor
 
-	" after the gutterimage is completely painted, define any missing
-	" icon/signs, and then paint.
+	" after the gutterimage is completely painted, define any missing signs, and
+	" then paint.
 	for [line,val] in items(results)
-		let fname = a:searchResults['gutterImage'].generateHash(0,g:sluice_pixel_density*(line-1),g:sluice_pixel_density,g:sluice_pixel_density)
+		let highlightName = sluice#util#color#GetHighlightName(val)
+		let fname = sha256(val['text'] . highlightName)
 		let results[line]['hash'] = fname
 		let new_signs[line] = fname
 
-		" if no icon has been made, and we can do it. then create the icon:
+		" if no sign has been made, do so:
 		if !exists('g:sluice_sign_'. fname)
 			"call VULog( "let g:sluice_sign_". fname ."=1")
 			exe "let g:sluice_sign_". fname ."=1"
-			if g:sluice_imagemagic_supported 
-				" if an icon doesn't exist yet, generate it.
-				if !filereadable(g:sluice_icon_cache . fname .'.png')
-					" place the background color
-					" DEBUG print the whole gutter. One long strip: :)
-					"call a:searchResults['gutterImage'].generatePNGFile(g:sluice_icon_cache . 'gutter')
-					call a:searchResults['gutterImage'].generatePNGFile(g:sluice_icon_cache . fname,0,g:sluice_pixel_density*(line-1),g:sluice_pixel_density,g:sluice_pixel_density)
-				endif
-				let results[line]['icon'] = g:sluice_icon_cache . fname .'.png'
-				exe printf("sign define %s icon=%s text=%s texthl=%s",fname,results[line]['icon'],val['text'],sluice#util#color#GetHighlightName(val))
-			else
-				exe printf("sign define %s text=%s texthl=%s",fname,val['text'],sluice#util#color#GetHighlightName(val))
-			endif
+			exe printf("sign define %s text=%s texthl=%s",fname,val['text'],highlightName)
 		endif
 	endfor
 

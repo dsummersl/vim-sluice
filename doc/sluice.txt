@@ -10,14 +10,10 @@ CONTENTS ~
 2. Quick Start                                     |sluice-install|
 
 3. Options                                         |sluice-options|
-  3.1 updatetime                                   |sluice-updatetime|
   3.2 background                                   |sluice_default_bg|
   3.3 enabled                                      |sluice_enabled|
   3.4 enabled on open                              |sluice_default_enabled|
   3.5 default mode                                 |sluice_default_macromode|
-  3.6 graphics enabled                             |sluice_graphics_enabled|
-  3.7 convert program location                     |sluice_convert_command|
-  3.8 pixel density                                |sluice_pixel_density|
 
 4. Commands                                        |sluice-commands|
   4.1 SluiceToggle                                 |SluiceToggle|
@@ -71,28 +67,13 @@ with three plugins:
 
 QUICKSTART                                         *sluice-install*
 
-To support graphical icons in the GUI in the gutter you must have ImageMagick
-installed on your system. On OSX you can do this easily with homebrew:
-
-brew install imagemagick
-
-TODO if we want to support text in the graphics we'll need to ensure that
-ghostscript is installed (at least on OSX):
-
-brew install ghostscript
+TODO install.
 
 ===========================================================================
 OPTIONS                                             *sluice-options*
 
 There are several global options that can be used to change the functionality
 of this plugin.
-
-                                                    *sluice-updatetime*
-
-The updatetime setting handles all of the slow/fastness of responsiveness of
-the entire plugin. By default the value is set to 200 (1/5 of a second):
-
-    set updatetime=200
 
                                                     *sluice_default_bg*
 
@@ -121,27 +102,6 @@ setting.
 Global variable for default macro/non-macro mode.
 
     let g:sluice_default_macromode=0
-
-                                                    *sluice_graphics_enabled*
-
-Global to enable graphical icons:
-
-    let g:sluice_graphics_enabled=1
-
-                                                    *sluice_convert_command*
-
-ImageMagick 'convert' command location.
-
-    let g:sluice_convert_command='convert'
-
-                                                    *sluice_pixel_density*
-
-When using the GUI, the number of pixels that are put into each icon. When the
-number is low the icon looks very pixel-ie, but the overall number of icons
-generated is smaller. When the number is high (ie, 20), many more icons are
-typically generated (slower overall performance, for prettier icons).
-
-    let g:sluice_pixel_density=12
 
 ===========================================================================
 COMMANDS                                            *sluice-commands*

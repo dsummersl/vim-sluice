@@ -247,47 +247,47 @@ function! TestLighterAndDarker()
 endfunction
 
 function! TestHexToRGBAndBack()
-	call VUAssertEquals(sluice#util#color#HexToRGB("000000"),[0,0,0])
-	call VUAssertEquals(sluice#util#color#HexToRGB("ffffff"),[255,255,255])
-	call VUAssertEquals(sluice#util#color#HexToRGB("AAAAAA"),[170,170,170])
-	call VUAssertEquals(sluice#util#color#HexToRGB("fdf6e3"),[253,246,227])
-	call VUAssertEquals(sluice#util#color#RGBToHex([0,0,0]),"000000")
-	call VUAssertEquals(sluice#util#color#RGBToHex([255,255,255]),"ffffff")
-	call VUAssertEquals(sluice#util#color#RGBToHex([32,15,180]),"200fb4")
-	call VUAssertEquals(sluice#util#color#RGBToHex([253,246,227]),"fdf6e3")
+  call VUAssertEquals(sluice#util#color#HexToRGB("000000"),[0,0,0])
+  call VUAssertEquals(sluice#util#color#HexToRGB("ffffff"),[255,255,255])
+  call VUAssertEquals(sluice#util#color#HexToRGB("AAAAAA"),[170,170,170])
+  call VUAssertEquals(sluice#util#color#HexToRGB("fdf6e3"),[253,246,227])
+  call VUAssertEquals(sluice#util#color#RGBToHex([0,0,0]),"000000")
+  call VUAssertEquals(sluice#util#color#RGBToHex([255,255,255]),"ffffff")
+  call VUAssertEquals(sluice#util#color#RGBToHex([32,15,180]),"200fb4")
+  call VUAssertEquals(sluice#util#color#RGBToHex([253,246,227]),"fdf6e3")
 endfunction
 
 function! TestRGBToHSVAndBack()
-	call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,0]),[0,0,0])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([255,255,255]),[0,0,100])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([255,0,0]),[0,100,100])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([0,255,0]),[120,100,100])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,255]),[240,100,100])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([50,50,50]),[0,0,19])
-	call VUAssertEquals(sluice#util#color#RGBToHSV([100,100,100]),[0,0,39])
-	" call VUAssertEquals(RGBToHSV([187,219,255]),[212,27,100])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,0]),[0,0,0])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([255,255,255]),[0,0,100])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([255,0,0]),[0,100,100])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([0,255,0]),[120,100,100])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([0,0,255]),[240,100,100])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([50,50,50]),[0,0,19])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([100,100,100]),[0,0,39])
+  " call VUAssertEquals(RGBToHSV([187,219,255]),[212,27,100])
 
-	call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,0]),[0,0,0])
-	call VUAssertEquals(sluice#util#color#HSVToRGB([100,100,100]),[84,255,0])
-	call VUAssertEquals(sluice#util#color#HSVToRGB([0,100,100]),[255,0,0])
-	call VUAssertEquals(sluice#util#color#HSVToRGB([120,100,100]),[0,255,0])
-	call VUAssertEquals(sluice#util#color#HSVToRGB([240,100,100]),[0,0,255])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([0,0,0]),[0,0,0])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([100,100,100]),[84,255,0])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([0,100,100]),[255,0,0])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([120,100,100]),[0,255,0])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([240,100,100]),[0,0,255])
 
   " TODO converting between the RGB and back again really wasn't lossless,
   " try to figure out why?
-	call VUAssertEquals(sluice#util#color#RGBToHSV([253,246,227]),[127,0,99])
-	call VUAssertEquals(sluice#util#color#HSVToRGB([127,0,99]),[252,252,252])
+  call VUAssertEquals(sluice#util#color#RGBToHSV([253,246,227]),[127,0,99])
+  call VUAssertEquals(sluice#util#color#HSVToRGB([127,0,99]),[252,252,252])
 endfunction
 " }}}
 " util#location "{{{
 function! TestLoadRegisters()
-	let from = "something"
-	let @8 = from
-	let registers = sluice#util#location#SaveRegisters()
-	call VUAssertEquals(from,registers["reg-8"])
-	let registers["reg-8"] = from ."2"
-	call sluice#util#location#LoadRegisters(registers)
-	call VUAssertEquals(from ."2",@8)
+  let from = "something"
+  let @8 = from
+  let registers = sluice#util#location#SaveRegisters()
+  call VUAssertEquals(from,registers["reg-8"])
+  let registers["reg-8"] = from ."2"
+  call sluice#util#location#LoadRegisters(registers)
+  call VUAssertEquals(from ."2",@8)
 endfunction
 
 function! TestConvertToModuloOffset()
@@ -336,275 +336,13 @@ function! TestPercentAndModule()
 endfunction
 
 function! TestGetHumanReadables()
-	call VUAssertEquals(sluice#util#location#GetHumanReadables(""),"")
-	call VUAssertEquals(sluice#util#location#GetHumanReadables("aa"),"aa")
-	call VUAssertEquals(sluice#util#location#GetHumanReadables(".."),"dtdt")
-	call VUAssertEquals(sluice#util#location#GetHumanReadables("\\\\"),"bsbs")
-	call VUAssertEquals(sluice#util#location#GetHumanReadables("//"),"fsfs")
-	call VUAssertEquals(sluice#util#location#GetHumanReadables("--"),"dada")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables(""),"")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables("aa"),"aa")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables(".."),"dtdt")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables("\\\\"),"bsbs")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables("//"),"fsfs")
+  call VUAssertEquals(sluice#util#location#GetHumanReadables("--"),"dada")
 endfunction
-"}}}
-" util#icon"{{{
-
-function! TestMakeImage()
-  let image = sluice#renderers#icon#makeImage()
-  " base case:
-  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px"></svg>')
-  " one line on the top row:
-  call image.addRectangle('000000',0,0,50,2)
-  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="0" y="0" height="2" width="50" style="fill: #000000;" />'.
-        \'</svg>')
-endfunction
-
-function! TestGeneratePNGFile()
-  let image = sluice#renderers#icon#makeImage()
-  call image.addRectangle('000000',0,0,50,2)
-  call image.generatePNGFile('test')
-endfunction
-
-function! TestAddRectangleWithAlign()
-  " Base case
-  let aligns = [ 'left', 'right', 'center' ]
-  for a in aligns
-    let image = sluice#renderers#icon#makeImage()
-    call image.placeRectangle('000000',10,100,2,a)
-    call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-          \'<rect x="0" y="10" height="2" width="50" style="fill: #000000;" />'.
-          \'</svg>')
-  endfor
-  let image = sluice#renderers#icon#makeImage()
-  call image.placeRectangle('000000',10,50,2,'right')
-  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="25" y="10" height="2" width="25" style="fill: #000000;" />'.
-        \'</svg>')
-  let image = sluice#renderers#icon#makeImage()
-  call image.placeRectangle('000000',10,50,2,'center')
-  call VUAssertEquals(image.generateSVG(),'<svg width="50px" height="50px">'.
-        \'<rect x="12" y="10" height="2" width="25" style="fill: #000000;" />'.
-        \'</svg>')
-endfunction
-
-function! TestGeneratePNGOffset()
-  " make the image, add a couple things by line...
-  " I was thinking that adding the line number into the ultimate image file
-  " would be handy (so you say how many lines there are and it computes the
-  " size? width = 10, height = # lines * 10
-  "
-  " then translate
-  let lines = 10
-  let image = sluice#renderers#icon#makeImage(10,10*lines)
-  for i in range(lines)
-    if i % 2 == 0
-      call image.addRectangle('000000',0,i*10,50,10)
-      call image.addText(string(i%2),'red',9,i*10+9)
-      call image.placeRectangle('000000',i*10,50,2,'left')
-    else
-      call image.addRectangle('ff0000',0,i*10,50,10)
-      call image.addText(string(i%2),'black',9,i*10+9)
-      call image.placeRectangle('0000ff',i*10,50,2,'right')
-    endif
-  endfor
-  call image.generatePNGFile('nooffset',0,10,10,10)
-  " ensure that a hash is a big string.
-  let filehash = image.generateHash()
-  call VUAssertTrue(len(filehash) > 0)
-
-  call VULog("one")
-  let onehash = image.generateHash(0,10,10,10)
-  call VUAssertNotSame(filehash,onehash)
-
-  call VULog("two")
-  let twohash = image.generateHash(0,20,10,10)
-  call VUAssertNotSame(twohash,onehash)
-  call VUAssertNotSame(twohash,filehash)
-
-  call VULog("three")
-  let threehash = image.generateHash(0,30,10,10)
-  call VUAssertEquals(threehash,onehash)
-  call VUAssertNotSame(threehash,filehash)
-
-  let fourhash = image.generateHash(0,40,10,10)
-  call VUAssertEquals(fourhash,twohash)
-  call VUAssertNotSame(fourhash,filehash)
-
-  call VULog("onehalf")
-  let onehalfhash = image.generateHash(0,5,10,10)
-  call VULog("threehalf")
-  let threehalfhash = image.generateHash(0,25,10,10)
-  call VUAssertEquals(onehalfhash,threehalfhash)
-endfunction
-
-function! TestGenerateHash()
-  let image = sluice#renderers#icon#makeImage(10,50)
-  call image.addRectangle('000000',0,0,10,40)
-  " a small widget painted from 7-10 so it should appear in
-  " blocks 0-9 and 10-19
-  call image.addRectangle('123444',0,7,10,4)
-
-  call VUAssertNotSame(image.generateHash(0,0,10,10),image.generateHash(0,10,10,10))
-
-  " compare the 10-19 block witht the 20-29 should not be the same since a
-  " sliver of the 123444 is in there.
-  call VUAssertNotSame(image.generateHash(0,10,10,10),image.generateHash(0,20,10,10))
-
-
-  let image = sluice#renderers#icon#makeImage(10,100)
-  call image.addRectangle('000000',0,0,10,100)
-  call image.addRectangle('c6c6c6',0,9,10,2)
-
-  call VUAssertNotSame(image.generateHash(0,0,0,0),image.generateHash(0,50,10,10))
-  call VUAssertNotSame(image.generateHash(0,10,0,0),image.generateHash(0,50,10,10))
-endfunction
-
-""}}}
-" renderer tests"{{{
-"function! TestCombineData()
-"  " put your curser in this block somewhere and then type ":call VUAutoRun()"
-"  " TODO these are still NOT passing.
-"  let w:save_cursor = winsaveview()
-"  call VUAssertEquals(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#test1paint' }}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ {})
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test2plugin', 'options': { 'render': 'sluice#test#test2paint'}}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ {'1':{'sluice#test#test2plugin': {
-"        \   'count': 1,
-"        \   'bg': 'testbg',
-"        \   'fg': 'testhi',
-"        \   'text': '..',
-"        \   'line': 1,
-"        \   'signLine': 1,
-"        \   'modulo': 0
-"        \ } }}
-"        \)
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#test1paint'}},
-"        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint'}}
-"        \ ],10,1,10)['lines'],
-"        \ 
-"        \ {'1': {'sluice#test#test2plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ } }})
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test2plugin', 'options': { 'render': 'sluice#test#test1paint'}},
-"        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint'}}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ {'1': {'sluice#test#test2plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ } }})
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-
-"  " Two plugins that have data, but only one of them renders anything.
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test3plugin', 'options': { 'render': 'sluice#test#test1paint'}},
-"        \ {'plugin':'sluice#test#test2plugin','options': { 'render': 'sluice#test#test2paint' }}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ {'1': {'sluice#test#test2plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ } }})
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-
-"  " if one data source has an extra key it should always be in the results
-"  " regardless of order:
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test4plugin','options': { 'render': 'sluice#test#test2paint'}},
-"        \ {'plugin':'sluice#test#test3plugin','options': { 'render': 'sluice#test#test2paint' }}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ {'1': {'sluice#test#test3plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ }, 'sluice#test#test4plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'isvis':1,
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ } }})
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-
-"  " non intersecting data sets, both should be there.
-"  let diff = vimunit#util#diff(sluice#renderer#CombineData([
-"        \ {'plugin':'sluice#test#test4plugin','options': { 'render': 'sluice#test#test3paint'}},
-"        \ {'plugin':'sluice#test#test5plugin','options': { 'render': 'sluice#test#test3paint'}}
-"        \ ],10,1,10)['lines'],
-"        \
-"        \ { '1': {'sluice#test#test4plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'isvis':1,
-"        \  'line': 1,
-"        \  'signLine': 1,
-"        \  'modulo': 0
-"        \ }},
-"        \ '2': {'sluice#test#test4plugin': {
-"        \  'count':2,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 2,
-"        \  'signLine': 2,
-"        \  'modulo': 0
-"        \ }},
-"        \ '5': {'sluice#test#test5plugin': {
-"        \  'count':1,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 5,
-"        \  'signLine': 5,
-"        \  'modulo': 0
-"        \ }},
-"        \ '6': {'sluice#test#test5plugin': {
-"        \  'count':2,
-"        \  'text':'..',
-"        \  'fg':'testhi',
-"        \  'bg':'testbg',
-"        \  'line': 6,
-"        \  'signLine': 6,
-"        \  'modulo': 0
-"        \ } }})
-"  call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
-"endfunction
 
 function! PaintTestStub(line,onscreen)
 endfunction
@@ -612,55 +350,54 @@ function! UnpaintTestStub(line,dict)
 endfunction
 
 function! TestDoPaintMatches()
-	call VUAssertEquals(sluice#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
-	" if all lines are currently visible, don't do anything:
-	" first just paint one line. We expect that the line '1' would be painted,
-	" and that the highlight group is created (and 'sluice#test#test1plugin' is called).
-	unlet! b:cached_signs
+  call VUAssertEquals(sluice#renderer#DoPaintMatches(5,1,5,{'lines':{}},"UnpaintTestStub","PaintTestStub"),{})
+  " if all lines are currently visible, don't do anything:
+  " first just paint one line. We expect that the line '1' would be painted,
+  " and that the highlight group is created (and 'sluice#test#test1plugin' is called).
+  unlet! b:cached_signs
   let result = sluice#renderer#DoPaintMatches(6,1,5,
         \{'lines':{1:{'sluice#test#test1plugin': {
-        \  'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \ }}, 'gutterImage': sluice#renderers#icon#makeImage()},
+        \  'line':1,'text':'XX','fg':'000000','bg':'000000'}
+        \ }}},
         \"UnpaintTestStub","PaintTestStub")
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
         \    { 'plugin': 'sluice#test#test1plugin', 'line': 1, 'text':'XX',
-        \      'fg':'000000','bg':'000000','iconwidth':50,
-        \      'iconalign':'left','iconcolor':'000000'}
+        \      'fg':'000000','bg':'000000'
         \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
   call VUAssertEquals(keys(result),['1'])
 
-	" two lines, implies some reconciliation should be happening here:
-	let g:mv_plugins = []
-	call sluice#renderer#add('sluice#test#test1plugin',{ 'render': 'sluice#test#nopaint' })
-	call sluice#renderer#add('sluice#test#test2plugin',{ 'render': 'sluice#test#rrpaint' })
+  " two lines, implies some reconciliation should be happening here:
+  let g:mv_plugins = []
+  call sluice#renderer#add('sluice#test#test1plugin',{ 'render': 'sluice#test#nopaint' })
+  call sluice#renderer#add('sluice#test#test2plugin',{ 'render': 'sluice#test#rrpaint' })
   let result = sluice#renderer#DoPaintMatches(10,1,5,
         \{'lines':{1:{ 'sluice#test#test1plugin': 
-        \  { 'line':1,'text':'//','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
+        \  { 'line':1,'text':'//','fg':'000000','bg':'000000'},
         \  'sluice#test#test2plugin':
-        \  { 'line':1,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'}
+        \  { 'line':1,'text':'XX','fg':'000000','bg':'000000'}
         \},
         \2:{'sluice#test#test1plugin':
-        \  { 'line':2,'text':'XX','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'left','iconcolor':'000000'}
-        \}}, 'gutterImage': sluice#renderers#icon#makeImage() },
+        \  { 'line':2,'text':'XX','fg':'000000','bg':'000000'}
+        \}}},
         \"UnpaintTestStub","PaintTestStub")
 
   let diff = vimunit#util#diff(result['1']['plugins'],[ 
-        \    {'plugin': 'sluice#test#test2plugin','line': 1, 'text': 'RR', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'right', 'iconcolor': '000000'},
-        \    {'plugin': 'sluice#test#test1plugin', 'line':1,'text':'//','fg':'000000','bg':'000000','iconwidth':50,'iconalign':'right','iconcolor':'000000'},
-        \    {'plugin': 'sluice#test#test1plugin','line': 2, 'text': 'XX', 'fg': '000000', 'bg': '000000', 'iconwidth': 50, 'iconalign':'left', 'iconcolor': '000000'}
+        \    {'plugin': 'sluice#test#test2plugin','line': 1, 'text': 'RR', 'fg': '000000', 'bg': '000000'},
+        \    {'plugin': 'sluice#test#test1plugin', 'line':1,'text':'//','fg':'000000','bg':'000000'},
+        \    {'plugin': 'sluice#test#test1plugin','line': 2, 'text': 'XX', 'fg': '000000', 'bg': '000000'}
         \  ])
   call VUAssertEquals(len(diff),0,vimunit#util#diff2str(diff))
 
   let result = sluice#renderer#DoPaintMatches(10,6,10,
         \{'lines':{1:{'sluice#test#test1plugin': { 'line':1,'text':'XX','fg':'000000','bg':'000000'}},
         \10:{'sluice#test#test1plugin': { 'line':10,'text':'XX','fg':'000000','bg':'000000'}} },
-        \  'gutterImage': sluice#renderers#icon#makeImage()},
+        \},
         \"UnpaintTestStub","PaintTestStub")
   call VUAssertEquals(sort(keys(result)),sort(['6','10']))
 
   " When a plugin is removed, it should not longer be in the list of plugins
-	call sluice#renderer#remove('sluice#test#test2plugin')
+  call sluice#renderer#remove('sluice#test#test2plugin')
   call VUAssertEquals(g:mv_plugins,[{ 'plugin': 'sluice#test#test1plugin', 'options': { 'render': 'sluice#test#nopaint' }}])
 endfunction
 

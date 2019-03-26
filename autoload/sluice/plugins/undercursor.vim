@@ -2,7 +2,7 @@
 "
 " Colors:
 "    Colors for the render will automatically be selected for
-"    color/xcolor/iconcolor if none are provided in the options. The colors
+"    color/xcolor if none are provided in the options. The colors
 "    will be selected to relate to the 'Search' highlight group.
 
 function! sluice#plugins#undercursor#init(options)
@@ -28,9 +28,6 @@ function! sluice#plugins#undercursor#init(options)
   endif
   if !has_key(a:options,'xcolor')
     let a:options['xcolor'] = color
-  endif
-  if !has_key(a:options,'iconcolor')
-    let a:options['iconcolor'] = color
   endif
   call sluice#plugins#search#init(a:options)
 endfunction

@@ -134,24 +134,24 @@ function! sluice#util#color#getcolor(part,hi)
     for part in split(line,' ')
       let ab = split(part,'=')
       if len(ab) == 2 && ab[0] == a:part
-        if ab[1] =~ '^#\v\x{6}$'
-          return substitute(ab[1],'^#','','')
-        else
-          try
-            let rgbmap = csapprox#rgb()
-            if has_key(rgbmap,tolower(ab[1]))
-              " remove any hex/# from the front of the string.
-              return substitute(
-                    \substitute(rgbmap[tolower(ab[1])],'^0x','','')
-                    \,'^#','','')
-            else
-              " no key, just return the value
-              return ab[1]
-            endif
-          catch
-            " do nothing, we probably don't have csapprox#rgb
-          endtry
-        endif
+	if ab[1] =~ '^#\v\x{6}$'
+	  return substitute(ab[1],'^#','','')
+	else
+	  try
+	    let rgbmap = csapprox#rgb()
+	    if has_key(rgbmap,tolower(ab[1]))
+	      " remove any hex/# from the front of the string.
+	      return substitute(
+		    \substitute(rgbmap[tolower(ab[1])],'^0x','','')
+		    \,'^#','','')
+	    else
+	      " no key, just return the value
+	      return ab[1]
+	    endif
+	  catch
+	    " do nothing, we probably don't have csapprox#rgb
+	  endtry
+	endif
       endif
     endfor
   endfor

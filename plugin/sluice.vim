@@ -51,25 +51,12 @@ if !exists('g:sluice_default_enabled') | let g:sluice_default_enabled=0 | endif
 " Global variable for default macro/non-macro mode.
 if !exists('g:sluice_default_macromode') | let g:sluice_default_macromode=0 | endif
 
-" TODO move into its renderer plugin
-" Global to enable graphical icons
-if !exists('g:sluice_graphics_enabled') | let g:sluice_graphics_enabled=1 | endif
-
-" TODO move into its renderer plugin
-" ImageMagick 'convert' command location
-if !exists('g:sluice_convert_command') | let g:sluice_convert_command='convert' | endif
-
-" TODO move into its renderer plugin
-if !exists('g:sluice_pixel_density') | let g:sluice_pixel_density=20 | endif
-
 if !exists('g:sluice_loaded')
 	" Setup the type of plugins you want:
 	"
 	call sluice#pluginmanager#add('window', {
 			\ 'data': 'sluice#plugins#window',
 			\ 'render': 'sluice#renderers#background',
-			\ 'iconalign': 'left',
-			\ 'iconwidth': 10,
 			\ 'showinline': 1
 			\ })
 	" Show the last search with //
@@ -79,8 +66,6 @@ if !exists('g:sluice_loaded')
 			\ 'chars': '/ ',
 			\ 'xchars': 'X ',
 			\ 'xcolor': '0055ff',
-			\ 'iconalign': 'center',
-			\ 'iconwidth': 100,
 			\ 'max_searches': 50
 			\ })
 	" Show all keywords in the file that match whats under your cursor with \\
@@ -89,8 +74,6 @@ if !exists('g:sluice_loaded')
 			\ 'render': 'sluice#renderers#slash',
 			\ 'chars': '\ ',
 			\ 'xchars': 'X ',
-			\ 'iconalign': 'right',
-			\ 'iconwidth': 60,
 			\ 'max_searches': 20
 			\ })
 	" Show location list elements with >>
@@ -100,21 +83,17 @@ if !exists('g:sluice_loaded')
 			\ 'chars': '>>',
 			\ 'xchars': 'XX',
 			\ 'xcolor': 'b20000',
-			\ 'iconalign': 'center',
-			\ 'iconwidth': 100
 			\ })
 	" Show all git changes with +/- icons.
-	call sluice#pluginmanager#add('git', {
-			\ 'data': 'sluice#plugins#git',
-			\ 'render': 'sluice#plugins#git',
-			\ 'gitcommand': 'git',
-			\ 'addedcolor': '00bb00',
-			\ 'addedchar': '+',
-			\ 'removedcolor': 'bb0000',
-			\ 'removedchar': '-',
-			\ 'iconalign': 'right',
-			\ 'iconwidth': 20
-			\ })
+	" call sluice#pluginmanager#add('git', {
+	" 		\ 'data': 'sluice#plugins#git',
+	" 		\ 'render': 'sluice#plugins#git',
+	" 		\ 'gitcommand': 'git',
+	" 		\ 'addedcolor': '00bb00',
+	" 		\ 'addedchar': '+',
+	" 		\ 'removedcolor': 'bb0000',
+	" 		\ 'removedchar': '-',
+	" 		\ })
 	let g:sluice_loaded = 1
 endif
 "}}}
@@ -128,7 +107,7 @@ autocmd! TextChangedI * nested call s:RepaintFn.call()
 autocmd! VimResized * nested call s:RepaintFn.call()
 autocmd! CursorMoved * nested call s:RepaintFn.call()
 
-" When re-entering a buffer, tell the paint methods to repain the entire
+" When re-entering a buffer, tell the paint methods to repaint the entire
 " gutter.
 autocmd! BufEnter * let b:sluice_signs = {}
 
@@ -158,7 +137,7 @@ command! -nargs=1 -complete=customlist,sluice#pluginmanager#getnames -bar Sluice
 command! -nargs=1 -complete=customlist,sluice#pluginmanager#getnames -bar SluiceDisablePlugin call sluice#pluginmanager#setenabled("<args>",0)
 
 " Defaults
-SluiceDisablePlugin git
+" SluiceDisablePlugin git
 SluiceDisablePlugin undercursor
 SluiceDisablePlugin locationlist
 
@@ -167,23 +146,6 @@ SluiceDisablePlugin locationlist
 
 " TODO what is this for, I don't remember?
 if !exists('w:sluice_lastcalldisabled') | let w:sluice_lastcalldisabled=1 | endif
-
-if !exists('g:sluice_cache') | let g:sluice_icon_cache=substitute(expand('<sfile>'),"\\v\/[^\/]+$","","") .'/sluice-cache/' | endif
-
-" Check to see if GUI mode is on, and we can find the 'convert' function. If
-" not, turn it off.
-let g:sluice_imagemagic_supported = 0
-if has("gui_running") && g:sluice_graphics_enabled
-	exe "silent !". g:sluice_convert_command ." -version"
-	if !v:shell_error
-		let g:sluice_imagemagic_supported = 1
-		exec "silent ! mkdir -p ". g:sluice_icon_cache
-	else
-		echohl ErrorMsg
-		echoe "Imagemagick 'convert' command not found or in error. Graphic icons disabled."
-		echohl None
-	endif
-endif
 
 "}}}
 " vim: set fdm=marker noet:

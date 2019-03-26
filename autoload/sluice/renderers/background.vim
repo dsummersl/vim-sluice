@@ -10,19 +10,19 @@
 "
 
 function! sluice#renderers#background#paint(options,vals)
-	"echom "bg paint". reltime()[0]
+  "echom "bg paint". reltime()[0]
   let showinline = a:options['showinline']
-	for line in keys(a:vals['lines'])
+  for line in keys(a:vals['lines'])
     let newbg = sluice#renderers#background#setBG(a:options,a:vals['lines'][line])
     let a:vals['lines'][line]['bg'] = newbg['bg']
-	endfor
+  endfor
 
   try
     " select the min/max/current values from all the lines and then use that
     " to paint the gutter with just two elements:
-    let mn = _#min(a:vals['lines'],"str2float(val['signLine'] .'.'. val['modulo'])")
-    let mx = _#max(a:vals['lines'],"str2float(val['signLine'] .'.'. val['modulo'])")
-    let cl = _#min(a:vals['lines'],"val['line'] == ". line('.') ."? str2float(val['signLine'] .'.'. val['modulo']) : 100000")
+    let mn = _#min(a:vals['lines'],"str2float(val['signLine'])")
+    let mx = _#max(a:vals['lines'],"str2float(val['signLine'])")
+    let cl = _#min(a:vals['lines'],"val['line'] == ". line('.') ."? str2float(val['signLine']) : 100000")
     let minLine = a:vals['lines'][mn]
     let maxLine = a:vals['lines'][mx]
     let currentLine = a:vals['lines'][cl]
@@ -31,29 +31,7 @@ function! sluice#renderers#background#paint(options,vals)
     return a:vals
   endtry
 
-  " paint two rectangles on the graphic. One is the main background, the other
-  " is the 'highlighted' part.
-  call a:vals['gutterImage'].addRectangle(
-        \a:options['bg'],
-        \0,
-        \g:sluice_pixel_density*(minLine['signLine']-1) + minLine['modulo'],
-        \g:sluice_pixel_density,
-        \g:sluice_pixel_density*(maxLine['signLine']-minLine['signLine']+1) + maxLine['modulo'],
-        \"",
-        \''
-        \)
-  if showinline
-    call a:vals['gutterImage'].addRectangle(
-          \a:options['inlinebg'],
-          \0,
-          \g:sluice_pixel_density*(currentLine['signLine']-1) + currentLine['modulo'],
-          \g:sluice_pixel_density,
-          \float2nr(a:vals['pixelsperline']),
-          \'',
-          \''
-          \)
-  endif
-	return a:vals
+  return a:vals
 endfunction
 
 function! sluice#renderers#background#setBG(options,line)

@@ -150,10 +150,7 @@ endfunction
 function! sluice#plugins#git#paint(options,vals)
   " We need two paint operations - one with the additions, one with the
   " subtractions
-  let filtered = { 'lines': {},
-        \'gutterImage': a:vals['gutterImage'],
-        \'pixelsperline': a:vals['pixelsperline'],
-        \}
+  let filtered = {'lines': {}}
   for line in keys(a:vals['lines'])
     if has_key(a:vals['lines'][line],'added')
       let filtered['lines'][line] = a:vals['lines'][line]
@@ -163,8 +160,6 @@ function! sluice#plugins#git#paint(options,vals)
   let a:options['color'] = a:options['addedcolor']
   let a:options['xchars'] = '/' . a:options['addedchar'] 
   let a:options['xcolor'] = a:options['addedcolor']
-  let a:options['iconcolor'] = a:options['addedcolor']
-	let added = sluice#renderers#util#TypicalPaint(filtered,a:options)
 
   " paint the removed lines
   let filtered['lines'] = {}
@@ -180,14 +175,13 @@ function! sluice#plugins#git#paint(options,vals)
   let a:options['color'] = a:options['removedcolor']
   let a:options['xchars'] = '/' . a:options['removedchar'] 
   let a:options['xcolor'] = a:options['removedcolor']
-  let a:options['iconcolor'] = a:options['removedcolor']
-	let removed = sluice#renderers#util#TypicalPaint(filtered,a:options)
 
-  for line in keys(added['lines'])
-    let removed['lines'][line] = added['lines'][line]
-  endfor
+  " TODO
+  " for line in keys(added['lines'])
+  "   let removed['lines'][line] = added['lines'][line]
+  " endfor
 
-  return removed
+  " return removed
 endfunction
 
 function! sluice#plugins#git#reconcile(options,vals,plugin)
@@ -200,13 +194,11 @@ function! sluice#plugins#git#reconcile(options,vals,plugin)
         let a:options['color'] = a:options['addedcolor']
         let a:options['xchars'] = '/' . a:options['addedchar'] 
         let a:options['xcolor'] = a:options['addedcolor']
-        let a:options['iconcolor'] = a:options['addedcolor']
       else
         let a:options['chars'] = a:options['removedchar'] . a:options['removedchar'] 
         let a:options['color'] = a:options['removedcolor']
         let a:options['xchars'] = '/' . a:options['removedchar'] 
         let a:options['xcolor'] = a:options['removedcolor']
-        let a:options['iconcolor'] = a:options['removedcolor']
       endif
       break
     endif
