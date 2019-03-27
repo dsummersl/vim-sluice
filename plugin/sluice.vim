@@ -99,8 +99,7 @@ endif
 "}}}
 " mappings"{{{
 
-" Try to repaint on a regular basis:
-let s:RepaintFn = _#throttle(function('sluice#renderer#RePaintMatches'), 100)
+let s:RepaintFn = _#throttle(function('sluice#renderer#RePaintMatches'), 100, 0)
 autocmd! CursorHold * nested call s:RepaintFn.call()
 autocmd! TextChanged * nested call s:RepaintFn.call()
 autocmd! TextChangedI * nested call s:RepaintFn.call()
